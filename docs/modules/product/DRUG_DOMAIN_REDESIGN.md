@@ -102,13 +102,13 @@ health_individual_drugs → drug_products 시드/동기화 원천
 
 ---
 
-## 6. 열린 결정 (확인 필요)
+## 6. 결정 (전체 확정 — 2026-05-29)
 
-- **D-1 마스터 출처**: `drug_products`를 (a) 기존 `products` 마스터 컬럼 기반으로 만들고 `health_individual_drugs`(심평원)로 보강할지, (b) 심평원 데이터를 1차 소스로 할지. (권장: a — 기존 운영 데이터 보존 + 심평원 매칭)
-- **D-2 수수료 모델**: 정진팜은 **제품×등급(A~E) 매트릭스**(거래처 등급 기반). Pample는 회사별 단일율. → **등급 매트릭스 유지**하되 소유를 "제품"에서 "제약사 취급품"으로 이전? 아니면 단일율로 단순화? (권장: 등급 매트릭스 유지, 소유만 company_drug_product 로)
-- **D-3 거래처 예외단가**: `company_product_overrides`를 (company_id, **company_drug_product_id**) 로 재배치. 유지 맞는지.
-- **D-4 실적 참조 단위**: `performances`가 (a) `company_drug_product_id`(제약사 취급품) 참조 vs (b) `drug_product_id`(마스터) + tenant_id. (권장: a — "어느 제약사가 어느 취급품을 팔았나"가 자연스럽고 수수료 연결 용이)
-- **D-5 착수 시점**: GAP-10 멀티테넌시 잔여(MT-8/마스터 CRUD/NOT NULL) **이후** 착수 vs 병행. (권장: 이후 — products tenant_id 작업과 충돌)
+- **D-1 마스터 출처**: ✅ **(a) 기존 `products` 마스터 컬럼 기반 + `health_individual_drugs`(심평원)로 보강**. 운영 데이터 보존 + 표준코드/허가정보 심평원 매칭.
+- **D-2 수수료 모델**: ✅ **등급 매트릭스(A~E) 유지 + 소유를 `company_drug_product`로 이전**. 정진팜은 거래처 등급 기반 정산이라 매트릭스 필수(단일율 전환 시 정산 로직 붕괴). `company_drug_product_commission_rates`가 등급별 율(rate_a~e)·base_month·effective range 보유.
+- **D-3 거래처 예외단가**: ✅ **`company_product_overrides` → (company_id, `company_drug_product_id`) 재배치, 기능 유지**. 거래처×취급품 단위.
+- **D-4 실적 참조 단위**: ✅ **(a) `performances.company_drug_product_id`** (제약사 취급품 참조). tenant_id 도 여기서 도출, 수수료 연결 자연스러움. (스냅샷 가격/수수료는 기존대로 실적 행에 고정.)
+- **D-5 착수 시점**: ✅ **GAP-10 멀티테넌시 잔여(MT-8/마스터 CRUD/NOT NULL) 이후 착수**. products tenant_id 작업과 충돌 방지.
 
 ---
 
@@ -116,11 +116,11 @@ health_individual_drugs → drug_products 시드/동기화 원천
 
 | 단계 | 상태 | 비고 |
 |---|---|---|
-| DR-0 설계 | 🟡 진행중 | 2026-05-29 초안. D-1~D-5 확인 대기 |
-| DR-1~6 | ⚪ 대기 | 결정 확정 후 |
+| DR-0 설계 | 🟢 완료 | 2026-05-29. D-1~D-5 전체 확정(§6) |
+| DR-1~6 | ⚪ 대기 | **GAP-10 안정화 후** 착수 (D-5) |
 
 ---
 
-**문서 버전**: 0.1 (초안)
+**문서 버전**: 1.0
 **작성일**: 2026-05-29
-**상태**: 설계 초안 — 열린 결정(§6) 확인 후 DR-1 착수. **GAP-10 안정화 후 진행 권장.**
+**상태**: 🟢 설계 확정 (D-1~D-5) — 착수는 **GAP-10 멀티테넌시 잔여 완료 후**(D-5).
