@@ -194,6 +194,16 @@
 - super_admin / 콘솔 / 큐 / 게스트 → 미설정 = **전역**(비스코프) → 비-HTTP 경로·super_admin 안전
 - 덕분에 tenant_id 가 null 인 사용자(과도기·테스트)는 비스코프로 동작 → **기존 기능 무손상**
 
+### 6.5 마스터 CRUD 1차 (2026-05-29) — 약국·병의원 전역 CRUD (super_admin)
+
+`/platform/pharmacies`·`/platform/hospitals` 를 **전체 resource CRUD** 로 확장(super_admin). 공유 마스터이므로 super_admin 이 직접 소유·관리(D-6).
+- [controller] `Platform\PharmacyController`·`Platform\HospitalController` 에 create/store/show/edit/update/destroy 추가 (`ensureSuperAdmin` 가드)
+- [request] `Platform\Store/Update{Pharmacy,Hospital}Request` — 기존 Request 상속, `authorize`만 `isSuperAdmin` 오버라이드(규칙 재사용)
+- [page] `Platform/{Pharmacies,Hospitals}/{Create,Edit,Show}.vue` — 기존 `Clients/.../Partials/{Pharmacy,Hospital}Form.vue` 파셜 재사용 + Index 에 등록 버튼·행 링크
+- [route] `Route::resource('pharmacies'|'hospitals', ...)` (platform 그룹, super_admin)
+- [test] `PlatformMasterCrudTest` 6 cases. 전체 **327/327 PASS, 회귀 0**
+- **후속**: 의약품(tenant-scoped, 가격/수수료/첨부 등 무거움)·사용자(전역 계정) CRUD 는 별도 단계. 현재 `/platform/products`·`/platform/users` 는 목록·조회.
+
 ### 6.4 MT-7 완료 메모 (2026-05-29) — 격리 회귀 (보안 핵심)
 
 `TenantIsolationTest` 8 cases — 실제 컨트롤러 HTTP 경유로 격리 검증:

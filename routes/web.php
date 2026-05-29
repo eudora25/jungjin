@@ -177,10 +177,13 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('platform')->name('platf
     Route::resource('tenants', PlatformTenantController::class);
     Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
 
-    // 전역 마스터/사용자 조회 (모든 제약사 횡단) — CRUD 는 후속 단계
+    // 공유 마스터(약국·병의원) 전역 CRUD — super_admin 이 직접 관리 (D-6)
+    Route::resource('pharmacies', PlatformPharmacyController::class)
+        ->parameters(['pharmacies' => 'pharmacy']);
+    Route::resource('hospitals', PlatformHospitalController::class);
+
+    // 전역 조회 (의약품·사용자) — CRUD 는 후속 단계
     Route::get('/products', [PlatformProductController::class, 'index'])->name('products.index');
-    Route::get('/hospitals', [PlatformHospitalController::class, 'index'])->name('hospitals.index');
-    Route::get('/pharmacies', [PlatformPharmacyController::class, 'index'])->name('pharmacies.index');
     Route::get('/users', [PlatformUserController::class, 'index'])->name('users.index');
 });
 

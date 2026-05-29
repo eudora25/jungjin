@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { debouncedWatch } from '@vueuse/core';
+import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import InputText from 'primevue/inputtext';
@@ -53,9 +54,14 @@ const onPage = (e: { page: number }) => {
     <Head title="병의원 관리 (공유)" />
     <AdminLayout>
         <div class="flex flex-col gap-4">
-            <div>
-                <h1 class="text-2xl font-bold">병의원 관리 <span class="text-base font-normal text-surface-500">(공유 마스터)</span></h1>
-                <p class="text-surface-500 mt-1 text-sm">전 제약사 공용 병의원 마스터 — 전체 {{ hospitals.total }}건 · 등록/수정은 다음 단계</p>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl font-bold">병의원 관리 <span class="text-base font-normal text-surface-500">(공유 마스터)</span></h1>
+                    <p class="text-surface-500 mt-1 text-sm">전 제약사 공용 병의원 마스터 — 전체 {{ hospitals.total }}건</p>
+                </div>
+                <Link :href="route('platform.hospitals.create')">
+                    <Button label="병의원 등록" icon="pi pi-plus" />
+                </Link>
             </div>
 
             <InputText v-model="search" placeholder="병의원명·코드·사업자번호 검색" class="w-full md:w-[28rem]" />
@@ -66,7 +72,9 @@ const onPage = (e: { page: number }) => {
                 </template>
                 <Column header="병의원명">
                     <template #body="{ data }">
-                        <span class="font-medium">{{ data.hospital_name }}</span>
+                        <Link :href="route('platform.hospitals.show', data.id)" class="font-medium hover:text-primary">
+                            {{ data.hospital_name }}
+                        </Link>
                         <div v-if="data.hospital_code" class="text-xs text-surface-400 mt-1">{{ data.hospital_code }}</div>
                     </template>
                 </Column>
