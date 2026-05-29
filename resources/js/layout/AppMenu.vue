@@ -45,6 +45,7 @@ const model = computed(() => [
     {
         label: '마스터 관리',
         path: '/master-data',
+        visible: isPharma.value,
         items: [
             { label: '마스터 홈', icon: 'pi pi-fw pi-th-large', to: '/master-data', visible: isPharma.value },
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/products' },
@@ -55,6 +56,7 @@ const model = computed(() => [
     {
         label: '거래처',
         path: '/companies',
+        visible: !isPlatform.value,
         items: [
             { label: '업체 관리', icon: 'pi pi-fw pi-briefcase', to: '/companies' },
         ],
@@ -62,6 +64,7 @@ const model = computed(() => [
     {
         label: '실적',
         path: '/performance',
+        visible: !isPlatform.value,
         items: [
             {
                 label: '실적 목록',
@@ -82,6 +85,7 @@ const model = computed(() => [
     },
     {
         label: '정산',
+        visible: !isPlatform.value,
         items: [
             {
                 label: '정산 관리',
