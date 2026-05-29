@@ -4,7 +4,7 @@ use App\Models\Product;
 use App\Models\User;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
 });
 
 test('동일한 insurance_code 로는 두 번째 제품을 등록할 수 없다 (422)', function () {

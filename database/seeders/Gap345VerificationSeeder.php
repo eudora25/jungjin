@@ -52,7 +52,7 @@ class Gap345VerificationSeeder extends Seeder
             [
                 'name' => '관리자',
                 'password' => bcrypt('jungjin1234!'),
-                'role' => 'admin',
+                'role' => 'pharma',
                 'is_active' => true,
             ],
         );
@@ -65,7 +65,7 @@ class Gap345VerificationSeeder extends Seeder
             [
                 'name' => '데모 영업사원',
                 'password' => bcrypt('jungjin1234!'),
-                'role' => 'sales',
+                'role' => 'cso',
                 'is_active' => true,
             ],
         );

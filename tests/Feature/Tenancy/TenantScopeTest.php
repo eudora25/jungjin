@@ -65,7 +65,7 @@ test('실적번호 채번은 테넌트 스코프를 우회해 전역 기준으�
 test('HTTP — admin 은 ResolveTenant 로 자기 제약사 제품만 본다', function () {
     $a = Tenant::factory()->create();
     $b = Tenant::factory()->create();
-    $adminA = User::factory()->create(['role' => 'admin', 'tenant_id' => $a->id]);
+    $adminA = User::factory()->create(['role' => 'pharma', 'tenant_id' => $a->id]);
     Product::factory()->count(2)->create(['tenant_id' => $a->id]);
     Product::factory()->count(3)->create(['tenant_id' => $b->id]);
 
@@ -78,7 +78,7 @@ test('HTTP — admin 은 ResolveTenant 로 자기 제약사 제품만 본다', f
 test('HTTP — super_admin 은 전 제약사 제품을 전역으로 본다', function () {
     $a = Tenant::factory()->create();
     $b = Tenant::factory()->create();
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     Product::factory()->count(2)->create(['tenant_id' => $a->id]);
     Product::factory()->count(3)->create(['tenant_id' => $b->id]);
 

@@ -36,13 +36,14 @@ class LegacyImportUsers extends Command
             if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $this->warn(sprintf('  skip: invalid email (legacy.id=%d, email=%s)', $row->id, $email));
                 $skipped++;
+
                 continue;
             }
 
             $attributes = [
                 'name' => Str::before($email, '@'),
                 'password' => $row->encrypted_password,
-                'role' => $row->is_super_admin ? 'admin' : 'sales',
+                'role' => $row->is_super_admin ? 'pharma' : 'cso',
                 'last_sign_in_at' => $row->last_sign_in_at,
                 'created_at' => $row->created_at,
                 'updated_at' => $row->updated_at,

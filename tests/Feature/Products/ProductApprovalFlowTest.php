@@ -2,10 +2,11 @@
 
 use App\Models\Product;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
 });
 
 test('admin은 draft 제품의 검수를 요청할 수 있다', function () {
@@ -99,7 +100,7 @@ test('반려 시 사유는 필수이며 (422), 사유 입력 시 rejected 로 �
     expect($product->approval_status)->toBe(Product::APPROVAL_REJECTED);
 
     // P3-S5 이후: 사유는 remarks 부기가 아닌 audit log properties.reason 에 저장됨
-    $reject = \Spatie\Activitylog\Models\Activity::query()
+    $reject = Activity::query()
         ->where('subject_type', Product::class)
         ->where('subject_id', $product->id)
         ->where('event', 'reject')
@@ -125,7 +126,7 @@ test('단종 처리 시 status가 discontinued로 바뀌고 대체품/사유가 
     expect($product->replacement_product_id)->toBe($replacement->id);
 
     // P3-S5 이후: 사유는 audit log properties.reason 에 저장됨
-    $disc = \Spatie\Activitylog\Models\Activity::query()
+    $disc = Activity::query()
         ->where('subject_type', Product::class)
         ->where('subject_id', $product->id)
         ->where('event', 'discontinue')

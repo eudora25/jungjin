@@ -10,7 +10,7 @@ class UpdateHospitalRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isAdmin() ?? false;
+        return $this->user()?->isPharma() ?? false;
     }
 
     public function rules(): array

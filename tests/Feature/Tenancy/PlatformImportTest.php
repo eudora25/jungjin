@@ -8,7 +8,7 @@ use Illuminate\Http\UploadedFile;
  */
 function superImporter(): User
 {
-    return User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    return User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 }
 
 /** 공공데이터(약국) 최소 CSV — EUC-KR(CP949) 인코딩 */
@@ -62,7 +62,7 @@ test('super_admin 은 분석 후 확정 적용하면 약국이 생성된다', fu
 });
 
 test('admin 은 플랫폼 import 에 접근할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)->get(route('platform.pharmacies.import.form'))->assertForbidden();
     $this->actingAs($admin)->get(route('platform.hospitals.import.form'))->assertForbidden();

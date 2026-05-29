@@ -33,12 +33,12 @@ test('legacy users are imported with mapped fields', function () {
 
     $alice = User::where('email', 'alice@example.com')->sole();
     expect($alice->name)->toBe('alice');
-    expect($alice->role)->toBe('admin');
+    expect($alice->role)->toBe('pharma');
     expect($alice->password)->toBe('$2y$12$hash_alice');
     expect($alice->last_sign_in_at->format('Y-m-d H:i:s'))->toBe('2024-02-01 12:34:56');
 
     $bob = User::where('email', 'bob@example.com')->sole();
-    expect($bob->role)->toBe('sales');
+    expect($bob->role)->toBe('cso');
     expect($bob->last_sign_in_at)->toBeNull();
 });
 
@@ -46,14 +46,14 @@ test('existing users are preserved and upserted by email', function () {
     $existing = User::factory()->create([
         'email' => 'keep@jungjin.test',
         'name' => '유지될 이름',
-        'role' => 'admin',
+        'role' => 'pharma',
     ]);
 
     DB::connection('legacy')->table('users')->insert([
         'id' => 10,
         'email' => 'newbie@example.com',
         'encrypted_password' => '$2y$12$hash_new',
-            'is_super_admin' => 0,
+        'is_super_admin' => 0,
         'created_at' => now(),
         'updated_at' => now(),
         'last_sign_in_at' => null,

@@ -19,16 +19,16 @@ class CompanyProductOverridePolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function update(User $user, CompanyProductOverride $override): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, CompanyProductOverride $override): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

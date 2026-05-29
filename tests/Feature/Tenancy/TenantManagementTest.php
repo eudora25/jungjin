@@ -7,7 +7,7 @@ use App\Models\User;
  * GAP-10 MT-6 — super_admin 제약사 관리 페이지.
  */
 test('super_admin 은 제약사 목록을 조회한다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     Tenant::factory()->count(2)->create();
 
     $this->actingAs($super)
@@ -17,7 +17,7 @@ test('super_admin 은 제약사 목록을 조회한다', function () {
 });
 
 test('super_admin 은 제약사를 등록한다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     $this->actingAs($super)
         ->post(route('platform.tenants.store'), [
@@ -31,7 +31,7 @@ test('super_admin 은 제약사를 등록한다', function () {
 });
 
 test('제약사 등록 시 제약사명은 필수', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     $this->actingAs($super)
         ->post(route('platform.tenants.store'), ['name' => '', 'status' => 'active'])
@@ -39,7 +39,7 @@ test('제약사 등록 시 제약사명은 필수', function () {
 });
 
 test('super_admin 은 제약사 admin 계정을 생성한다 (위임형)', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     $tenant = Tenant::factory()->create();
 
     $this->actingAs($super)
@@ -53,26 +53,26 @@ test('super_admin 은 제약사 admin 계정을 생성한다 (위임형)', funct
 
     $this->assertDatabaseHas('users', [
         'email' => 'admin@hanmi.test',
-        'role' => 'admin',
+        'role' => 'pharma',
         'tenant_id' => $tenant->id,
     ]);
 });
 
-test('admin 은 제약사 관리에 접근할 수 없다 (role:super_admin)', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+test('admin 은 제약사 관리에 접근할 수 없다 (role:platform)', function () {
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)->get(route('platform.tenants.index'))->assertForbidden();
     $this->actingAs($admin)->post(route('platform.tenants.store'), ['name' => 'X', 'status' => 'active'])->assertForbidden();
 });
 
 test('sales 는 제약사 관리에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)->get(route('platform.tenants.index'))->assertForbidden();
 });
 
 test('super_admin 이 대시보드 진입 시 제약사 관리로 리다이렉트된다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     $this->actingAs($super)
         ->get(route('dashboard'))
@@ -80,11 +80,11 @@ test('super_admin 이 대시보드 진입 시 제약사 관리로 리다이렉�
 });
 
 test('artisan tenancy:make-super-admin 이 기존 사용자를 승격한다', function () {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['role' => 'pharma']);
 
     $this->artisan('tenancy:make-super-admin', ['email' => $user->email])
         ->assertExitCode(0);
 
-    expect($user->fresh()->role)->toBe('super_admin')
+    expect($user->fresh()->role)->toBe('platform')
         ->and($user->fresh()->tenant_id)->toBeNull();
 });

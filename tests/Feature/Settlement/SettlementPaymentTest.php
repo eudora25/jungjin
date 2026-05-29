@@ -32,7 +32,7 @@ function confirmedSettlement(User $admin, ?Company $company = null): Settlement
 // ── 지급 처리 (pay) ────────────────────────────────────────────────────────────
 
 test('지급 처리 시 paid_on 이 필수다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $settlement = confirmedSettlement($admin);
 
     $this->actingAs($admin)
@@ -43,7 +43,7 @@ test('지급 처리 시 paid_on 이 필수다', function () {
 });
 
 test('미래 날짜는 paid_on 으로 사용할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $settlement = confirmedSettlement($admin);
 
     $this->actingAs($admin)
@@ -54,7 +54,7 @@ test('미래 날짜는 paid_on 으로 사용할 수 없다', function () {
 });
 
 test('지급 수단·Batch·메모가 함께 저장된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $settlement = confirmedSettlement($admin);
 
     $this->actingAs($admin)
@@ -75,7 +75,7 @@ test('지급 수단·Batch·메모가 함께 저장된다', function () {
 });
 
 test('잘못된 payment_method 는 거부된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $settlement = confirmedSettlement($admin);
 
     $this->actingAs($admin)
@@ -87,8 +87,8 @@ test('잘못된 payment_method 는 거부된다', function () {
 });
 
 test('영업사원은 지급 처리를 할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $settlement = confirmedSettlement($admin);
 
     $this->actingAs($sales)
@@ -99,7 +99,7 @@ test('영업사원은 지급 처리를 할 수 없다', function () {
 });
 
 test('draft 상태에서는 지급 처리할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -124,7 +124,7 @@ test('draft 상태에서는 지급 처리할 수 없다', function () {
 // ── 정산 목록 Batch 필터 ───────────────────────────────────────────────────────
 
 test('payment_batch_no 필터로 정산 목록을 조회할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $companyA = Company::factory()->create();
     $companyB = Company::factory()->create();
 

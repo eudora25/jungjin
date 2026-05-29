@@ -13,7 +13,7 @@ interface AppUser {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'sales';
+    role: 'pharma' | 'cso';
     is_active: boolean;
 }
 
@@ -32,8 +32,8 @@ const form = useForm({
 });
 
 const roleOptions = [
-    { label: '관리자', value: 'admin' },
-    { label: '영업사원', value: 'sales' },
+    { label: '관리자', value: 'pharma' },
+    { label: '영업사원', value: 'cso' },
 ];
 
 const submit = () => form.put(route('users.update', props.user.id));

@@ -8,8 +8,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
 });
 
 function makeConfirmedSettlement(User $admin, ?Company $company = null): Settlement

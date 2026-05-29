@@ -4,8 +4,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
 });
 
 test('admin 은 사용자 목록을 조회할 수 있다', function () {
@@ -30,14 +30,14 @@ test('admin 이 새 사용자를 등록한다', function () {
             'email' => 'new@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'role' => 'sales',
+            'role' => 'cso',
             'is_active' => true,
         ])
         ->assertRedirect();
 
     $created = User::where('email', 'new@example.com')->first();
     expect($created)->not->toBeNull()
-        ->and($created->role)->toBe('sales')
+        ->and($created->role)->toBe('cso')
         ->and($created->is_active)->toBeTrue()
         ->and(Hash::check('Password123!', $created->password))->toBeTrue();
 });
@@ -51,14 +51,14 @@ test('이메일 중복 시 등록 실패', function () {
             'email' => 'dup@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'role' => 'sales',
+            'role' => 'cso',
         ])
         ->assertSessionHasErrors('email');
 });
 
 test('수정 시 비밀번호를 비우면 기존 비밀번호 유지', function () {
     $user = User::factory()->create([
-        'role' => 'sales',
+        'role' => 'cso',
         'password' => Hash::make('OldPass123!'),
     ]);
 
@@ -66,7 +66,7 @@ test('수정 시 비밀번호를 비우면 기존 비밀번호 유지', function
         ->put(route('users.update', $user), [
             'name' => '수정된이름',
             'email' => $user->email,
-            'role' => 'sales',
+            'role' => 'cso',
             'password' => '',
             'password_confirmation' => '',
         ])
@@ -129,10 +129,10 @@ test('비활성화된 사용자는 로그인할 수 없다', function () {
 });
 
 test('권한/활성 필터링이 동작한다', function () {
-    User::factory()->count(2)->create(['role' => 'admin', 'is_active' => true]);
-    User::factory()->count(3)->create(['role' => 'sales', 'is_active' => false]);
+    User::factory()->count(2)->create(['role' => 'pharma', 'is_active' => true]);
+    User::factory()->count(3)->create(['role' => 'cso', 'is_active' => false]);
 
     $this->actingAs($this->admin)
-        ->get(route('users.index', ['role' => 'sales', 'active' => '0']))
+        ->get(route('users.index', ['role' => 'cso', 'active' => '0']))
         ->assertInertia(fn ($page) => $page->where('users.total', 3));
 });

@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Services\Settlement\SettlementBuilder;
 
 test('승인된 실적만 정산 라인으로 집계된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
     $product = Product::factory()->create(['price' => 5000]);
 
@@ -43,7 +43,7 @@ test('승인된 실적만 정산 라인으로 집계된다', function () {
 });
 
 test('draft 가 아닌 정산은 재계산할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     Settlement::factory()->create([
@@ -55,10 +55,10 @@ test('draft 가 아닌 정산은 재계산할 수 없다', function () {
     $builder = app(SettlementBuilder::class);
 
     $builder->createOrRebuild($company, '2026-05', $admin);
-})->throws(\RuntimeException::class);
+})->throws(RuntimeException::class);
 
 test('관리자만 정산 생성 API 를 호출할 수 있다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
 
     $this->actingAs($sales)

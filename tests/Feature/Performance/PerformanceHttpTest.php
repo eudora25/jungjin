@@ -18,7 +18,7 @@ test('로그인 사용자는 실적 목록·등록 폼에 접근할 수 있다',
 });
 
 test('실적을 등록하면 draft 로 저장되고 스냅샷이 채워진다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 8000]);
 
@@ -57,8 +57,8 @@ test('resolve-preview 는 JSON 으로 미리보기를 반환한다', function ()
 });
 
 test('실적 제출 → 검수 → 승인 워크플로가 동작한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $admin = User::factory()->create(['role' => 'admin']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -103,7 +103,7 @@ test('실적 제출 → 검수 → 승인 워크플로가 동작한다', functio
 });
 
 test('영업사원은 검수·승인을 할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $perf = Performance::factory()->submitted()->create();
 
     $this->actingAs($sales)
@@ -116,7 +116,7 @@ test('영업사원은 검수·승인을 할 수 없다', function () {
 });
 
 test('반려 시 사유가 저장되고 파이프라인 타임스탬프가 초기화된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $perf = Performance::factory()->submitted()->create([
         'submitted_by' => $admin->id,
     ]);
@@ -135,7 +135,7 @@ test('반려 시 사유가 저장되고 파이프라인 타임스탬프가 초�
 });
 
 test('반려 사유 없이 반려하면 검증 실패한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $perf = Performance::factory()->submitted()->create();
 
     $this->actingAs($admin)
@@ -144,7 +144,7 @@ test('반려 사유 없이 반려하면 검증 실패한다', function () {
 });
 
 test('미승인 거래처에 실적을 등록하면 검증 오류가 반환된다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['approval_status' => 'pending']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -161,7 +161,7 @@ test('미승인 거래처에 실적을 등록하면 검증 오류가 반환된�
 });
 
 test('미승인(rejected) 거래처에도 실적 등록이 차단된다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['approval_status' => 'rejected']);
     $product = Product::factory()->create(['price' => 1000]);
 

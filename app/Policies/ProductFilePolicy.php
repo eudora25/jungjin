@@ -19,11 +19,11 @@ class ProductFilePolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, ProductFile $file): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

@@ -35,7 +35,7 @@ class PerformancePolicy
 
     public function view(User $user, Performance $performance): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isPharma()) {
             return true;
         }
 
@@ -57,7 +57,7 @@ class PerformancePolicy
             return false;
         }
 
-        if ($user->isAdmin()) {
+        if ($user->isPharma()) {
             return in_array($performance->status, [
                 Performance::STATUS_DRAFT,
                 Performance::STATUS_REJECTED,
@@ -81,7 +81,7 @@ class PerformancePolicy
             return false;
         }
 
-        return $user->isAdmin()
+        return $user->isPharma()
             || ($performance->created_by === $user->id
                 && in_array($performance->status, [
                     Performance::STATUS_DRAFT,
@@ -91,7 +91,7 @@ class PerformancePolicy
 
     public function uploadFile(User $user, Performance $performance): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isPharma()) {
             return ! in_array($performance->status, [
                 Performance::STATUS_CANCELLED,
             ], true);
@@ -113,29 +113,29 @@ class PerformancePolicy
             return false;
         }
 
-        return $user->isAdmin() || $performance->created_by === $user->id;
+        return $user->isPharma() || $performance->created_by === $user->id;
     }
 
     public function review(User $user, Performance $performance): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && $performance->status === Performance::STATUS_SUBMITTED;
     }
 
     public function approve(User $user, Performance $performance): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && $performance->status === Performance::STATUS_REVIEWED;
     }
 
     public function reject(User $user, Performance $performance): bool
     {
-        return $user->isAdmin() && $performance->isRejectable();
+        return $user->isPharma() && $performance->isRejectable();
     }
 
     public function cancel(User $user, Performance $performance): bool
     {
-        if (! $user->isAdmin()) {
+        if (! $user->isPharma()) {
             return false;
         }
 

@@ -14,9 +14,7 @@ use Inertia\Response;
 
 class SalesQuotaController extends Controller
 {
-    public function __construct(private readonly QuotaAchievementService $achievement)
-    {
-    }
+    public function __construct(private readonly QuotaAchievementService $achievement) {}
 
     public function index(Request $request): Response
     {
@@ -58,7 +56,7 @@ class SalesQuotaController extends Controller
                 ];
             });
 
-        $salesUsers = User::where('role', 'sales')->where('is_active', true)
+        $salesUsers = User::where('role', 'cso')->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 

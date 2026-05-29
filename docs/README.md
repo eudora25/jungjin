@@ -44,3 +44,7 @@
 ## 문서 이동 (2026-05-29)
 
 이전 flat 경로(`docs/ROADMAP.md` 등)는 위 하위 폴더로 옮겼습니다. 링크는 상대 경로·`docs/...` 절대 경로 모두 갱신했습니다.
+
+아이디(이메일)  │ admin@jungjin.test                       
+비밀번호       │ jungjin1234!
+역할          │ super_admin (방금 승격, tenant_id = null) 

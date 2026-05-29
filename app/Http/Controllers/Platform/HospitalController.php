@@ -18,7 +18,7 @@ class HospitalController extends Controller
 {
     private function ensureSuperAdmin(Request $request): void
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
     }
 
     public function index(Request $request): Response

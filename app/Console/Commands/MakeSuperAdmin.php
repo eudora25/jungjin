@@ -29,7 +29,7 @@ class MakeSuperAdmin extends Command
         $user = User::where('email', $email)->first();
 
         if ($user) {
-            $user->update(['role' => User::ROLE_SUPER_ADMIN, 'tenant_id' => null, 'is_active' => true]);
+            $user->update(['role' => User::ROLE_PLATFORM, 'tenant_id' => null, 'is_active' => true]);
             $this->info("기존 사용자 [{$email}] 를 super_admin 으로 승격했습니다.");
 
             return self::SUCCESS;
@@ -40,7 +40,7 @@ class MakeSuperAdmin extends Command
             'name' => $this->option('name') ?: '플랫폼 운영자',
             'email' => $email,
             'password' => Hash::make($password),
-            'role' => User::ROLE_SUPER_ADMIN,
+            'role' => User::ROLE_PLATFORM,
             'tenant_id' => null,
             'is_active' => true,
         ]);

@@ -9,7 +9,7 @@ use App\Models\User;
  */
 function superAdmin(): User
 {
-    return User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    return User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 }
 
 // ---- 약국 ----
@@ -66,7 +66,7 @@ test('super_admin 은 병의원을 수정한다', function () {
 // ---- 권한 차단 ----
 
 test('admin 은 플랫폼 약국/병의원 CRUD 에 접근할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)->get(route('platform.pharmacies.create'))->assertForbidden();
     $this->actingAs($admin)->post(route('platform.pharmacies.store'), ['pharmacy_name' => 'X'])->assertForbidden();

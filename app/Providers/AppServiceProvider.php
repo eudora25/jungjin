@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         //  2) admin/sales(테넌트 보유) → 다른 테넌트의 자원 접근 차단 (방어선; 1차 격리는 TenantScope)
         //  3) 그 외(null 테넌트/게스트) → 통과시켜 기존 Policy 로 위임 (과도기 호환)
         Gate::before(function (User $user, string $ability, array $arguments = []) {
-            if ($user->isSuperAdmin()) {
+            if ($user->isPlatform()) {
                 return true;
             }
 

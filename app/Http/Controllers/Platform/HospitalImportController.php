@@ -26,7 +26,7 @@ class HospitalImportController extends Controller
 
     public function form(Request $request): Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         return Inertia::render('Clients/Hospitals/Import', [
             'requiredHeaders' => HospitalImportService::REQUIRED_HEADERS,
@@ -38,7 +38,7 @@ class HospitalImportController extends Controller
 
     public function handle(ImportHospitalsRequest $request): RedirectResponse|Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         $mode = $request->validated('mode');
         $userId = $request->user()->id;

@@ -19,26 +19,26 @@ class CompanyPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function update(User $user, Company $company): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, Company $company): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function restore(User $user, Company $company): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function forceDelete(User $user, Company $company): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

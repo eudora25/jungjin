@@ -11,9 +11,7 @@ use Illuminate\Http\RedirectResponse;
 
 class ProductPriceController extends Controller
 {
-    public function __construct(private readonly ProductPriceService $service)
-    {
-    }
+    public function __construct(private readonly ProductPriceService $service) {}
 
     public function store(StoreProductPriceRequest $request, Product $product): RedirectResponse
     {

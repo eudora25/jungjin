@@ -13,11 +13,11 @@ class MonthlyReportPolicy
 {
     public function viewAny(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->isPharma();
     }
 
     public function export(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->isPharma();
     }
 }

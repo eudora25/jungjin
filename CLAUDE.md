@@ -50,7 +50,8 @@
   - GAP-10 MT-5: 테넌트 권한 게이트 — 🟢 **완료** (단일 `Gate::before`: super_admin 전체 통과 + 교차 테넌트 거부 + null 테넌트 위임)
   - GAP-10 MT-7: 테넌트 격리 회귀 — 🟢 **완료** (`TenantIsolationTest` 8 — 거래처·실적·정산·목표 목록 자사 격리 / 교차 테넌트 상세 403 / 생성 자동주입. 회귀 0)
   - GAP-10 마스터 CRUD(1차): `/platform` 약국·병의원 전역 CRUD + 공공데이터 CSV 일괄 등록 — 🟢 **완료** (super_admin 직접 관리, 기존 Form Request·import 서비스 재사용. samples CSV 검증. 의약품·사용자 CRUD는 후속)
-- 테스트: `./vendor/bin/sail test` 기준 **331개 전체 통과** (2026-05-29)
+  - GAP-10 role 리네임 + 코드 테이블 — 🟢 **완료**: `users.role` = **`platform`/`pharma`/`cso`** (구 super_admin/admin/sales), 헬퍼 `isPlatform/isPharma/isCso`. 코드 의미는 `code_definitions`(group_code=`user_role`) 테이블에 저장·조회. tenant_id=null 로 구분 안 함
+- 테스트: `./vendor/bin/sail test` 기준 **334개 전체 통과** (2026-05-29)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)

@@ -5,8 +5,8 @@ use App\Models\Settlement;
 use App\Models\User;
 
 test('관리자만 정산 상태 전이를 할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -25,7 +25,7 @@ test('관리자만 정산 상태 전이를 할 수 있다', function () {
 });
 
 test('정산: draft→confirmed→paid 상태 전이가 동작한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -55,7 +55,7 @@ test('정산: draft→confirmed→paid 상태 전이가 동작한다', function 
 });
 
 test('확정된 정산은 재계산할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -71,4 +71,3 @@ test('확정된 정산은 재계산할 수 없다', function () {
 
     $this->actingAs($admin)->post(route('settlements.recalculate', $settlement))->assertForbidden();
 });
-

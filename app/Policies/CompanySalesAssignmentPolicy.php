@@ -20,11 +20,11 @@ class CompanySalesAssignmentPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, CompanySalesAssignment $assignment): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

@@ -4,10 +4,11 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\User;
 use App\Services\Products\ProductPriceService;
+use Carbon\Carbon;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
     $this->product = Product::factory()->create();
 });
 
@@ -72,11 +73,11 @@ test('currentPriceOf 는 시점에 적용 중인 이력을 정확히 돌려준�
 
     $product = $this->product->fresh();
 
-    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, \Carbon\Carbon::parse('2026-02-15'))->amount)
+    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, Carbon::parse('2026-02-15'))->amount)
         ->toEqual(1000);
-    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, \Carbon\Carbon::parse('2026-04-15'))->amount)
+    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, Carbon::parse('2026-04-15'))->amount)
         ->toEqual(2000);
-    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, \Carbon\Carbon::parse('2025-12-31')))
+    expect($product->currentPriceOf(ProductPrice::TYPE_SALE, Carbon::parse('2025-12-31')))
         ->toBeNull();
 });
 

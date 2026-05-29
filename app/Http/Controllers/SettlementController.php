@@ -10,22 +10,20 @@ use App\Models\Performance;
 use App\Models\Settlement;
 use App\Services\Settlement\SettlementBuilder;
 use App\Services\Settlement\SettlementExcelExporter;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SettlementController extends Controller
 {
     public function __construct(
         private readonly SettlementBuilder $builder,
         private readonly SettlementExcelExporter $excelExporter,
-    )
-    {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -39,7 +37,7 @@ class SettlementController extends Controller
 
         $settlements = Settlement::query()
             ->with(['company:id,company_name'])
-            ->when(! $user->isAdmin(), fn ($q) => $q->whereHas(
+            ->when(! $user->isPharma(), fn ($q) => $q->whereHas(
                 'lines.performance',
                 fn ($p) => $p->where('created_by', $user->id),
             ))

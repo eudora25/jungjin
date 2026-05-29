@@ -6,7 +6,6 @@ use App\Http\Requests\ImportProductsRequest;
 use App\Models\Product;
 use App\Services\Products\ProductImportService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -21,9 +20,7 @@ class ProductImportController extends Controller
     /** 분석 결과 토큰 보존 시간 (분) */
     private const TOKEN_TTL_MIN = 30;
 
-    public function __construct(private readonly ProductImportService $service)
-    {
-    }
+    public function __construct(private readonly ProductImportService $service) {}
 
     public function form(): Response
     {

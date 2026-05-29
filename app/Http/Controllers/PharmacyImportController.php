@@ -18,9 +18,7 @@ class PharmacyImportController extends Controller
 
     private const TOKEN_TTL_MIN = 30;
 
-    public function __construct(private readonly PharmacyImportService $service)
-    {
-    }
+    public function __construct(private readonly PharmacyImportService $service) {}
 
     public function form(): Response
     {
@@ -111,4 +109,3 @@ class PharmacyImportController extends Controller
         return redirect()->route('pharmacies.index')->with('success', $msg);
     }
 }
-

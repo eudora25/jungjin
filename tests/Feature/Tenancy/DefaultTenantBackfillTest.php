@@ -24,8 +24,8 @@ test('마이그레이션이 기본 제약사를 시드한다', function () {
 
 test('백필: tenant_id 없는 admin/sales 가 기본 제약사로 채워진다', function () {
     // 레거시 상황 재현 — tenant_id 없는 사용자
-    $admin = User::factory()->create(['role' => 'admin', 'tenant_id' => null]);
-    $sales = User::factory()->create(['role' => 'sales', 'tenant_id' => null]);
+    $admin = User::factory()->create(['role' => 'pharma', 'tenant_id' => null]);
+    $sales = User::factory()->create(['role' => 'cso', 'tenant_id' => null]);
 
     runBackfillMigration();
 
@@ -35,7 +35,7 @@ test('백필: tenant_id 없는 admin/sales 가 기본 제약사로 채워진다'
 });
 
 test('백필: super_admin 은 tenant_id 가 NULL 로 유지된다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     runBackfillMigration();
 
@@ -44,7 +44,7 @@ test('백필: super_admin 은 tenant_id 가 NULL 로 유지된다', function () 
 
 test('백필: 이미 소속이 있는 사용자는 덮어쓰지 않는다', function () {
     $other = Tenant::factory()->create();
-    $user = User::factory()->create(['role' => 'admin', 'tenant_id' => $other->id]);
+    $user = User::factory()->create(['role' => 'pharma', 'tenant_id' => $other->id]);
 
     runBackfillMigration();
 

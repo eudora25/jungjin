@@ -7,7 +7,7 @@ use App\Models\Settlement;
 use App\Models\User;
 
 test('관리자는 정산 Excel 을 다운로드할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -36,8 +36,8 @@ test('관리자는 정산 Excel 을 다운로드할 수 있다', function () {
 });
 
 test('영업사원은 정산 Excel 을 다운로드할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $admin = User::factory()->create(['role' => 'admin']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -53,4 +53,3 @@ test('영업사원은 정산 Excel 을 다운로드할 수 없다', function () 
         ->get(route('settlements.export.excel', $settlement))
         ->assertForbidden();
 });
-

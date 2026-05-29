@@ -19,16 +19,16 @@ class ProductPricePolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function update(User $user, ProductPrice $price): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, ProductPrice $price): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

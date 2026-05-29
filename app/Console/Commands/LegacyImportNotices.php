@@ -36,6 +36,7 @@ class LegacyImportNotices extends Command
             if (empty(trim((string) $row->title))) {
                 $this->warn(sprintf('  skip: empty title (legacy.id=%d)', $row->id));
                 $skipped++;
+
                 continue;
             }
 
@@ -102,6 +103,7 @@ class LegacyImportNotices extends Command
             if (! isset($validNoticeIds[$row->notice_id])) {
                 $this->warn(sprintf('  skip: orphan notice_file (id=%d, notice_id=%s)', $row->id, $row->notice_id));
                 $skipped++;
+
                 continue;
             }
 

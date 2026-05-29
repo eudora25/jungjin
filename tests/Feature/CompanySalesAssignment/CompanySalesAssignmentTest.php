@@ -14,8 +14,8 @@ test('비로그인 사용자는 담당 배정에 접근할 수 없다', function
 });
 
 test('영업사원은 담당 배정을 등록할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $other = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $other = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
 
     $this->actingAs($sales)
@@ -24,8 +24,8 @@ test('영업사원은 담당 배정을 등록할 수 없다', function () {
 });
 
 test('관리자는 영업사원을 거래처에 배정할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales', 'is_active' => true]);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso', 'is_active' => true]);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -43,8 +43,8 @@ test('관리자는 영업사원을 거래처에 배정할 수 있다', function 
 // ── 검증 규칙 ──────────────────────────────────────────────────────────────────
 
 test('영업사원이 아닌 사용자는 담당으로 지정할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $otherAdmin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $otherAdmin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -55,8 +55,8 @@ test('영업사원이 아닌 사용자는 담당으로 지정할 수 없다', fu
 });
 
 test('비활성 영업사원은 담당으로 지정할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales', 'is_active' => false]);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso', 'is_active' => false]);
     $company = Company::factory()->create();
 
     $this->actingAs($admin)
@@ -65,8 +65,8 @@ test('비활성 영업사원은 담당으로 지정할 수 없다', function () 
 });
 
 test('같은 거래처에 같은 영업사원을 중복 배정할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales', 'is_active' => true]);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso', 'is_active' => true]);
     $company = Company::factory()->create();
 
     CompanySalesAssignment::create([
@@ -86,8 +86,8 @@ test('같은 거래처에 같은 영업사원을 중복 배정할 수 없다', f
 // ── 삭제 ──────────────────────────────────────────────────────────────────────
 
 test('관리자는 담당 배정을 해제할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
 
     $assignment = CompanySalesAssignment::create([
@@ -105,8 +105,8 @@ test('관리자는 담당 배정을 해제할 수 있다', function () {
 });
 
 test('영업사원은 담당 배정을 해제할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
 
     $assignment = CompanySalesAssignment::create([
@@ -122,8 +122,8 @@ test('영업사원은 담당 배정을 해제할 수 없다', function () {
 });
 
 test('다른 거래처 ID로 배정 해제 시도하면 404', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $companyA = Company::factory()->create();
     $companyB = Company::factory()->create();
 
@@ -144,8 +144,8 @@ test('다른 거래처 ID로 배정 해제 시도하면 404', function () {
 // ── 거래처 상세 prop ──────────────────────────────────────────────────────────
 
 test('거래처 상세 페이지에 담당 영업사원 목록이 prop으로 전달된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales', 'is_active' => true]);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso', 'is_active' => true]);
     $company = Company::factory()->create();
 
     CompanySalesAssignment::create([
@@ -168,8 +168,8 @@ test('거래처 상세 페이지에 담당 영업사원 목록이 prop으로 전
 // ── 거래처 검색 우선순위 ───────────────────────────────────────────────────────
 
 test('영업사원이 거래처를 검색하면 본인 담당 거래처가 먼저 노출된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $assigned = Company::factory()->create(['company_name' => 'Z거래처', 'status' => 'active']);
     $other = Company::factory()->create(['company_name' => 'A거래처', 'status' => 'active']);
@@ -192,8 +192,8 @@ test('영업사원이 거래처를 검색하면 본인 담당 거래처가 먼�
 });
 
 test('assigned_to_me 필터는 본인 담당 거래처만 반환한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $assigned = Company::factory()->create(['status' => 'active']);
     Company::factory()->create(['status' => 'active']); // 미배정
@@ -217,8 +217,8 @@ test('assigned_to_me 필터는 본인 담당 거래처만 반환한다', functio
 // ── Sales 대시보드 prop ────────────────────────────────────────────────────────
 
 test('Sales 대시보드 props 에 myAssignedCompanies 가 포함된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['company_name' => '내거래처']);
 
     CompanySalesAssignment::create([

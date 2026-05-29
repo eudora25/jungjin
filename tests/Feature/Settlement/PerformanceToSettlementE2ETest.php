@@ -14,8 +14,8 @@ use App\Models\User;
  * Phase 4 E2E: 마스터(예외 단가·예외 수수료·매출가·매트릭스) → 실적 스냅샷 → 정산 라인 복사 일관성.
  */
 test('실적 등록(HTTP) → 승인 → 정산 재계산 시 라인이 실적 스냅샷과 동일하다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $company = Company::factory()->create(['default_commission_grade' => 'b']);
     $product = Product::factory()->create(['price' => 10000]);
@@ -113,7 +113,7 @@ test('실적 등록(HTTP) → 승인 → 정산 재계산 시 라인이 실적 �
 });
 
 test('같은 월에 승인 실적이 두 건이면 정산 합계가 실적 합과 같다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 2000]);
 

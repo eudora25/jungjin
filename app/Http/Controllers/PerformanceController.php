@@ -21,9 +21,7 @@ use Spatie\Activitylog\Models\Activity;
 
 class PerformanceController extends Controller
 {
-    public function __construct(private readonly PerformanceResolver $resolver)
-    {
-    }
+    public function __construct(private readonly PerformanceResolver $resolver) {}
 
     /**
      * 실적 목록 (S3 에서 필터 확장).
@@ -42,7 +40,7 @@ class PerformanceController extends Controller
 
         $performances = Performance::query()
             ->with(['company:id,company_name', 'product:id,product_name,insurance_code', 'creator:id,name'])
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('created_by', $user->id))
+            ->when(! $user->isPharma(), fn ($q) => $q->where('created_by', $user->id))
             ->when(in_array($status, Performance::STATUSES, true), fn ($q) => $q->where('status', $status))
             ->when($from, fn ($q) => $q->where('performance_date', '>=', $from))
             ->when($to, fn ($q) => $q->where('performance_date', '<=', $to))
@@ -65,7 +63,7 @@ class PerformanceController extends Controller
             'statuses' => Performance::STATUSES,
             'can' => [
                 'create' => $user->can('create', Performance::class),
-                'viewCreator' => $user->isAdmin(),
+                'viewCreator' => $user->isPharma(),
             ],
         ]);
     }
@@ -153,7 +151,7 @@ class PerformanceController extends Controller
         }
 
         $perf = DB::transaction(function () use ($company, $product, $data, $user): Performance {
-            $perf = new Performance();
+            $perf = new Performance;
             $this->resolver->fill($perf, $company, $product, [
                 'performance_no' => Performance::nextNumberFor($data['performance_date']),
                 'performance_date' => $data['performance_date'],

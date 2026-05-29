@@ -21,7 +21,7 @@ class StoreCompanySalesAssignmentRequest extends FormRequest
             'user_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', 'sales')->where('is_active', true)),
+                Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', 'cso')->where('is_active', true)),
                 Rule::unique('company_sales_assignments', 'user_id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
         ];

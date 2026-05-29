@@ -78,7 +78,7 @@ class CompanyController extends Controller
         $assignedUserId = null;
         if ($request->boolean('assigned_to_me') && $user) {
             $assignedUserId = $user->id;
-        } elseif ($user?->isAdmin() && $request->filled('assigned_user_id')) {
+        } elseif ($user?->isPharma() && $request->filled('assigned_user_id')) {
             $assignedUserId = $request->integer('assigned_user_id');
         }
 
@@ -98,7 +98,7 @@ class CompanyController extends Controller
             )
             ->when(
                 // sales 가 자기 자신의 우선 노출만 원할 때(필터 X 단순 정렬): 담당 거래처 먼저
-                $assignedUserId === null && $user?->isSales(),
+                $assignedUserId === null && $user?->isCso(),
                 function ($qb) use ($user) {
                     $qb->leftJoin('company_sales_assignments as csa', function ($j) use ($user) {
                         $j->on('csa.company_id', '=', 'companies.id')->where('csa.user_id', '=', $user->id);
@@ -164,7 +164,7 @@ class CompanyController extends Controller
 
         $assignedUserIds = $salesAssignments->pluck('user_id')->all();
         $availableSalesUsers = User::query()
-            ->where('role', 'sales')
+            ->where('role', 'cso')
             ->where('is_active', true)
             ->whereNotIn('id', $assignedUserIds)
             ->orderBy('name')

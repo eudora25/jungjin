@@ -16,16 +16,17 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    public const ROLE_SUPER_ADMIN = 'super_admin';
+    // 권한 코드 값 (의미 정의는 code_definitions 테이블 group_code='user_role' 참조)
+    public const ROLE_PLATFORM = 'platform'; // 정진팜 플랫폼 운영자 (구 super_admin)
 
-    public const ROLE_ADMIN = 'admin';
+    public const ROLE_PHARMA = 'pharma';     // 제약사 관리자 (구 admin)
 
-    public const ROLE_SALES = 'sales';
+    public const ROLE_CSO = 'cso';           // 영업 (CSO, 구 sales)
 
     public const ROLES = [
-        self::ROLE_SUPER_ADMIN,
-        self::ROLE_ADMIN,
-        self::ROLE_SALES,
+        self::ROLE_PLATFORM,
+        self::ROLE_PHARMA,
+        self::ROLE_CSO,
     ];
 
     /**
@@ -43,15 +44,16 @@ class User extends Authenticatable
         'last_sign_in_at',
     ];
 
-    /** 플랫폼 운영자 (정진팜) — 소속 테넌트 없음 */
-    public function isSuperAdmin(): bool
+    /** 정진팜 플랫폼 운영자 (구 super_admin) — 소속 테넌트 없음 */
+    public function isPlatform(): bool
     {
-        return $this->role === self::ROLE_SUPER_ADMIN;
+        return $this->role === self::ROLE_PLATFORM;
     }
 
-    public function isAdmin(): bool
+    /** 제약사 관리자 (구 admin) */
+    public function isPharma(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->role === self::ROLE_PHARMA;
     }
 
     public function isActive(): bool
@@ -59,12 +61,13 @@ class User extends Authenticatable
         return (bool) $this->is_active;
     }
 
-    public function isSales(): bool
+    /** 영업 (CSO, 구 sales) */
+    public function isCso(): bool
     {
-        return $this->role === self::ROLE_SALES;
+        return $this->role === self::ROLE_CSO;
     }
 
-    /** 소속 제약사(테넌트) — super_admin 은 null */
+    /** 소속 제약사(테넌트) — platform 은 null */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

@@ -18,7 +18,7 @@ function cp949(string $utf8): string
 test('관리자는 약국 CSV를 분석하고 적용할 수 있다 (CP949)', function () {
     Storage::fake('local');
 
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $utf8 = implode("\n", [
         '관리번호,사업장명,영업상태명,도로명우편번호,도로명주소,전화번호,지번주소,소재지우편번호',
@@ -58,11 +58,10 @@ test('관리자는 약국 CSV를 분석하고 적용할 수 있다 (CP949)', fun
 test('영업사원은 약국 CSV import에 접근할 수 없다', function () {
     Storage::fake('local');
 
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $file = UploadedFile::fake()->createWithContent('pharmacies.csv', cp949('관리번호,사업장명,영업상태명'."\n".'PHMD-001,테스트약국,영업/정상'."\n"));
 
     $this->actingAs($sales)
         ->post(route('pharmacies.import.handle'), ['mode' => 'analyze', 'file' => $file])
         ->assertForbidden();
 });
-

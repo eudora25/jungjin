@@ -18,9 +18,7 @@ class HospitalImportController extends Controller
 
     private const TOKEN_TTL_MIN = 30;
 
-    public function __construct(private readonly HospitalImportService $service)
-    {
-    }
+    public function __construct(private readonly HospitalImportService $service) {}
 
     public function form(): Response
     {
@@ -111,4 +109,3 @@ class HospitalImportController extends Controller
         return redirect()->route('hospitals.index')->with('success', $msg);
     }
 }
-

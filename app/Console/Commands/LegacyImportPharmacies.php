@@ -36,6 +36,7 @@ class LegacyImportPharmacies extends Command
             if ($name === '') {
                 $this->warn(sprintf('  skip: empty pharmacy_name (legacy.id=%d)', $row->id));
                 $skipped++;
+
                 continue;
             }
 
@@ -47,12 +48,14 @@ class LegacyImportPharmacies extends Command
             if ($bizNo && isset($seenBizNos[$bizNo])) {
                 $this->warn(sprintf('  skip: duplicate legacy business_registration_number=%s (legacy.id=%d)', $bizNo, $row->id));
                 $skipped++;
+
                 continue;
             }
 
             if ($code && isset($seenCodes[$code])) {
                 $this->warn(sprintf('  skip: duplicate legacy pharmacy_code=%s (legacy.id=%d)', $code, $row->id));
                 $skipped++;
+
                 continue;
             }
 
@@ -122,4 +125,3 @@ class LegacyImportPharmacies extends Command
         return self::SUCCESS;
     }
 }
-

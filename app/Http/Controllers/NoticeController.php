@@ -82,7 +82,7 @@ class NoticeController extends Controller
         ]);
 
         $readStats = null;
-        if ($request->user()->isAdmin()) {
+        if ($request->user()->isPharma()) {
             $totalUsers = User::where('is_active', true)->count();
             $readers = $notice->readers()
                 ->where('users.is_active', true)

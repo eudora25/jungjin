@@ -42,6 +42,7 @@ class LegacyImportHospitals extends Command
             if ($name === '') {
                 $this->warn(sprintf('  skip: empty hospital_name (legacy.id=%d)', $row->id));
                 $skipped++;
+
                 continue;
             }
 
@@ -104,4 +105,3 @@ class LegacyImportHospitals extends Command
         return self::SUCCESS;
     }
 }
-

@@ -22,7 +22,7 @@ function makePerf(User $user, string $status, string $date, int $qty, float $uni
 }
 
 test('myMonthlyChart 는 최근 12개월 라벨과 승인 실적 월별 합계를 반환한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $thisMonth = now()->format('Y-m');
     $lastMonth = now()->subMonth()->format('Y-m');
@@ -37,7 +37,7 @@ test('myMonthlyChart 는 최근 12개월 라벨과 승인 실적 월별 합계�
     makePerf($sales, Performance::STATUS_APPROVED, now()->subMonth()->startOfMonth()->toDateString(), 1, 5000);
 
     // 다른 영업사원의 승인 실적 → 제외
-    $other = User::factory()->create(['role' => 'sales']);
+    $other = User::factory()->create(['role' => 'cso']);
     makePerf($other, Performance::STATUS_APPROVED, now()->startOfMonth()->toDateString(), 99, 9999);
 
     $this->actingAs($sales)
@@ -55,7 +55,7 @@ test('myMonthlyChart 는 최근 12개월 라벨과 승인 실적 월별 합계�
 });
 
 test('recentRejected 는 본인 반려 실적을 최신순 최대 5건, 사유와 함께 반환한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     // 반려 6건 생성 (updated_at 으로 정렬 검증)
     for ($i = 0; $i < 6; $i++) {
@@ -66,7 +66,7 @@ test('recentRejected 는 본인 반려 실적을 최신순 최대 5건, 사유�
     }
 
     // 다른 사용자 반려 → 제외
-    $other = User::factory()->create(['role' => 'sales']);
+    $other = User::factory()->create(['role' => 'cso']);
     makePerf($other, Performance::STATUS_REJECTED, now()->toDateString(), 1, 1000, ['rejected_reason' => '남의 사유']);
 
     $this->actingAs($sales)
@@ -81,14 +81,14 @@ test('recentRejected 는 본인 반려 실적을 최신순 최대 5건, 사유�
 });
 
 test('statusCounts.draft 는 본인 임시저장 실적 건수를 반환한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     makePerf($sales, Performance::STATUS_DRAFT, now()->toDateString(), 1, 1000);
     makePerf($sales, Performance::STATUS_DRAFT, now()->toDateString(), 1, 1000);
     makePerf($sales, Performance::STATUS_APPROVED, now()->toDateString(), 1, 1000);
 
     // 다른 사용자 draft → 제외
-    $other = User::factory()->create(['role' => 'sales']);
+    $other = User::factory()->create(['role' => 'cso']);
     makePerf($other, Performance::STATUS_DRAFT, now()->toDateString(), 1, 1000);
 
     $this->actingAs($sales)

@@ -33,6 +33,7 @@ class LegacyImportHospitalCompanyAssignments extends Command
             if ($cid === null || ! isset($knownHospitals[$hid]) || ! isset($knownCompanies[$cid])) {
                 $this->warn(sprintf('  skip: unknown ref (legacy.id=%d, hospital_id=%d, company_id=%s)', $row->id, $hid, $cid === null ? 'NULL' : (string) $cid));
                 $skipped++;
+
                 continue;
             }
 
@@ -78,4 +79,3 @@ class LegacyImportHospitalCompanyAssignments extends Command
         return self::SUCCESS;
     }
 }
-

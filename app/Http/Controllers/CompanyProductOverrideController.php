@@ -11,9 +11,7 @@ use Illuminate\Http\RedirectResponse;
 
 class CompanyProductOverrideController extends Controller
 {
-    public function __construct(private readonly CompanyProductOverrideService $service)
-    {
-    }
+    public function __construct(private readonly CompanyProductOverrideService $service) {}
 
     public function store(StoreCompanyProductOverrideRequest $request, Product $product): RedirectResponse
     {

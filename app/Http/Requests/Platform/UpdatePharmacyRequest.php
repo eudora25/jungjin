@@ -8,6 +8,6 @@ class UpdatePharmacyRequest extends BaseUpdatePharmacyRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSuperAdmin() ?? false;
+        return $this->user()?->isPlatform() ?? false;
     }
 }

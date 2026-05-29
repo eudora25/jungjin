@@ -14,7 +14,7 @@ interface UserRow {
     id: number;
     name: string;
     email: string;
-    role: 'super_admin' | 'admin' | 'sales';
+    role: 'platform' | 'pharma' | 'cso';
     is_active: boolean;
     tenant_name: string | null;
 }
@@ -37,15 +37,15 @@ const role = ref(props.filters.role ?? null);
 
 const roleOptions = [
     { label: '전체', value: null },
-    { label: '플랫폼 운영자', value: 'super_admin' },
-    { label: '제약사 관리자', value: 'admin' },
-    { label: '영업사원', value: 'sales' },
+    { label: '플랫폼 운영자', value: 'platform' },
+    { label: '제약사 관리자', value: 'pharma' },
+    { label: '영업사원', value: 'cso' },
 ];
 
 const roleLabel = (r: string) =>
-    ({ super_admin: '플랫폼 운영자', admin: '제약사 관리자', sales: '영업사원' })[r] ?? r;
+    ({ platform: '플랫폼 운영자', pharma: '제약사 관리자', cso: '영업(CSO)' })[r] ?? r;
 const roleSeverity = (r: string) =>
-    ({ super_admin: 'danger', admin: 'info', sales: 'secondary' })[r] as any;
+    ({ platform: 'danger', pharma: 'info', cso: 'secondary' })[r] as any;
 
 const refresh = () => {
     router.get(route('platform.users.index'),

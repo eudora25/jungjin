@@ -4,8 +4,8 @@ use App\Models\Company;
 use App\Models\User;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
 });
 
 test('any authenticated user can list companies', function () {

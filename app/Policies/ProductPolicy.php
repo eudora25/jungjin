@@ -19,27 +19,27 @@ class ProductPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function update(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function restore(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function forceDelete(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     /**
@@ -47,7 +47,7 @@ class ProductPolicy
      */
     public function submit(User $user, Product $product): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && in_array($product->approval_status, [
                 Product::APPROVAL_DRAFT,
                 Product::APPROVAL_REJECTED,
@@ -59,7 +59,7 @@ class ProductPolicy
      */
     public function review(User $user, Product $product): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && $product->approval_status === Product::APPROVAL_PENDING;
     }
 
@@ -68,7 +68,7 @@ class ProductPolicy
      */
     public function approve(User $user, Product $product): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && $product->approval_status === Product::APPROVAL_REVIEWED;
     }
 
@@ -77,7 +77,7 @@ class ProductPolicy
      */
     public function reject(User $user, Product $product): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && in_array($product->approval_status, [
                 Product::APPROVAL_PENDING,
                 Product::APPROVAL_REVIEWED,
@@ -89,7 +89,7 @@ class ProductPolicy
      */
     public function discontinue(User $user, Product $product): bool
     {
-        return $user->isAdmin()
+        return $user->isPharma()
             && $product->status !== Product::STATUS_DISCONTINUED;
     }
 }

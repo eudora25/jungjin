@@ -8,6 +8,6 @@ class StoreHospitalRequest extends BaseStoreHospitalRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSuperAdmin() ?? false;
+        return $this->user()?->isPlatform() ?? false;
     }
 }

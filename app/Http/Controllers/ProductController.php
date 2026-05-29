@@ -6,14 +6,21 @@ use App\Http\Requests\DiscontinueProductRequest;
 use App\Http\Requests\RejectProductRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Models\ChangeReason;
+use App\Models\CompanyProductOverride;
+use App\Models\Performance;
 use App\Models\Product;
+use App\Models\ProductFile;
+use App\Models\ProductPrice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class ProductController extends Controller
 {
@@ -173,32 +180,32 @@ class ProductController extends Controller
             'override' => $product->companyOverrides->pluck('id')->all(),
         ];
 
-        $activities = \Spatie\Activitylog\Models\Activity::query()
+        $activities = Activity::query()
             ->where(function ($q) use ($product, $childIds) {
                 $q->where(function ($qq) use ($product) {
-                    $qq->where('subject_type', \App\Models\Product::class)
+                    $qq->where('subject_type', Product::class)
                         ->where('subject_id', $product->id);
                 })
-                ->orWhere(function ($qq) use ($childIds) {
-                    if (! empty($childIds['price'])) {
-                        $qq->orWhere(function ($x) use ($childIds) {
-                            $x->where('subject_type', \App\Models\ProductPrice::class)
-                                ->whereIn('subject_id', $childIds['price']);
-                        });
-                    }
-                    if (! empty($childIds['file'])) {
-                        $qq->orWhere(function ($x) use ($childIds) {
-                            $x->where('subject_type', \App\Models\ProductFile::class)
-                                ->whereIn('subject_id', $childIds['file']);
-                        });
-                    }
-                    if (! empty($childIds['override'])) {
-                        $qq->orWhere(function ($x) use ($childIds) {
-                            $x->where('subject_type', \App\Models\CompanyProductOverride::class)
-                                ->whereIn('subject_id', $childIds['override']);
-                        });
-                    }
-                });
+                    ->orWhere(function ($qq) use ($childIds) {
+                        if (! empty($childIds['price'])) {
+                            $qq->orWhere(function ($x) use ($childIds) {
+                                $x->where('subject_type', ProductPrice::class)
+                                    ->whereIn('subject_id', $childIds['price']);
+                            });
+                        }
+                        if (! empty($childIds['file'])) {
+                            $qq->orWhere(function ($x) use ($childIds) {
+                                $x->where('subject_type', ProductFile::class)
+                                    ->whereIn('subject_id', $childIds['file']);
+                            });
+                        }
+                        if (! empty($childIds['override'])) {
+                            $qq->orWhere(function ($x) use ($childIds) {
+                                $x->where('subject_type', CompanyProductOverride::class)
+                                    ->whereIn('subject_id', $childIds['override']);
+                            });
+                        }
+                    });
             })
             ->with('causer:id,name,email')
             ->orderByDesc('created_at')
@@ -217,14 +224,14 @@ class ProductController extends Controller
             ]);
 
         // 최근 실적 미니 패널 (P4-S5 잔여분)
-        $recentPerformances = \App\Models\Performance::query()
+        $recentPerformances = Performance::query()
             ->where('product_id', $product->id)
             ->with('company:id,company_name,default_commission_grade')
             ->orderByDesc('performance_date')
             ->orderByDesc('id')
             ->limit(10)
             ->get()
-            ->map(fn (\App\Models\Performance $p) => [
+            ->map(fn (Performance $p) => [
                 'id' => $p->id,
                 'performance_no' => $p->performance_no,
                 'performance_date' => $p->performance_date?->toDateString(),
@@ -260,8 +267,8 @@ class ProductController extends Controller
                 'approve' => $user->can('approve', $product),
                 'reject' => $user->can('reject', $product),
                 'discontinue' => $user->can('discontinue', $product),
-                'managePrices' => $user->can('create', \App\Models\ProductPrice::class),
-                'manageOverrides' => $user->can('create', \App\Models\CompanyProductOverride::class),
+                'managePrices' => $user->can('create', ProductPrice::class),
+                'manageOverrides' => $user->can('create', CompanyProductOverride::class),
             ],
         ]);
     }
@@ -297,7 +304,7 @@ class ProductController extends Controller
         $changeReason = $data['change_reason'] ?? null;
         unset($data['image'], $data['remove_image'], $data['change_reason']);
 
-        \App\Models\ChangeReason::with($changeReason, fn () => $product->update($data));
+        ChangeReason::with($changeReason, fn () => $product->update($data));
 
         return redirect()
             ->route('products.show', $product)
@@ -322,7 +329,7 @@ class ProductController extends Controller
     {
         $this->authorize('submit', $product);
 
-        \App\Models\ChangeReason::with('검수 요청', function () use ($product, $request) {
+        ChangeReason::with('검수 요청', function () use ($product, $request) {
             $product->update([
                 'approval_status' => Product::APPROVAL_PENDING,
                 'reviewed_at' => null,
@@ -350,7 +357,7 @@ class ProductController extends Controller
     {
         $this->authorize('review', $product);
 
-        \App\Models\ChangeReason::with('검수 완료', function () use ($product, $request) {
+        ChangeReason::with('검수 완료', function () use ($product, $request) {
             $product->update([
                 'approval_status' => Product::APPROVAL_REVIEWED,
                 'reviewed_at' => now(),
@@ -376,7 +383,7 @@ class ProductController extends Controller
     {
         $this->authorize('approve', $product);
 
-        \App\Models\ChangeReason::with('최종 승인', function () use ($product, $request) {
+        ChangeReason::with('최종 승인', function () use ($product, $request) {
             $product->update([
                 'approval_status' => Product::APPROVAL_APPROVED,
                 'approved_at' => now(),
@@ -402,7 +409,7 @@ class ProductController extends Controller
     {
         $reason = (string) $request->validated('reason');
 
-        \App\Models\ChangeReason::with($reason, function () use ($product, $request) {
+        ChangeReason::with($reason, function () use ($product, $request) {
             $product->update([
                 'approval_status' => Product::APPROVAL_REJECTED,
                 'reviewed_at' => null,
@@ -440,7 +447,7 @@ class ProductController extends Controller
             $payload['replacement_product_id'] = $replacementId;
         }
 
-        \App\Models\ChangeReason::with($reason, fn () => $product->update($payload));
+        ChangeReason::with($reason, fn () => $product->update($payload));
 
         activity('product')
             ->performedOn($product)
@@ -456,7 +463,7 @@ class ProductController extends Controller
         return back()->with('success', '제품을 단종 처리했습니다.');
     }
 
-    protected function storeImage(\Illuminate\Http\UploadedFile $file): string
+    protected function storeImage(UploadedFile $file): string
     {
         $stored = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
 

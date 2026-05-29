@@ -33,6 +33,7 @@ class LegacyImportHospitalPharmacyAssignments extends Command
             if (! isset($knownHospitals[$hid]) || ! isset($knownPharmacies[$pid])) {
                 $this->warn(sprintf('  skip: unknown ref (legacy.id=%d, hospital_id=%d, pharmacy_id=%d)', $row->id, $hid, $pid));
                 $skipped++;
+
                 continue;
             }
 
@@ -75,4 +76,3 @@ class LegacyImportHospitalPharmacyAssignments extends Command
         return self::SUCCESS;
     }
 }
-

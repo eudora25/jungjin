@@ -15,7 +15,7 @@ interface AppUser {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'sales';
+    role: 'pharma' | 'cso';
     is_active: boolean;
     last_sign_in_at: string | null;
     created_at: string;
@@ -40,8 +40,8 @@ const active = ref(props.filters.active ?? null);
 
 const roleOptions = [
     { label: '전체', value: null },
-    { label: '관리자', value: 'admin' },
-    { label: '영업사원', value: 'sales' },
+    { label: '관리자', value: 'pharma' },
+    { label: '영업사원', value: 'cso' },
 ];
 
 const activeOptions = [
@@ -142,8 +142,8 @@ const formatDate = (iso: string | null) =>
                 <Column header="이메일" field="email" />
                 <Column header="권한" style="width: 100px">
                     <template #body="{ data }">
-                        <Tag :value="data.role === 'admin' ? '관리자' : '영업사원'"
-                             :severity="data.role === 'admin' ? 'warn' : 'info'" />
+                        <Tag :value="data.role === 'pharma' ? '관리자' : '영업사원'"
+                             :severity="data.role === 'pharma' ? 'warn' : 'info'" />
                     </template>
                 </Column>
                 <Column header="상태" style="width: 100px">

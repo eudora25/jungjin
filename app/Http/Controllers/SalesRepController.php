@@ -18,7 +18,7 @@ class SalesRepController extends Controller
         $search = trim((string) $request->input('search'));
 
         $sales = User::query()
-            ->where('role', 'sales')
+            ->where('role', 'cso')
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

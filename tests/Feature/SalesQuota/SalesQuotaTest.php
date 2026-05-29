@@ -11,7 +11,7 @@ test('비로그인 사용자는 목표 목록에 접근할 수 없다', function
 });
 
 test('영업사원은 목표 목록에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('sales-quotas.index'))
@@ -19,7 +19,7 @@ test('영업사원은 목표 목록에 접근할 수 없다', function () {
 });
 
 test('관리자는 목표 목록에 접근할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)
         ->get(route('sales-quotas.index'))
@@ -29,8 +29,8 @@ test('관리자는 목표 목록에 접근할 수 있다', function () {
 // ── 등록 ─────────────────────────────────────────────────────────────────────
 
 test('관리자는 월별 목표를 등록할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->post(route('sales-quotas.store'), [
@@ -47,8 +47,8 @@ test('관리자는 월별 목표를 등록할 수 있다', function () {
 });
 
 test('관리자는 분기별 목표를 등록할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->post(route('sales-quotas.store'), [
@@ -64,8 +64,8 @@ test('관리자는 분기별 목표를 등록할 수 있다', function () {
 });
 
 test('관리자는 연간 목표를 등록할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->post(route('sales-quotas.store'), [
@@ -81,8 +81,8 @@ test('관리자는 연간 목표를 등록할 수 있다', function () {
 });
 
 test('제품별 목표를 별도로 등록할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $product = Product::factory()->create();
 
     $this->actingAs($admin)
@@ -100,8 +100,8 @@ test('제품별 목표를 별도로 등록할 수 있다', function () {
 });
 
 test('영업사원은 목표를 등록할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $other = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $other = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->post(route('sales-quotas.store'), [
@@ -116,8 +116,8 @@ test('영업사원은 목표를 등록할 수 없다', function () {
 // ── 중복 검증 ─────────────────────────────────────────────────────────────────
 
 test('동일 조건의 목표는 중복 등록할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     SalesQuota::factory()->create([
         'user_id' => $sales->id,
@@ -139,9 +139,9 @@ test('동일 조건의 목표는 중복 등록할 수 없다', function () {
 });
 
 test('다른 사용자는 같은 기간 조건으로 등록 가능하다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales1 = User::factory()->create(['role' => 'sales']);
-    $sales2 = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales1 = User::factory()->create(['role' => 'cso']);
+    $sales2 = User::factory()->create(['role' => 'cso']);
 
     SalesQuota::factory()->create([
         'user_id' => $sales1->id,
@@ -165,8 +165,8 @@ test('다른 사용자는 같은 기간 조건으로 등록 가능하다', funct
 });
 
 test('제품 있는 목표와 없는 목표는 같은 기간에 공존 가능하다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $product = Product::factory()->create();
 
     SalesQuota::factory()->create([
@@ -193,8 +193,8 @@ test('제품 있는 목표와 없는 목표는 같은 기간에 공존 가능하
 // ── 기간 형식 검증 ────────────────────────────────────────────────────────────
 
 test('잘못된 월별 기간 형식은 거부된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->post(route('sales-quotas.store'), [
@@ -207,8 +207,8 @@ test('잘못된 월별 기간 형식은 거부된다', function () {
 });
 
 test('잘못된 분기 형식은 거부된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->post(route('sales-quotas.store'), [
@@ -223,8 +223,8 @@ test('잘못된 분기 형식은 거부된다', function () {
 // ── 수정/삭제 ─────────────────────────────────────────────────────────────────
 
 test('관리자는 목표를 수정할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $quota = SalesQuota::factory()->create([
         'user_id' => $sales->id,
@@ -248,8 +248,8 @@ test('관리자는 목표를 수정할 수 있다', function () {
 });
 
 test('관리자는 목표를 삭제할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $quota = SalesQuota::factory()->create([
         'user_id' => $sales->id,
@@ -266,8 +266,8 @@ test('관리자는 목표를 삭제할 수 있다', function () {
 });
 
 test('영업사원은 목표를 삭제할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $quota = SalesQuota::factory()->create([
         'user_id' => $sales->id,

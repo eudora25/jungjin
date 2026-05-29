@@ -10,7 +10,7 @@ use App\Models\User;
  * GAP-10 MT-6 — 플랫폼 전역 마스터/사용자 목록 (super_admin).
  */
 test('super_admin 은 전 제약사 의약품을 전역 조회한다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     $hanmi = Tenant::factory()->create(['name' => '한미']);
     $ckd = Tenant::factory()->create(['name' => '종근당']);
@@ -27,9 +27,9 @@ test('super_admin 은 전 제약사 의약품을 전역 조회한다', function 
 });
 
 test('super_admin 은 전역 사용자 목록을 조회한다 (제약사 칸 포함)', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     $tenant = Tenant::factory()->create(['name' => '한미']);
-    User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]);
+    User::factory()->create(['role' => 'pharma', 'tenant_id' => $tenant->id]);
 
     $this->actingAs($super)
         ->get(route('platform.users.index'))
@@ -38,7 +38,7 @@ test('super_admin 은 전역 사용자 목록을 조회한다 (제약사 칸 포
 });
 
 test('super_admin 은 공유 병의원·약국을 조회한다', function () {
-    $super = User::factory()->create(['role' => 'super_admin', 'tenant_id' => null]);
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     Hospital::factory()->create();
     Pharmacy::factory()->create();
 
@@ -47,8 +47,8 @@ test('super_admin 은 공유 병의원·약국을 조회한다', function () {
 });
 
 test('admin·sales 는 플랫폼 영역에 접근할 수 없다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     foreach (['platform.products.index', 'platform.hospitals.index', 'platform.pharmacies.index', 'platform.users.index'] as $routeName) {
         $this->actingAs($admin)->get(route($routeName))->assertForbidden();

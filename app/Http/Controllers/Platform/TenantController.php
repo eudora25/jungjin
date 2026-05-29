@@ -70,7 +70,7 @@ class TenantController extends Controller
         $tenant->loadCount('users');
 
         $users = $tenant->users()
-            ->orderByRaw("FIELD(role, 'admin', 'sales')")
+            ->orderByRaw("FIELD(role, 'pharma', 'cso')")
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'role', 'is_active']);
 
@@ -123,7 +123,7 @@ class TenantController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => User::ROLE_ADMIN,
+            'role' => User::ROLE_PHARMA,
             'tenant_id' => $tenant->id,
             'is_active' => true,
         ]);

@@ -18,7 +18,7 @@ class CompanySalesAssignmentFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'user_id' => User::factory()->state(['role' => 'sales']),
+            'user_id' => User::factory()->state(['role' => 'cso']),
             'assigned_at' => now(),
             'assigned_by' => null,
         ];

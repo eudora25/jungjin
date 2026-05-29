@@ -8,14 +8,14 @@ use App\Models\User;
 // ── 접근 권한 ──────────────────────────────────────────────────────────────────
 
 test('비로그인 사용자는 명세서에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->get(route('commission-summary.statement', $sales))
         ->assertRedirect(route('login'));
 });
 
 test('영업사원은 본인 명세서를 조회할 수 있다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('commission-summary.statement', $sales))
@@ -23,8 +23,8 @@ test('영업사원은 본인 명세서를 조회할 수 있다', function () {
 });
 
 test('영업사원은 타인의 명세서를 조회할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $other = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $other = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('commission-summary.statement', $other))
@@ -32,8 +32,8 @@ test('영업사원은 타인의 명세서를 조회할 수 없다', function () 
 });
 
 test('관리자는 임의의 영업사원 명세서를 조회할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($admin)
         ->get(route('commission-summary.statement', $sales))
@@ -43,8 +43,8 @@ test('관리자는 임의의 영업사원 명세서를 조회할 수 있다', fu
 // ── 집계 정확성 ────────────────────────────────────────────────────────────────
 
 test('명세서는 본인의 승인 실적 합계를 정확히 노출한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $other = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $other = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -86,7 +86,7 @@ test('명세서는 본인의 승인 실적 합계를 정확히 노출한다', fu
 // ── PDF 다운로드 ───────────────────────────────────────────────────────────────
 
 test('본인은 명세서 PDF 를 다운로드할 수 있다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -107,8 +107,8 @@ test('본인은 명세서 PDF 를 다운로드할 수 있다', function () {
 });
 
 test('타인의 명세서 PDF 는 다운로드할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
-    $other = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
+    $other = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('commission-summary.statement.pdf', $other))
@@ -118,7 +118,7 @@ test('타인의 명세서 PDF 는 다운로드할 수 없다', function () {
 // ── Sales 대시보드 카드 ────────────────────────────────────────────────────────
 
 test('Sales 대시보드 props 에 thisMonthCommission 이 포함된다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 

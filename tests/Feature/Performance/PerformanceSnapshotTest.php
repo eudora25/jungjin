@@ -12,7 +12,7 @@ use App\Services\Performance\PerformanceResolver;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
     $this->company = Company::factory()->create(['default_commission_grade' => 'B']);
     $this->product = Product::factory()->create(['price' => 10000]);
 });
@@ -154,7 +154,7 @@ test('Performance 저장 시 subtotal 과 commission_amount 가 DB 에서 계산
 
     /** @var PerformanceResolver $resolver */
     $resolver = app(PerformanceResolver::class);
-    $perf = new Performance();
+    $perf = new Performance;
     $resolver->fill($perf, $this->company, $this->product->fresh(), [
         'performance_no' => Performance::nextNumberFor('2026-04-20'),
         'performance_date' => '2026-04-20',
@@ -182,7 +182,7 @@ test('commission_rate 가 null 이면 commission_amount 도 null', function () {
 
     /** @var PerformanceResolver $resolver */
     $resolver = app(PerformanceResolver::class);
-    $perf = new Performance();
+    $perf = new Performance;
     $resolver->fill($perf, $this->company, $this->product->fresh(), [
         'performance_no' => Performance::nextNumberFor('2026-04-20'),
         'performance_date' => '2026-04-20',
@@ -211,7 +211,7 @@ test('Performance 생성 시 activity_log 에 performance 채널로 기록된다
 
     ChangeReason::with('2026-04-20 E2E 테스트', function () {
         $resolver = app(PerformanceResolver::class);
-        $perf = new Performance();
+        $perf = new Performance;
         $resolver->fill($perf, $this->company, $this->product->fresh(), [
             'performance_no' => Performance::nextNumberFor('2026-04-20'),
             'performance_date' => '2026-04-20',

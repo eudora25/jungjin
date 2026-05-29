@@ -33,12 +33,14 @@ class LegacyImportClientPharmacyAssignmentsAsHospitalPharmacy extends Command
             if ($hid === null || $pid === null) {
                 $this->warn(sprintf('  skip: null ref (legacy.id=%s, client_id=%s, pharmacy_id=%s)', (string) $row->id, (string) $row->client_id, (string) $row->pharmacy_id));
                 $skipped++;
+
                 continue;
             }
 
             if (! isset($knownHospitals[$hid]) || ! isset($knownPharmacies[$pid])) {
                 $this->warn(sprintf('  skip: unknown ref (legacy.id=%s, hospital_id=%d, pharmacy_id=%d)', (string) $row->id, $hid, $pid));
                 $skipped++;
+
                 continue;
             }
 
@@ -81,4 +83,3 @@ class LegacyImportClientPharmacyAssignmentsAsHospitalPharmacy extends Command
         return self::SUCCESS;
     }
 }
-

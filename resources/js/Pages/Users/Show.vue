@@ -14,7 +14,7 @@ interface AppUser {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'sales';
+    role: 'pharma' | 'cso';
     is_active: boolean;
     last_sign_in_at: string | null;
     created_at: string;
@@ -103,8 +103,8 @@ const formatDate = (iso: string | null) =>
                         <div>
                             <dt class="text-surface-500 mb-1">권한</dt>
                             <dd>
-                                <Tag :value="user.role === 'admin' ? '관리자' : '영업사원'"
-                                     :severity="user.role === 'admin' ? 'warn' : 'info'" />
+                                <Tag :value="user.role === 'pharma' ? '관리자' : '영업사원'"
+                                     :severity="user.role === 'pharma' ? 'warn' : 'info'" />
                             </dd>
                         </div>
                         <div>

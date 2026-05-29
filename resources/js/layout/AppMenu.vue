@@ -4,15 +4,15 @@ import { usePage } from '@inertiajs/vue3';
 import AppMenuItem from './AppMenuItem.vue';
 
 const page = usePage();
-const isAdmin = computed(() => page.props?.auth?.user?.role === 'admin');
-const isSales = computed(() => page.props?.auth?.user?.role === 'sales');
-const isSuperAdmin = computed(() => page.props?.auth?.user?.role === 'super_admin');
+const isPharma = computed(() => page.props?.auth?.user?.role === 'pharma');
+const isCso = computed(() => page.props?.auth?.user?.role === 'cso');
+const isPlatform = computed(() => page.props?.auth?.user?.role === 'platform');
 const authUserId = computed(() => page.props?.auth?.user?.id);
 
 const model = computed(() => [
     {
         label: '플랫폼',
-        visible: isSuperAdmin.value,
+        visible: isPlatform.value,
         items: [
             { label: '제약사 관리', icon: 'pi pi-fw pi-building-columns', to: '/platform/tenants' },
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/platform/products' },
@@ -33,7 +33,7 @@ const model = computed(() => [
                 label: '영업 대시보드',
                 icon: 'pi pi-fw pi-bolt',
                 to: '/sales/dashboard',
-                visible: isSales.value,
+                visible: isCso.value,
             },
             {
                 label: '공지사항',
@@ -46,7 +46,7 @@ const model = computed(() => [
         label: '마스터 관리',
         path: '/master-data',
         items: [
-            { label: '마스터 홈', icon: 'pi pi-fw pi-th-large', to: '/master-data', visible: isAdmin.value },
+            { label: '마스터 홈', icon: 'pi pi-fw pi-th-large', to: '/master-data', visible: isPharma.value },
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/products' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/pharmacies' },
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/hospitals' },
@@ -91,7 +91,7 @@ const model = computed(() => [
             {
                 label: '수수료 명세',
                 icon: 'pi pi-fw pi-wallet',
-                to: isAdmin.value
+                to: isPharma.value
                     ? '/commission-summary'
                     : `/commission-summary/users/${authUserId.value}/statement`,
             },
@@ -99,28 +99,28 @@ const model = computed(() => [
                 label: '월간 보고서',
                 icon: 'pi pi-fw pi-chart-line',
                 to: '/reports/monthly',
-                visible: isAdmin.value,
+                visible: isPharma.value,
             },
         ],
     },
     {
         label: '관리',
         path: '/admin',
-        visible: isAdmin.value,
+        visible: isPharma.value,
         items: [
             {
                 label: '사용자 관리',
                 icon: 'pi pi-fw pi-user-edit',
                 to: '/users',
-                visible: isAdmin.value,
+                visible: isPharma.value,
             },
             {
                     label: '목표 관리',
                     icon: 'pi pi-fw pi-chart-bar',
                     to: '/sales-quotas',
-                    visible: isAdmin.value,
+                    visible: isPharma.value,
                 },
-            { label: '영업사원 (조회)', icon: 'pi pi-fw pi-id-card', to: '/clients/sales', visible: isAdmin.value },
+            { label: '영업사원 (조회)', icon: 'pi pi-fw pi-id-card', to: '/clients/sales', visible: isPharma.value },
             { label: '설정', icon: 'pi pi-fw pi-cog', to: '/profile' },
         ],
     },

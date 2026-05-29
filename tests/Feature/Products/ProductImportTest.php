@@ -3,12 +3,13 @@
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\User;
+use App\Services\Products\ProductPriceService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
     Storage::fake('local');
 });
 
@@ -165,7 +166,7 @@ test('CSV 의 가격 컬럼은 직전 자동 마감 로직과 함께 동작한�
     $product = Product::factory()->create(['insurance_code' => 'A00000050']);
 
     // 첫 번째 가격 (직접 등록)
-    app(\App\Services\Products\ProductPriceService::class)->register($product, [
+    app(ProductPriceService::class)->register($product, [
         'price_type' => 'sale',
         'amount' => 1000,
         'effective_from' => '2026-01-01',

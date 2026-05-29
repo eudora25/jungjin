@@ -21,12 +21,12 @@ class ResolveTenant
         $user = $request->user();
         $context = app(TenantContext::class);
 
-        if ($user && ! $user->isSuperAdmin() && $user->tenant_id) {
+        if ($user && ! $user->isPlatform() && $user->tenant_id) {
             $context->set((int) $user->tenant_id);
         }
 
         // 후속(임퍼서네이션): super_admin 이 세션에서 테넌트를 선택했으면 그 값으로 설정.
-        // if ($user && $user->isSuperAdmin() && $request->session()->has('impersonated_tenant_id')) {
+        // if ($user && $user->isPlatform() && $request->session()->has('impersonated_tenant_id')) {
         //     $context->set((int) $request->session()->get('impersonated_tenant_id'));
         // }
 

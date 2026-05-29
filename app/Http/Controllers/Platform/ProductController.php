@@ -16,7 +16,7 @@ class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         $search = trim((string) $request->input('search', ''));
 

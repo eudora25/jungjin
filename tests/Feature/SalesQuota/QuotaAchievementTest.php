@@ -10,7 +10,7 @@ use App\Services\QuotaAchievementService;
 // ── 서비스 유닛 테스트 ────────────────────────────────────────────────────────
 
 test('월별 달성액을 올바르게 계산한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -44,7 +44,7 @@ test('월별 달성액을 올바르게 계산한다', function () {
 });
 
 test('승인되지 않은 실적은 달성액에 포함되지 않는다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -68,7 +68,7 @@ test('승인되지 않은 실적은 달성액에 포함되지 않는다', functi
 });
 
 test('분기별 달성액을 올바르게 계산한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -105,7 +105,7 @@ test('분기별 달성액을 올바르게 계산한다', function () {
 });
 
 test('연간 달성액을 올바르게 계산한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -141,7 +141,7 @@ test('연간 달성액을 올바르게 계산한다', function () {
 });
 
 test('제품별 목표는 해당 제품 실적만 집계한다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product1 = Product::factory()->create(['price' => 1000]);
     $product2 = Product::factory()->create(['price' => 1000]);
@@ -177,8 +177,8 @@ test('제품별 목표는 해당 제품 실적만 집계한다', function () {
 // ── HTTP 응답에 달성 정보가 포함되는지 확인 ───────────────────────────────────
 
 test('목표 목록 페이지에 달성액과 달성률이 포함된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     SalesQuota::factory()->create([
         'user_id' => $sales->id,

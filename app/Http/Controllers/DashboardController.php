@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function index(Request $request): Response|RedirectResponse
     {
         // 플랫폼 운영자(super_admin)는 플랫폼 영역으로 진입 (GAP-10 MT-6)
-        if ($request->user()->isSuperAdmin()) {
+        if ($request->user()->isPlatform()) {
             return redirect()->route('platform.tenants.index');
         }
 

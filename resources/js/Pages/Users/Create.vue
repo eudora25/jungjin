@@ -13,13 +13,13 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
-    role: 'sales' as 'admin' | 'sales',
+    role: 'cso' as 'pharma' | 'cso',
     is_active: true,
 });
 
 const roleOptions = [
-    { label: '관리자', value: 'admin' },
-    { label: '영업사원', value: 'sales' },
+    { label: '관리자', value: 'pharma' },
+    { label: '영업사원', value: 'cso' },
 ];
 
 const submit = () => form.post(route('users.store'));

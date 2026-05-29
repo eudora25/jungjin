@@ -133,4 +133,3 @@ class LegacyInspectSchema extends Command
         }
     }
 }
-

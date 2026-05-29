@@ -5,7 +5,7 @@ use App\Models\Settlement;
 use App\Models\User;
 
 test('거래처 상세에서 최근 정산 6건이 period_month 내림차순으로 노출된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $company = Company::factory()->create();
 
     // 7건 생성 → 최근 6건만 노출되어야 함
@@ -28,4 +28,3 @@ test('거래처 상세에서 최근 정산 6건이 period_month 내림차순으�
         ->where('recentSettlements.5.period_month', '2026-02')
     );
 });
-

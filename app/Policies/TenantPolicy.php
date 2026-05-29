@@ -12,32 +12,32 @@ class TenantPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 
     public function view(User $user, Tenant $tenant): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 
     public function update(User $user, Tenant $tenant): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 
     public function delete(User $user, Tenant $tenant): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 
     /** 제약사 admin 계정 생성(위임형 D-2) */
     public function manageAdmins(User $user, Tenant $tenant): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isPlatform();
     }
 }

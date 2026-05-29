@@ -31,4 +31,3 @@ class ImportHospitalsRequest extends FormRequest
         ];
     }
 }
-

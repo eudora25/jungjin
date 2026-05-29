@@ -25,7 +25,8 @@ class SyncCompaniesFromClients extends Command
         $doHospital = $only === null || $only === '' || $only === 'hospital';
 
         if (! $doPharmacy && ! $doHospital) {
-            $this->error("--only 는 pharmacy|hospital 중 하나여야 합니다.");
+            $this->error('--only 는 pharmacy|hospital 중 하나여야 합니다.');
+
             return self::FAILURE;
         }
 
@@ -85,6 +86,7 @@ class SyncCompaniesFromClients extends Command
         foreach ($pharmacies as $p) {
             if ($p->company_id) {
                 $skipped++;
+
                 continue;
             }
 
@@ -102,7 +104,7 @@ class SyncCompaniesFromClients extends Command
             }
 
             if (! $company) {
-                $company = new Company();
+                $company = new Company;
                 $company->fill([
                     'company_name' => $p->pharmacy_name,
                     'business_registration_number' => $p->business_registration_number,
@@ -158,6 +160,7 @@ class SyncCompaniesFromClients extends Command
         foreach ($hospitals as $h) {
             if ($h->company_id) {
                 $skipped++;
+
                 continue;
             }
 
@@ -172,7 +175,7 @@ class SyncCompaniesFromClients extends Command
             }
 
             if (! $company) {
-                $company = new Company();
+                $company = new Company;
                 $company->fill([
                     'company_name' => $h->hospital_name,
                     'business_registration_number' => $h->business_registration_number,
@@ -234,4 +237,3 @@ class SyncCompaniesFromClients extends Command
             ->first();
     }
 }
-

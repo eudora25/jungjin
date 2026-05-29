@@ -244,4 +244,3 @@ class LegacyAnalyzeAssignments extends Command
         return self::SUCCESS;
     }
 }
-

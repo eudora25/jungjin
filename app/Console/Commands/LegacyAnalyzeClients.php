@@ -79,4 +79,3 @@ class LegacyAnalyzeClients extends Command
         return self::SUCCESS;
     }
 }
-

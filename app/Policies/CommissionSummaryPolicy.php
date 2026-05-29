@@ -14,17 +14,17 @@ class CommissionSummaryPolicy
 {
     public function viewAny(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->isPharma();
     }
 
     public function export(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->isPharma();
     }
 
     public function viewStatement(User $actor, User $target): bool
     {
-        return $actor->isAdmin() || $actor->id === $target->id;
+        return $actor->isPharma() || $actor->id === $target->id;
     }
 
     public function exportStatement(User $actor, User $target): bool

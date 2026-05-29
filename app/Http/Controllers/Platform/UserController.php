@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         $search = trim((string) $request->input('search', ''));
         $role = $request->input('role');
@@ -29,7 +29,7 @@ class UserController extends Controller
                 });
             })
             ->when(in_array($role, User::ROLES, true), fn ($q) => $q->where('role', $role))
-            ->orderByRaw("FIELD(role, 'super_admin', 'admin', 'sales')")
+            ->orderByRaw("FIELD(role, 'platform', 'pharma', 'cso')")
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString()

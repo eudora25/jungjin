@@ -33,6 +33,7 @@ class LegacyImportProductCommissionRates extends Command
             if (! isset($validProductIds[$row->product_id])) {
                 $this->warn(sprintf('  skip: orphan product_id=%d (legacy.id=%d)', $row->product_id, $row->id));
                 $skipped++;
+
                 continue;
             }
 

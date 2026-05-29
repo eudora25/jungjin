@@ -9,7 +9,7 @@ use App\Models\User;
  * GAP-9 기준정보 마스터 허브 (/master-data)
  */
 test('admin 은 마스터 허브에 접근하고 3종 건수를 받는다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     Product::factory()->count(3)->create();
     Pharmacy::factory()->count(2)->create();
@@ -26,8 +26,8 @@ test('admin 은 마스터 허브에 접근하고 3종 건수를 받는다', func
         );
 });
 
-test('sales 는 마스터 허브에 접근할 수 없다 (role:admin)', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+test('sales 는 마스터 허브에 접근할 수 없다 (role:pharma)', function () {
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('master-data.index'))

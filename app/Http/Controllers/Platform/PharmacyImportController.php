@@ -27,7 +27,7 @@ class PharmacyImportController extends Controller
 
     public function form(Request $request): Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         return Inertia::render('Clients/Pharmacies/Import', [
             'requiredHeaders' => PharmacyImportService::REQUIRED_HEADERS,
@@ -39,7 +39,7 @@ class PharmacyImportController extends Controller
 
     public function handle(ImportPharmaciesRequest $request): RedirectResponse|Response
     {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($request->user()->isPlatform(), 403);
 
         $mode = $request->validated('mode');
         $userId = $request->user()->id;

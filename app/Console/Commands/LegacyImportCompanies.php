@@ -34,6 +34,7 @@ class LegacyImportCompanies extends Command
             if (trim((string) $row->company_name) === '') {
                 $this->warn(sprintf('  skip: empty company_name (legacy.id=%d)', $row->id));
                 $skipped++;
+
                 continue;
             }
 

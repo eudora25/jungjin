@@ -14,7 +14,7 @@ use App\Models\User;
  */
 function adminFor(Tenant $t): User
 {
-    return User::factory()->create(['role' => 'admin', 'tenant_id' => $t->id]);
+    return User::factory()->create(['role' => 'pharma', 'tenant_id' => $t->id]);
 }
 
 // ---- 목록 격리: 자기 제약사 것만 ----

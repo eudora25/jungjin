@@ -12,7 +12,7 @@ test('비로그인 사용자는 수수료 명세 페이지에 접근할 수 없�
 });
 
 test('영업사원은 수수료 합계 페이지에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('commission-summary.index'))
@@ -20,7 +20,7 @@ test('영업사원은 수수료 합계 페이지에 접근할 수 없다', funct
 });
 
 test('관리자는 수수료 합계 페이지에 접근할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)
         ->get(route('commission-summary.index'))
@@ -28,7 +28,7 @@ test('관리자는 수수료 합계 페이지에 접근할 수 있다', function
 });
 
 test('영업사원은 Excel 내보내기에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('commission-summary.export.excel'))
@@ -38,9 +38,9 @@ test('영업사원은 Excel 내보내기에 접근할 수 없다', function () {
 // ── 집계 정확성 ────────────────────────────────────────────────────────────────
 
 test('관리자 페이지는 영업사원별 수수료 합계를 정확히 노출한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $salesA = User::factory()->create(['role' => 'sales', 'name' => '영업A']);
-    $salesB = User::factory()->create(['role' => 'sales', 'name' => '영업B']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $salesA = User::factory()->create(['role' => 'cso', 'name' => '영업A']);
+    $salesB = User::factory()->create(['role' => 'cso', 'name' => '영업B']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -98,8 +98,8 @@ test('관리자 페이지는 영업사원별 수수료 합계를 정확히 노�
 });
 
 test('승인되지 않은 실적은 합계에 포함되지 않는다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -125,8 +125,8 @@ test('승인되지 않은 실적은 합계에 포함되지 않는다', function 
 // ── Excel 내보내기 ─────────────────────────────────────────────────────────────
 
 test('관리자는 수수료 합계 Excel 을 다운로드할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 
@@ -149,8 +149,8 @@ test('관리자는 수수료 합계 Excel 을 다운로드할 수 있다', funct
 // ── 기간 범위 필터 ─────────────────────────────────────────────────────────────
 
 test('from/to 직접 입력 시 해당 범위의 실적만 합산한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create(['default_commission_grade' => 'a']);
     $product = Product::factory()->create(['price' => 1000]);
 

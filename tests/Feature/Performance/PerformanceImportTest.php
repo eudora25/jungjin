@@ -7,9 +7,10 @@ use App\Models\User;
 use App\Services\Performance\PerformanceImportService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
     $this->company = Company::factory()->create([
         'company_name' => '테스트약국',
         'business_registration_number' => '111-22-33333',
@@ -110,7 +111,7 @@ test('import: 모두 통과하면 저장되고 ChangeReason 이 채워진다', f
         ->and(Performance::first()->status)->toBe(Performance::STATUS_DRAFT)
         ->and(Performance::first()->created_by)->toBe($this->admin->id);
 
-    $activities = \Spatie\Activitylog\Models\Activity::where('log_name', 'performance')->get();
+    $activities = Activity::where('log_name', 'performance')->get();
     expect($activities->first()->properties['reason'] ?? null)->toBe('실적 CSV 일괄 등록');
 });
 

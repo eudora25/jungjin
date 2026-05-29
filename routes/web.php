@@ -44,7 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // sales 전용 대시보드 (영업사원 개인화)
     Route::get('/sales/dashboard', [SalesDashboardController::class, 'index'])
-        ->middleware('role:sales')
+        ->middleware('role:cso')
         ->name('sales.dashboard');
 
     Route::resource('notices', NoticeController::class);
@@ -68,7 +68,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->parameters(['pharmacies' => 'pharmacy']);
     Route::resource('hospitals', HospitalController::class);
     Route::get('/clients/sales', [SalesRepController::class, 'index'])
-        ->middleware('role:admin')
+        ->middleware('role:pharma')
         ->name('sales.index');
 
     // 제품 검색 (자동완성용) — resource 보다 먼저 정의해 /products/{product} 와 충돌 방지
@@ -174,7 +174,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // GAP-10 MT-6: 플랫폼 운영자(super_admin) 전용 영역 (/platform/*)
-Route::middleware(['auth', 'role:super_admin'])->prefix('platform')->name('platform.')->group(function () {
+Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform.')->group(function () {
     // 제약사(테넌트) 관리 — 전체 CRUD
     Route::resource('tenants', PlatformTenantController::class);
     Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
@@ -195,7 +195,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('platform')->name('platf
     Route::get('/users', [PlatformUserController::class, 'index'])->name('users.index');
 });
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:pharma'])->group(function () {
     // GAP-9: 기준정보 마스터 허브 (병의원·약국·의약품)
     Route::get('/master-data', [MasterDataController::class, 'index'])->name('master-data.index');
 

@@ -11,6 +11,6 @@ class StorePharmacyRequest extends BaseStorePharmacyRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isSuperAdmin() ?? false;
+        return $this->user()?->isPlatform() ?? false;
     }
 }

@@ -26,7 +26,7 @@ interface TenantUser {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'sales';
+    role: 'pharma' | 'cso';
     is_active: boolean;
 }
 
@@ -67,7 +67,7 @@ const submitAdmin = () =>
         },
     });
 
-const roleLabel = (r: string) => (r === 'admin' ? '관리자' : '영업사원');
+const roleLabel = (r: string) => (r === 'pharma' ? '관리자' : '영업사원');
 </script>
 
 <template>
@@ -136,7 +136,7 @@ const roleLabel = (r: string) => (r === 'admin' ? '관리자' : '영업사원');
                         <Column header="이메일" field="email" />
                         <Column header="권한" style="width: 110px">
                             <template #body="{ data }">
-                                <Tag :value="roleLabel(data.role)" :severity="data.role === 'admin' ? 'info' : 'secondary'" />
+                                <Tag :value="roleLabel(data.role)" :severity="data.role === 'pharma' ? 'info' : 'secondary'" />
                             </template>
                         </Column>
                         <Column header="활성" style="width: 80px">

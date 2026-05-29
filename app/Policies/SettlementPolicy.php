@@ -15,7 +15,7 @@ class SettlementPolicy
 
     public function view(User $user, Settlement $settlement): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isPharma()) {
             return true;
         }
 
@@ -28,12 +28,12 @@ class SettlementPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function export(User $user, Settlement $settlement): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isPharma()) {
             return true;
         }
 
@@ -46,22 +46,22 @@ class SettlementPolicy
 
     public function recalculate(User $user, Settlement $settlement): bool
     {
-        return $user->isAdmin() && $settlement->status === Settlement::STATUS_DRAFT;
+        return $user->isPharma() && $settlement->status === Settlement::STATUS_DRAFT;
     }
 
     public function confirm(User $user, Settlement $settlement): bool
     {
-        return $user->isAdmin() && $settlement->status === Settlement::STATUS_DRAFT;
+        return $user->isPharma() && $settlement->status === Settlement::STATUS_DRAFT;
     }
 
     public function pay(User $user, Settlement $settlement): bool
     {
-        return $user->isAdmin() && $settlement->status === Settlement::STATUS_CONFIRMED;
+        return $user->isPharma() && $settlement->status === Settlement::STATUS_CONFIRMED;
     }
 
     public function cancel(User $user, Settlement $settlement): bool
     {
-        return $user->isAdmin() && in_array($settlement->status, [
+        return $user->isPharma() && in_array($settlement->status, [
             Settlement::STATUS_DRAFT,
             Settlement::STATUS_CONFIRMED,
         ], true);
@@ -73,7 +73,7 @@ class SettlementPolicy
      */
     public function uploadPaymentFile(User $user, Settlement $settlement): bool
     {
-        return $user->isAdmin() && in_array($settlement->status, [
+        return $user->isPharma() && in_array($settlement->status, [
             Settlement::STATUS_CONFIRMED,
             Settlement::STATUS_PAID,
         ], true);

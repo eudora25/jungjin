@@ -37,7 +37,7 @@ return new class extends Migration
         // 2) 소속 없는 admin/sales 를 기본 제약사로 백필 (super_admin 은 제외 → NULL 유지)
         DB::table('users')
             ->whereNull('tenant_id')
-            ->whereIn('role', ['admin', 'sales'])
+            ->whereIn('role', ['admin', 'sales', 'pharma', 'cso'])
             ->update(['tenant_id' => $tenantId]);
     }
 

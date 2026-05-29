@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -30,7 +29,7 @@ class UserController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when(in_array($role, ['admin', 'sales'], true), fn ($q) => $q->where('role', $role))
+            ->when(in_array($role, ['pharma', 'cso'], true), fn ($q) => $q->where('role', $role))
             ->when($active === '1', fn ($q) => $q->where('is_active', true))
             ->when($active === '0', fn ($q) => $q->where('is_active', false))
             ->orderByDesc('created_at')

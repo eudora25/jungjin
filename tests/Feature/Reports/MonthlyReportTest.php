@@ -12,7 +12,7 @@ test('비로그인 사용자는 월간 보고서에 접근할 수 없다', funct
 });
 
 test('영업사원은 월간 보고서에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('reports.monthly'))
@@ -20,7 +20,7 @@ test('영업사원은 월간 보고서에 접근할 수 없다', function () {
 });
 
 test('관리자는 월간 보고서에 접근할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
 
     $this->actingAs($admin)
         ->get(route('reports.monthly'))
@@ -28,7 +28,7 @@ test('관리자는 월간 보고서에 접근할 수 있다', function () {
 });
 
 test('영업사원은 월간 보고서 Excel 내보내기에 접근할 수 없다', function () {
-    $sales = User::factory()->create(['role' => 'sales']);
+    $sales = User::factory()->create(['role' => 'cso']);
 
     $this->actingAs($sales)
         ->get(route('reports.monthly.export.excel'))
@@ -46,8 +46,8 @@ test('영업사원은 월간 보고서 Excel 내보내기에 접근할 수 없�
  */
 function seedMonthlyReportSample(): array
 {
-    $salesA = User::factory()->create(['role' => 'sales', 'name' => '영업A']);
-    $salesB = User::factory()->create(['role' => 'sales', 'name' => '영업B']);
+    $salesA = User::factory()->create(['role' => 'cso', 'name' => '영업A']);
+    $salesB = User::factory()->create(['role' => 'cso', 'name' => '영업B']);
     $company1 = Company::factory()->create(['company_name' => '거래처1', 'partner_type' => 'company']);
     $company2 = Company::factory()->create(['company_name' => '거래처2', 'partner_type' => 'pharmacy']);
     $product1 = Product::factory()->create(['product_name' => '제품1', 'insurance_code' => 'INS-1']);
@@ -76,7 +76,7 @@ function seedMonthlyReportSample(): array
 }
 
 test('거래처별 요약을 매출 내림차순으로 정확히 집계한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $s = seedMonthlyReportSample();
 
     $props = $this->actingAs($admin)
@@ -101,7 +101,7 @@ test('거래처별 요약을 매출 내림차순으로 정확히 집계한다', 
 });
 
 test('영업사원별 요약을 수수료 내림차순으로 정확히 집계한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $s = seedMonthlyReportSample();
 
     $props = $this->actingAs($admin)
@@ -122,7 +122,7 @@ test('영업사원별 요약을 수수료 내림차순으로 정확히 집계한
 });
 
 test('제품별 요약을 매출 내림차순으로 정확히 집계한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     $s = seedMonthlyReportSample();
 
     $props = $this->actingAs($admin)
@@ -145,7 +145,7 @@ test('제품별 요약을 매출 내림차순으로 정확히 집계한다', fun
 });
 
 test('전체 합계가 3종 리포트와 동일하게 계산된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     seedMonthlyReportSample();
 
     $props = $this->actingAs($admin)
@@ -161,8 +161,8 @@ test('전체 합계가 3종 리포트와 동일하게 계산된다', function ()
 });
 
 test('승인되지 않은 실적은 집계에서 제외된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $sales = User::factory()->create(['role' => 'sales']);
+    $admin = User::factory()->create(['role' => 'pharma']);
+    $sales = User::factory()->create(['role' => 'cso']);
     $company = Company::factory()->create();
     $product = Product::factory()->create();
 
@@ -187,7 +187,7 @@ test('승인되지 않은 실적은 집계에서 제외된다', function () {
 // ── 기간 범위 필터 ─────────────────────────────────────────────────────────────
 
 test('from/to 직접 입력 시 해당 범위의 실적만 집계한다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     seedMonthlyReportSample();
 
     // 2026-05-01 ~ 2026-05-11 → P1 만 (10일) 포함, P2(12일)·P3(15일) 제외
@@ -204,7 +204,7 @@ test('from/to 직접 입력 시 해당 범위의 실적만 집계한다', functi
 // ── Excel 내보내기 ─────────────────────────────────────────────────────────────
 
 test('관리자는 월간 보고서 Excel(3시트)을 다운로드할 수 있다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     seedMonthlyReportSample();
 
     $res = $this->actingAs($admin)
@@ -216,7 +216,7 @@ test('관리자는 월간 보고서 Excel(3시트)을 다운로드할 수 있다
 });
 
 test('Excel 내보내기 시 activity log 가 기록된다', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'pharma']);
     seedMonthlyReportSample();
 
     $this->actingAs($admin)

@@ -20,7 +20,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', Rule::in(['admin', 'sales'])],
+            'role' => ['required', Rule::in(['pharma', 'cso'])],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

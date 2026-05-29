@@ -32,6 +32,7 @@ class LegacyImportProducts extends Command
             if (trim((string) $row->insurance_code) === '' || trim((string) $row->product_code) === '') {
                 $this->warn(sprintf('  skip: missing insurance/product code (legacy.id=%d)', $row->id));
                 $skipped++;
+
                 continue;
             }
 

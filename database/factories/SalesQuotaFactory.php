@@ -28,7 +28,7 @@ class SalesQuotaFactory extends Factory
             'period_type' => $periodType,
             'period' => $period,
             'target_amount' => $this->faker->randomFloat(2, 100000, 10000000),
-            'created_by' => User::factory()->state(['role' => 'admin']),
+            'created_by' => User::factory()->state(['role' => 'pharma']),
         ];
     }
 

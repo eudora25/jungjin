@@ -8,13 +8,14 @@ use App\Models\ProductPrice;
 use App\Models\User;
 use App\Services\Products\CompanyProductOverrideService;
 use App\Services\Products\ProductPriceService;
+use Carbon\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
     $this->product = Product::factory()->create();
     $this->company = Company::factory()->create(['default_commission_grade' => 'b']);
 });
@@ -82,11 +83,11 @@ test('effectiveSalePriceFor 우선순위: override → product_prices(sale) → 
         'override_unit_price' => 4000,
         'effective_from' => '2026-02-01',
     ]);
-    expect($product->fresh()->effectiveSalePriceFor($this->company, \Carbon\Carbon::parse('2026-03-01')))
+    expect($product->fresh()->effectiveSalePriceFor($this->company, Carbon::parse('2026-03-01')))
         ->toEqual(4000.0);
 
     // 4) override 적용 종료 후엔 다시 sale 적용
-    expect($product->fresh()->effectiveSalePriceFor($this->company, \Carbon\Carbon::parse('2026-01-15')))
+    expect($product->fresh()->effectiveSalePriceFor($this->company, Carbon::parse('2026-01-15')))
         ->toEqual(4500.0);
 });
 
@@ -112,7 +113,7 @@ test('effectiveCommissionRateFor 우선순위: override → 등급 매트릭스'
         'effective_from' => '2026-02-01',
     ]);
 
-    expect($product->fresh()->effectiveCommissionRateFor($this->company, \Carbon\Carbon::parse('2026-03-01')))
+    expect($product->fresh()->effectiveCommissionRateFor($this->company, Carbon::parse('2026-03-01')))
         ->toEqual(7.5);
 });
 

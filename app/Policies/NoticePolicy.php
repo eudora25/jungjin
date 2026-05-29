@@ -19,26 +19,26 @@ class NoticePolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function update(User $user, Notice $notice): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function delete(User $user, Notice $notice): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function restore(User $user, Notice $notice): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 
     public function forceDelete(User $user, Notice $notice): bool
     {
-        return $user->isAdmin();
+        return $user->isPharma();
     }
 }

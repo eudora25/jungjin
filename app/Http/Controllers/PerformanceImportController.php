@@ -19,9 +19,7 @@ class PerformanceImportController extends Controller
 
     private const TOKEN_TTL_MIN = 30;
 
-    public function __construct(private readonly PerformanceImportService $service)
-    {
-    }
+    public function __construct(private readonly PerformanceImportService $service) {}
 
     public function form(): Response
     {

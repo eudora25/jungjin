@@ -6,8 +6,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->sales = User::factory()->create(['role' => 'sales']);
+    $this->admin = User::factory()->create(['role' => 'pharma']);
+    $this->sales = User::factory()->create(['role' => 'cso']);
 });
 
 test('실적 소유자는 draft 실적에 증빙 파일을 첨부할 수 있다', function () {
@@ -46,7 +46,7 @@ test('admin은 어떤 실적에도 증빙 파일을 첨부할 수 있다', funct
 test('타인의 실적에 파일을 첨부할 수 없다', function () {
     Storage::fake('local');
 
-    $other = User::factory()->create(['role' => 'sales']);
+    $other = User::factory()->create(['role' => 'cso']);
     $perf = Performance::factory()->create([
         'status' => Performance::STATUS_DRAFT,
         'created_by' => $other->id,
