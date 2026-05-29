@@ -35,7 +35,7 @@ class HospitalImportService
 
             $this->attachEncodingFilter($handle);
 
-            while (($cols = fgetcsv($handle)) !== false) {
+            while (($cols = fgetcsv($handle, null, ',', '"', '')) !== false) {
                 $lineNo++;
 
                 if ($lineNo === 1) {
@@ -45,6 +45,7 @@ class HospitalImportService
                         $errors[] = '필수 컬럼이 없습니다: '.implode(', ', $missing);
                         break;
                     }
+
                     continue;
                 }
 
@@ -93,6 +94,7 @@ class HospitalImportService
                             'errors' => $rowErrors,
                         ];
                     }
+
                     continue;
                 }
 
@@ -151,7 +153,7 @@ class HospitalImportService
                 $batch = [];
                 $batchSize = 500;
 
-                while (($cols = fgetcsv($handle)) !== false) {
+                while (($cols = fgetcsv($handle, null, ',', '"', '')) !== false) {
                     $lineNo++;
 
                     if ($lineNo === 1) {
@@ -160,6 +162,7 @@ class HospitalImportService
                         if (! empty($missing)) {
                             throw new \RuntimeException('필수 컬럼이 없습니다: '.implode(', ', $missing));
                         }
+
                         continue;
                     }
 
@@ -339,4 +342,3 @@ class HospitalImportService
         return implode(' / ', $parts);
     }
 }
-

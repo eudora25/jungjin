@@ -32,10 +32,15 @@ interface Analysis {
     expires_at: string;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     requiredHeaders: string[];
     analysis?: Analysis | null;
-}>();
+    handleRoute?: string;
+    indexRoute?: string;
+}>(), {
+    handleRoute: 'hospitals.import.handle',
+    indexRoute: 'hospitals.index',
+});
 
 const analyzeForm = useForm<{ file: File | null; mode: 'analyze' }>({
     file: null,
@@ -54,7 +59,7 @@ const onFileChange = (e: Event) => {
 };
 
 const submitAnalyze = () => {
-    analyzeForm.post(route('hospitals.import.handle'), {
+    analyzeForm.post(route(props.handleRoute), {
         forceFormData: true,
         preserveScroll: true,
     });
@@ -63,7 +68,7 @@ const submitAnalyze = () => {
 const submitCommit = () => {
     if (!props.analysis) return;
     commitForm.token = props.analysis.token;
-    commitForm.post(route('hospitals.import.handle'), { preserveScroll: false });
+    commitForm.post(route(props.handleRoute), { preserveScroll: false });
 };
 
 const actionLabel = (a: Action) => ({ create: '신규', update: '수정', error: '오류' }[a]);
@@ -101,7 +106,7 @@ const filteredResults = computed(() => {
                         공공데이터 CSV(대부분 CP949) 업로드를 지원합니다. <strong>관리번호</strong>를 `hospital_code`로 사용해 upsert 합니다.
                     </p>
                 </div>
-                <Link :href="route('hospitals.index')">
+                <Link :href="route(props.indexRoute)">
                     <Button label="목록으로" icon="pi pi-arrow-left" severity="secondary" outlined />
                 </Link>
             </div>

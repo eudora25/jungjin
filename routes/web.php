@@ -16,7 +16,9 @@ use App\Http\Controllers\PerformanceImportController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PharmacyImportController;
 use App\Http\Controllers\Platform\HospitalController as PlatformHospitalController;
+use App\Http\Controllers\Platform\HospitalImportController as PlatformHospitalImportController;
 use App\Http\Controllers\Platform\PharmacyController as PlatformPharmacyController;
+use App\Http\Controllers\Platform\PharmacyImportController as PlatformPharmacyImportController;
 use App\Http\Controllers\Platform\ProductController as PlatformProductController;
 use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
 use App\Http\Controllers\Platform\UserController as PlatformUserController;
@@ -176,6 +178,12 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('platform')->name('platf
     // 제약사(테넌트) 관리 — 전체 CRUD
     Route::resource('tenants', PlatformTenantController::class);
     Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
+
+    // 공유 마스터(약국·병의원) CSV 일괄 등록 — resource 보다 먼저 (/{pharmacy} 충돌 방지)
+    Route::get('/pharmacies/import', [PlatformPharmacyImportController::class, 'form'])->name('pharmacies.import.form');
+    Route::post('/pharmacies/import', [PlatformPharmacyImportController::class, 'handle'])->name('pharmacies.import.handle');
+    Route::get('/hospitals/import', [PlatformHospitalImportController::class, 'form'])->name('hospitals.import.form');
+    Route::post('/hospitals/import', [PlatformHospitalImportController::class, 'handle'])->name('hospitals.import.handle');
 
     // 공유 마스터(약국·병의원) 전역 CRUD — super_admin 이 직접 관리 (D-6)
     Route::resource('pharmacies', PlatformPharmacyController::class)

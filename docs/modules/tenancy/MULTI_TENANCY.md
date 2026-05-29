@@ -202,6 +202,8 @@
 - [page] `Platform/{Pharmacies,Hospitals}/{Create,Edit,Show}.vue` — 기존 `Clients/.../Partials/{Pharmacy,Hospital}Form.vue` 파셜 재사용 + Index 에 등록 버튼·행 링크
 - [route] `Route::resource('pharmacies'|'hospitals', ...)` (platform 그룹, super_admin)
 - [test] `PlatformMasterCrudTest` 6 cases. 전체 **327/327 PASS, 회귀 0**
+- **CSV 일괄 등록(공공데이터 LOCALDATA)**: `/platform/{pharmacies,hospitals}/import` (super_admin) 추가 — 기존 `Pharmacy/HospitalImportService` 재사용(CP949→UTF-8, `관리번호`·`사업장명`, upsert). 기존 Import.vue 를 `handleRoute`/`indexRoute` props 로 파라미터화해 admin/super_admin 공용. `docs/data/samples/건강_약국·병원·의원.csv` 로 검증: 약국 70,145행·병원 8,272행 오류 0. `PlatformImportTest` 4 cases.
+- `fgetcsv()` PHP 8.4 deprecation 정리(`escape: ''` 명시) — 샘플 재검증 0 오류(회귀 없음).
 - **후속**: 의약품(tenant-scoped, 가격/수수료/첨부 등 무거움)·사용자(전역 계정) CRUD 는 별도 단계. 현재 `/platform/products`·`/platform/users` 는 목록·조회.
 
 ### 6.4 MT-7 완료 메모 (2026-05-29) — 격리 회귀 (보안 핵심)

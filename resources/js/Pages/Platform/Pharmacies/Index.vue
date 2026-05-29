@@ -55,9 +55,14 @@ const onPage = (e: { page: number }) => {
                     <h1 class="text-2xl font-bold">약국 관리 <span class="text-base font-normal text-surface-500">(공유 마스터)</span></h1>
                     <p class="text-surface-500 mt-1 text-sm">전 제약사 공용 약국 마스터 — 전체 {{ pharmacies.total }}건</p>
                 </div>
-                <Link :href="route('platform.pharmacies.create')">
-                    <Button label="약국 등록" icon="pi pi-plus" />
-                </Link>
+                <div class="flex items-center gap-2">
+                    <Link :href="route('platform.pharmacies.import.form')">
+                        <Button label="CSV 일괄 등록" icon="pi pi-upload" severity="secondary" outlined />
+                    </Link>
+                    <Link :href="route('platform.pharmacies.create')">
+                        <Button label="약국 등록" icon="pi pi-plus" />
+                    </Link>
+                </div>
             </div>
 
             <InputText v-model="search" placeholder="약국명·코드·사업자번호 검색" class="w-full md:w-[28rem]" />

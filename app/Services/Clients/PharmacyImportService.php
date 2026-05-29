@@ -39,7 +39,7 @@ class PharmacyImportService
 
             $this->attachEncodingFilter($handle);
 
-            while (($cols = fgetcsv($handle)) !== false) {
+            while (($cols = fgetcsv($handle, null, ',', '"', '')) !== false) {
                 $lineNo++;
 
                 if ($lineNo === 1) {
@@ -49,6 +49,7 @@ class PharmacyImportService
                         $errors[] = '필수 컬럼이 없습니다: '.implode(', ', $missing);
                         break;
                     }
+
                     continue;
                 }
 
@@ -94,6 +95,7 @@ class PharmacyImportService
                             'errors' => $rowErrors,
                         ];
                     }
+
                     continue;
                 }
 
@@ -151,7 +153,7 @@ class PharmacyImportService
                 $batch = [];
                 $batchSize = 500;
 
-                while (($cols = fgetcsv($handle)) !== false) {
+                while (($cols = fgetcsv($handle, null, ',', '"', '')) !== false) {
                     $lineNo++;
 
                     if ($lineNo === 1) {
@@ -160,6 +162,7 @@ class PharmacyImportService
                         if (! empty($missing)) {
                             throw new \RuntimeException('필수 컬럼이 없습니다: '.implode(', ', $missing));
                         }
+
                         continue;
                     }
 
@@ -292,4 +295,3 @@ class PharmacyImportService
         return implode(' / ', $parts);
     }
 }
-
