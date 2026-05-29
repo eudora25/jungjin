@@ -243,6 +243,8 @@
 - **D-4 super_admin 데이터 접근**: ✅ **테넌트 선택 후 진입(임퍼서네이션)**. 세션 "현재 테넌트" 기준 스코프. 전역 합산은 전용 대시보드에서 우회.
 - **D-5 사용자 이메일 유일성**: ✅ **전역 unique 유지**. 로그인 단순(이메일+비밀번호). 겸직 케이스 없음 전제. 로그인 화면 변경 없음.
 - **D-6 약국·병원 쓰기 권한**: ✅ **super_admin 전용 쓰기 + 제약사 admin 변경요청 승인 워크플로**. 제약사 admin 은 신규 등록/수정을 *요청*만, super_admin 검토·승인 시 반영(반려 가능). `master_change_requests` 테이블(§3.3), 단계 MT-8.
+- **D-7 코드 구조(폴더 분리)**: ✅ **Platform 전용만 폴더(`app/Http/Controllers/Platform/*`), 나머지는 도메인 기준 유지**. pharma·cso 는 실적·정산 등 컨트롤러를 공유(런타임 role/Policy/TenantScope 분기)하므로 `pharma/`·`cso/` 폴더로 강제 분리하지 않음(공유 로직 파편화 방지). 역할 구분은 role 코드 + Policy + TenantScope 로 충분.
+- **메뉴(IA)**: platform = "플랫폼" 그룹(`/platform/*`) 전용. pharma = "마스터 관리" + 거래처/실적/정산/관리. cso = 영업 대시보드/실적. (`AppMenu.vue` 가시성 `isPlatform`/`isPharma`/`isCso`)
 
 ---
 
