@@ -10,6 +10,13 @@ import InputText from 'primevue/inputtext';
 import Paginator from 'primevue/paginator';
 import Tag from 'primevue/tag';
 
+interface TenantAdmin {
+    id: number;
+    name: string;
+    email: string;
+    is_active: boolean;
+}
+
 interface Tenant {
     id: number;
     name: string;
@@ -17,6 +24,7 @@ interface Tenant {
     business_registration_number: string | null;
     status: 'active' | 'inactive';
     users_count: number;
+    users: TenantAdmin[];
 }
 
 interface Paginated<T> {
@@ -83,10 +91,22 @@ const onPage = (e: { page: number }) => {
                         <div v-if="data.code" class="text-xs text-surface-400 mt-1">{{ data.code }}</div>
                     </template>
                 </Column>
-                <Column header="사업자번호" style="width: 160px">
+                <Column header="사업자번호" style="width: 140px">
                     <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
                 </Column>
-                <Column header="소속 사용자" style="width: 120px">
+                <Column header="관리자 계정" style="min-width: 220px">
+                    <template #body="{ data }">
+                        <div v-if="data.users.length" class="flex flex-col gap-1">
+                            <div v-for="admin in data.users" :key="admin.id" class="flex items-center gap-2">
+                                <span class="font-medium">{{ admin.name }}</span>
+                                <span class="text-surface-400 text-xs">{{ admin.email }}</span>
+                                <Tag v-if="!admin.is_active" value="비활성" severity="secondary" />
+                            </div>
+                        </div>
+                        <span v-else class="text-surface-400 text-sm">관리자 미지정</span>
+                    </template>
+                </Column>
+                <Column header="소속 사용자" style="width: 100px">
                     <template #body="{ data }">{{ data.users_count }}명</template>
                 </Column>
                 <Column header="상태" style="width: 90px">

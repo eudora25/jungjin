@@ -16,6 +16,30 @@ test('super_admin 은 제약사 목록을 조회한다', function () {
         ->assertInertia(fn ($page) => $page->component('Platform/Tenants/Index')->has('tenants.data'));
 });
 
+test('제약사 목록에 관리자(pharma) 계정이 함께 표시된다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    $tenant = Tenant::factory()->create();
+    User::factory()->create(['role' => 'pharma', 'tenant_id' => $tenant->id, 'name' => '대표관리자']);
+    // cso 는 관리자 컬럼에 노출되지 않아야 한다
+    User::factory()->create(['role' => 'cso', 'tenant_id' => $tenant->id]);
+
+    $this->actingAs($super)
+        ->get(route('platform.tenants.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Platform/Tenants/Index')
+            // 기본(시드) 제약사가 함께 있으므로 생성한 제약사 행을 찾아 검증
+            ->where('tenants.data', function ($data) use ($tenant) {
+                $row = collect($data)->firstWhere('id', $tenant->id);
+
+                // pharma 1명만 노출 (cso 제외)
+                return $row !== null
+                    && count($row['users']) === 1
+                    && $row['users'][0]['name'] === '대표관리자';
+            })
+        );
+});
+
 test('super_admin 은 제약사 등록 시 관리자(pharma) 계정을 함께 생성한다', function () {
     $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 

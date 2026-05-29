@@ -28,6 +28,10 @@ class TenantController extends Controller
 
         $tenants = Tenant::query()
             ->withCount('users')
+            // 제약사별 관리자(pharma) 계정 — 목록에 노출
+            ->with(['users' => fn ($q) => $q->where('role', User::ROLE_PHARMA)
+                ->orderBy('name')
+                ->select(['id', 'name', 'email', 'is_active', 'tenant_id'])])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
