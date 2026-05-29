@@ -12,6 +12,10 @@ const form = useForm({
     code: '',
     business_registration_number: '',
     status: 'active',
+    admin_name: '',
+    admin_email: '',
+    admin_password: '',
+    admin_password_confirmation: '',
 });
 
 const statusOptions = [
@@ -55,6 +59,33 @@ const submit = () => form.post(route('platform.tenants.store'));
                             <label class="block text-sm mb-1">상태</label>
                             <Select v-model="form.status" :options="statusOptions" option-label="label" option-value="value" class="w-full" />
                         </div>
+
+                        <div class="border-t border-surface-200 dark:border-surface-700 pt-4 mt-2">
+                            <h2 class="text-base font-semibold mb-1">초기 관리자 계정</h2>
+                            <p class="text-surface-500 text-sm mb-3">이 제약사를 운영할 관리자(pharma) 로그인 계정을 함께 생성합니다.</p>
+                            <div class="flex flex-col gap-4">
+                                <div>
+                                    <label class="block text-sm mb-1">성명 <span class="text-red-500">*</span></label>
+                                    <InputText v-model="form.admin_name" class="w-full" />
+                                    <Message v-if="form.errors.admin_name" severity="error" size="small" variant="simple">{{ form.errors.admin_name }}</Message>
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1">이메일 <span class="text-red-500">*</span></label>
+                                    <InputText v-model="form.admin_email" type="email" class="w-full" placeholder="로그인 아이디로 사용" />
+                                    <Message v-if="form.errors.admin_email" severity="error" size="small" variant="simple">{{ form.errors.admin_email }}</Message>
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1">비밀번호 <span class="text-red-500">*</span></label>
+                                    <InputText v-model="form.admin_password" type="password" class="w-full" />
+                                    <Message v-if="form.errors.admin_password" severity="error" size="small" variant="simple">{{ form.errors.admin_password }}</Message>
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1">비밀번호 확인 <span class="text-red-500">*</span></label>
+                                    <InputText v-model="form.admin_password_confirmation" type="password" class="w-full" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end gap-2 pt-2">
                             <Link :href="route('platform.tenants.index')">
                                 <Button label="취소" severity="secondary" outlined type="button" />

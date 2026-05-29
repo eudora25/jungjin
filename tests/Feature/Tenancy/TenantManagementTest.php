@@ -16,7 +16,7 @@ test('super_admin 은 제약사 목록을 조회한다', function () {
         ->assertInertia(fn ($page) => $page->component('Platform/Tenants/Index')->has('tenants.data'));
 });
 
-test('super_admin 은 제약사를 등록한다', function () {
+test('super_admin 은 제약사 등록 시 관리자(pharma) 계정을 함께 생성한다', function () {
     $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
     $this->actingAs($super)
@@ -24,10 +24,23 @@ test('super_admin 은 제약사를 등록한다', function () {
             'name' => '한미약품',
             'code' => 'HANMI',
             'status' => 'active',
+            'admin_name' => '김대표',
+            'admin_email' => 'owner@hanmi.test',
+            'admin_password' => 'password123',
+            'admin_password_confirmation' => 'password123',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('tenants', ['name' => '한미약품', 'code' => 'HANMI', 'created_by' => $super->id]);
+
+    $tenant = Tenant::where('code', 'HANMI')->firstOrFail();
+    $this->assertDatabaseHas('users', [
+        'email' => 'owner@hanmi.test',
+        'name' => '김대표',
+        'role' => 'pharma',
+        'tenant_id' => $tenant->id,
+        'is_active' => true,
+    ]);
 });
 
 test('제약사 등록 시 제약사명은 필수', function () {
@@ -36,6 +49,32 @@ test('제약사 등록 시 제약사명은 필수', function () {
     $this->actingAs($super)
         ->post(route('platform.tenants.store'), ['name' => '', 'status' => 'active'])
         ->assertSessionHasErrors('name');
+});
+
+test('제약사 등록 시 관리자 이메일은 필수이며 중복 불가', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    User::factory()->create(['email' => 'dup@hanmi.test']);
+
+    // 관리자 정보 누락 → 검증 실패 + tenant 미생성(트랜잭션)
+    $this->actingAs($super)
+        ->post(route('platform.tenants.store'), [
+            'name' => '계정없는약품',
+            'status' => 'active',
+        ])
+        ->assertSessionHasErrors(['admin_name', 'admin_email', 'admin_password']);
+    $this->assertDatabaseMissing('tenants', ['name' => '계정없는약품']);
+
+    // 이메일 중복
+    $this->actingAs($super)
+        ->post(route('platform.tenants.store'), [
+            'name' => '중복약품',
+            'status' => 'active',
+            'admin_name' => '김중복',
+            'admin_email' => 'dup@hanmi.test',
+            'admin_password' => 'password123',
+            'admin_password_confirmation' => 'password123',
+        ])
+        ->assertSessionHasErrors('admin_email');
 });
 
 test('super_admin 은 제약사 admin 계정을 생성한다 (위임형)', function () {

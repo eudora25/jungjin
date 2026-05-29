@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -54,13 +55,32 @@ class TenantController extends Controller
     public function store(StoreTenantRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['created_by'] = $request->user()->id;
 
-        $tenant = Tenant::create($data);
+        // 제약사(tenant) + 초기 관리자(pharma) 계정을 한 트랜잭션으로 동시 생성 (D-2)
+        $tenant = DB::transaction(function () use ($data, $request) {
+            $tenant = Tenant::create([
+                'name' => $data['name'],
+                'code' => $data['code'] ?? null,
+                'business_registration_number' => $data['business_registration_number'] ?? null,
+                'status' => $data['status'],
+                'created_by' => $request->user()->id,
+            ]);
+
+            User::create([
+                'name' => $data['admin_name'],
+                'email' => $data['admin_email'],
+                'password' => Hash::make($data['admin_password']),
+                'role' => User::ROLE_PHARMA,
+                'tenant_id' => $tenant->id,
+                'is_active' => true,
+            ]);
+
+            return $tenant;
+        });
 
         return redirect()
             ->route('platform.tenants.show', $tenant)
-            ->with('success', "제약사 [{$tenant->name}] 를 등록했습니다.");
+            ->with('success', "제약사 [{$tenant->name}] 와 관리자 계정을 등록했습니다.");
     }
 
     public function show(Request $request, Tenant $tenant): Response

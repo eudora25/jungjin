@@ -54,7 +54,8 @@
   - GAP-10 role 리네임 + 코드 테이블 — 🟢 **완료**: `users.role` = **`platform`/`pharma`/`cso`** (구 super_admin/admin/sales), 헬퍼 `isPlatform/isPharma/isCso`. 코드 의미는 `code_definitions`(group_code=`user_role`) 테이블에 저장·조회. tenant_id=null 로 구분 안 함
   - GAP-10 임퍼서네이션 — 🟢 **완료**: platform 이 제약사로 "진입"(세션) → 그 테넌트 스코프로 운영 화면 사용 + 상단 배너/진입 종료. `Platform\TenantController::enter/exit`, `User::managesCurrentTenant()`, AppMenu 진입 인지
   - GAP-10 MT-8 변경요청 워크플로 — 🟢 **완료**: 공유 마스터(약국·병의원) pharma 직접 쓰기 차단(platform 전용) + 변경요청 제출(pharma)→검토·승인/반려(platform) 반영. `master_change_requests`, `MasterChangeRequestService`, `MasterChangeRequestPolicy` + UI(`MasterChangeRequests/Index.vue` 요청 폼, `Platform/MasterRequests/Index.vue` 검토 화면) + 메뉴 연동
-- 테스트: `./vendor/bin/sail test` 기준 **352개 전체 통과** (2026-05-29)
+- 테스트: `./vendor/bin/sail test` 기준 **353개 전체 통과** (2026-05-29)
+  - 제약사 등록 시 초기 관리자(pharma) 계정 동시 생성(1트랜잭션) — `platform.tenants.store` (D-2 보강)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)
