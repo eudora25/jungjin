@@ -31,6 +31,49 @@ test('pharma 가 약국 신규 변경요청을 제출한다', function () {
     expect(Pharmacy::where('pharmacy_name', '신규요청약국')->exists())->toBeFalse();
 });
 
+test('pharma 변경요청 목록 화면이 렌더된다', function () {
+    MasterChangeRequest::create([
+        'tenant_id' => $this->tenant->id,
+        'requested_by' => $this->pharma->id,
+        'target_type' => 'pharmacy',
+        'request_type' => 'create',
+        'payload' => ['pharmacy_name' => '내요청약국'],
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->pharma)
+        ->get(route('master-change-requests.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('MasterChangeRequests/Index')
+            ->where('requests.total', 1)
+        );
+});
+
+test('platform 검토 화면이 렌더되고 cso 는 접근할 수 없다', function () {
+    MasterChangeRequest::create([
+        'tenant_id' => $this->tenant->id,
+        'requested_by' => $this->pharma->id,
+        'target_type' => 'hospital',
+        'request_type' => 'create',
+        'payload' => ['hospital_name' => '검토대기병원'],
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->platform)
+        ->get(route('platform.master-requests.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Platform/MasterRequests/Index')
+            ->where('requests.total', 1)
+            ->where('filters.status', 'pending')
+        );
+
+    $this->actingAs($this->cso)
+        ->get(route('platform.master-requests.index'))
+        ->assertForbidden();
+});
+
 test('cso 는 변경요청을 제출할 수 없다', function () {
     $this->actingAs($this->cso)
         ->post(route('master-change-requests.store'), [

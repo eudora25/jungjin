@@ -25,6 +25,7 @@ const model = computed(() => [
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/platform/products' },
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/platform/hospitals' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/platform/pharmacies' },
+            { label: '변경요청 검토', icon: 'pi pi-fw pi-inbox', to: '/platform/master-requests' },
             { label: '사용자 관리', icon: 'pi pi-fw pi-users', to: '/platform/users' },
         ],
     },
@@ -60,6 +61,7 @@ const model = computed(() => [
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/products' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/pharmacies' },
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/hospitals' },
+            { label: '변경요청', icon: 'pi pi-fw pi-send', to: '/master-change-requests', visible: isPharma.value },
         ],
     },
     {

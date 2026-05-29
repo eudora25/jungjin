@@ -179,7 +179,7 @@
 | 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | ⚪ **다음** (단, 테스트 admin tenant 부여 선행 필요 — 아래 메모) |
 | 4 | MT-5 | Policy 테넌트 조건(admin/sales 동일 테넌트, super_admin 통과) | 🟢 **완료 (2026-05-29)** (단일 `Gate::before`. admin 소속 sales 관리 범위는 후속) |
 | 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | 🟢 **완료 (2026-05-29)** |
-| 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | 🟡 **백엔드 완료 (2026-05-29)** — 워크플로/정책/테스트. UI(요청 폼·검토 화면) 후속 |
+| 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | 🟢 **완료 (2026-05-29)** — 워크플로/정책/테스트 + UI(요청 폼·검토 화면) |
 
 > **의존성 메모**: MT-6 제약사 CRUD 는 `tenants`(전역, super_admin 전용) 대상이라 `TenantScope` 불필요 → MT-3 전에 선행 가능. 단 **"테넌트 진입(임퍼서네이션)" 버튼은 MT-3(ResolveTenant) 완료 후 연결**한다. super_admin 계정은 MT-6 에서 시드/승격 경로 마련.
 
@@ -223,8 +223,8 @@
 - [controller] `MasterChangeRequestController`(pharma index/store, tenant 자동 주입) + `Platform\MasterChangeRequestController`(platform index/approve/reject)
 - [route] pharma: `GET|POST /master-change-requests` (auth 그룹). platform: `GET /platform/master-requests`·`POST .../{masterRequest}/approve|reject` (role:platform)
 - **직접 쓰기 차단**: `Pharmacy/HospitalPolicy` create/update/delete + `Store/Update{Pharmacy,Hospital}Request::authorize` + CSV import(`create` 정책) 모두 `isPharma()` → `isPlatform()` 전환. 기존 `PharmacyCrudTest`·`HospitalCrudTest`·`*ImportTest` 를 platform 쓰기/ pharma 403 으로 재작성
-- [test] `MasterChangeRequestTest` 8 cases(제출/cso 차단/검증/create 승인 반영/update 승인 반영/반려/pharma 승인 차단) + CRUD·Import 재작성. 전체 **350/350 PASS, 회귀 0**
-- **후속(MT-8 UI)**: pharma 요청 제출 폼(`MasterChangeRequests/Index.vue`) + platform 검토 화면(`Platform/MasterRequests/Index.vue`)
+- [test] `MasterChangeRequestTest` 10 cases(제출/cso 차단/검증/create·update 승인 반영/반려/pharma 승인 차단/pharma·platform 목록 렌더) + CRUD·Import 재작성. 전체 **352/352 PASS, 회귀 0**
+- [UI] `MasterChangeRequests/Index.vue`(pharma — 요청 작성 Dialog: 대상/요청 유형 + 약국/병의원 동적 필드 + 내 요청 목록·상태) + `Platform/MasterRequests/Index.vue`(platform — 상태 필터 + 승인/반려 Dialog). 메뉴: pharma "마스터 관리 > 변경요청", platform "플랫폼 > 변경요청 검토"
 
 ### 6.6 임퍼서네이션 완료 (2026-05-29) — platform 의 제약사 진입
 
@@ -312,7 +312,7 @@ D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진�
 **문서 버전**: 1.3
 **작성일**: 2026-05-29
 **최종 갱신**: 2026-05-29 (MT-4 도메인 tenant_id 부착 완료 — nullable+백필. 5/5 신규, 전체 291/291 PASS)
-**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7 완료 + MT-8 백엔드 완료(전체 350/350, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-8 UI(요청 폼·검토 화면) / MT-4-finalize(NOT NULL §6.2) / `/platform` 의약품·사용자 CRUD.
+**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7·MT-8 완료(전체 352/352, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-4-finalize(NOT NULL §6.2) / `/platform` 의약품·사용자 CRUD.
 
 ### MT-6 설계 보정 (2026-05-29) — super_admin = 전역 슈퍼유저
 
