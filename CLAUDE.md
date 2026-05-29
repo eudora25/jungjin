@@ -12,6 +12,7 @@
 - **`docs/onboarding/HANDOFF.md`**: 프로젝트 핸드오프(배경/스택/원칙/이관 가이드)
 - **`docs/planning/ROADMAP.md`**: 작업 진행 보드 (완료·예정 항목 추적)
 - **`docs/modules/product/PRODUCT_MANAGEMENT.md`**: 제품 관리(Phase 1~3) 설계 + 변경 로그
+- **`docs/modules/product/DRUG_DOMAIN_REDESIGN.md`**: 의약품 도메인 재설계(GAP-11) — 공유 마스터+제약사 취급품 (Pample 차용, 설계중)
 - **`docs/modules/performance-settlement/PERFORMANCE_SETTLEMENT.md`**: 실적·정산(Phase 4) 설계 + 변경 로그
 - **`docs/modules/client/CLIENT_MANAGEMENT.md`**: 약국·병원·영업사원 마스터(M4) 설계 + 변경 로그
 - **`docs/modules/master-data/MASTER_DATA_ADMIN.md`**: 기준정보 마스터 admin 분리(GAP-9) — 병의원·약국·의약품을 거래처와 독립 마스터로

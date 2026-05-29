@@ -106,6 +106,7 @@
 | **GAP-8** | **감사 로그 운영 규정 (reason/보관/조회)** | P2 | S | reason 필수 액션 정의, 보관/정리 정책, 조회 권한 명문화. §4.16 |
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
 | **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~7 🟢(격리 엔진·게이트·회귀 통과), **Now: MT-8/사용자·의약품 CRUD**(약국·병의원 CRUD 🟢). cutover(OPS-7)는 MT-7 이후. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
+| **GAP-11** | **의약품 도메인 재설계 (공유 마스터 + 제약사 취급품)** | P2 | XL | 🟡 설계중(DR-0). 단일 `products`(테넌트 복제) → `drug_products`(공유, platform) + `company_drug_products`(제약사 취급+수수료). Pample(renewal) 경량 차용. 실적·정산 재배선 → **GAP-10 안정화 후**. 설계: [`DRUG_DOMAIN_REDESIGN.md`](../modules/product/DRUG_DOMAIN_REDESIGN.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
 
