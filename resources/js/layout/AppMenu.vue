@@ -35,6 +35,8 @@ const model = computed(() => [
                 label: '대시보드',
                 icon: 'pi pi-fw pi-home',
                 to: '/dashboard',
+                // platform(미진입)은 /dashboard 가 제약사 관리로 리다이렉트되므로 숨김
+                visible: inTenantView.value,
             },
             {
                 label: '영업 대시보드',
