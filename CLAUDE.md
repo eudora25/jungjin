@@ -51,12 +51,13 @@
   - GAP-10 MT-7: 테넌트 격리 회귀 — 🟢 **완료** (`TenantIsolationTest` 8 — 거래처·실적·정산·목표 목록 자사 격리 / 교차 테넌트 상세 403 / 생성 자동주입. 회귀 0)
   - GAP-10 마스터 CRUD(1차): `/platform` 약국·병의원 전역 CRUD + 공공데이터 CSV 일괄 등록 — 🟢 **완료** (super_admin 직접 관리, 기존 Form Request·import 서비스 재사용. samples CSV 검증. 의약품·사용자 CRUD는 후속)
   - GAP-10 role 리네임 + 코드 테이블 — 🟢 **완료**: `users.role` = **`platform`/`pharma`/`cso`** (구 super_admin/admin/sales), 헬퍼 `isPlatform/isPharma/isCso`. 코드 의미는 `code_definitions`(group_code=`user_role`) 테이블에 저장·조회. tenant_id=null 로 구분 안 함
-- 테스트: `./vendor/bin/sail test` 기준 **334개 전체 통과** (2026-05-29)
+  - GAP-10 임퍼서네이션 — 🟢 **완료**: platform 이 제약사로 "진입"(세션) → 그 테넌트 스코프로 운영 화면 사용 + 상단 배너/진입 종료. `Platform\TenantController::enter/exit`, `User::managesCurrentTenant()`, AppMenu 진입 인지
+- 테스트: `./vendor/bin/sail test` 기준 **339개 전체 통과** (2026-05-29)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)
 - **운영 경로 B 확정** — **GAP-10 멀티테넌시(MT-1~)** 선행 → MT-7 격리 검증 후 **OPS-6·OPS-7** cutover
-- **Now**: ~~MT-1~7 + 약국·병의원 CRUD~~ 🟢 → **사용자·의약품 CRUD** / MT-8(변경요청 워크플로) / MT-4-finalize(NOT NULL §6.2) / super_admin 임퍼서네이션
+- **Now**: ~~MT-1~7 + 약국·병의원 CRUD + role 리네임 + 임퍼서네이션~~ 🟢 → **MT-8(변경요청 워크플로)** / 사용자·의약품 CRUD / MT-4-finalize(NOT NULL §6.2)
 - **Later**: P2-1~4(소규모)·GAP-7/8·OPS-7·M6 알림
 
 ## 빌드 주의사항

@@ -37,7 +37,7 @@ class SettlementController extends Controller
 
         $settlements = Settlement::query()
             ->with(['company:id,company_name'])
-            ->when(! $user->isPharma(), fn ($q) => $q->whereHas(
+            ->when(! $user->managesCurrentTenant(), fn ($q) => $q->whereHas(
                 'lines.performance',
                 fn ($p) => $p->where('created_by', $user->id),
             ))

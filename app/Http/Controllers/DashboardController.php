@@ -20,8 +20,9 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
-        // 플랫폼 운영자(super_admin)는 플랫폼 영역으로 진입 (GAP-10 MT-6)
-        if ($request->user()->isPlatform()) {
+        // 플랫폼 운영자(platform)는 플랫폼 영역으로. 단 특정 제약사로 진입(임퍼서네이션) 중이면
+        // 해당 제약사 대시보드를 그대로 본다 (GAP-10).
+        if ($request->user()->isPlatform() && ! $request->session()->has('impersonated_tenant_id')) {
             return redirect()->route('platform.tenants.index');
         }
 

@@ -179,6 +179,10 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     Route::resource('tenants', PlatformTenantController::class);
     Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
 
+    // 임퍼서네이션 — 특정 제약사로 진입/종료 (GAP-10)
+    Route::post('/tenants/{tenant}/enter', [PlatformTenantController::class, 'enter'])->name('tenants.enter');
+    Route::post('/exit', [PlatformTenantController::class, 'exit'])->name('exit');
+
     // 공유 마스터(약국·병의원) CSV 일괄 등록 — resource 보다 먼저 (/{pharmacy} 충돌 방지)
     Route::get('/pharmacies/import', [PlatformPharmacyImportController::class, 'form'])->name('pharmacies.import.form');
     Route::post('/pharmacies/import', [PlatformPharmacyImportController::class, 'handle'])->name('pharmacies.import.handle');

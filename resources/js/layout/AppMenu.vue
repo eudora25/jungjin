@@ -9,10 +9,17 @@ const isCso = computed(() => page.props?.auth?.user?.role === 'cso');
 const isPlatform = computed(() => page.props?.auth?.user?.role === 'platform');
 const authUserId = computed(() => page.props?.auth?.user?.id);
 
+// GAP-10 임퍼서네이션: platform 이 특정 제약사로 진입 중인지
+const impersonating = computed(() => page.props?.impersonating ?? null);
+// 제약사 관리자처럼 동작 (pharma, 또는 진입 중인 platform)
+const actingPharma = computed(() => isPharma.value || (isPlatform.value && !!impersonating.value));
+// 테넌트 운영 화면 접근 (pharma/cso, 또는 진입 중인 platform)
+const inTenantView = computed(() => !isPlatform.value || !!impersonating.value);
+
 const model = computed(() => [
     {
         label: '플랫폼',
-        visible: isPlatform.value,
+        visible: isPlatform.value && !impersonating.value,
         items: [
             { label: '제약사 관리', icon: 'pi pi-fw pi-building-columns', to: '/platform/tenants' },
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/platform/products' },
@@ -45,9 +52,9 @@ const model = computed(() => [
     {
         label: '마스터 관리',
         path: '/master-data',
-        visible: isPharma.value,
+        visible: actingPharma.value,
         items: [
-            { label: '마스터 홈', icon: 'pi pi-fw pi-th-large', to: '/master-data', visible: isPharma.value },
+            { label: '마스터 홈', icon: 'pi pi-fw pi-th-large', to: '/master-data', visible: actingPharma.value },
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/products' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/pharmacies' },
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/hospitals' },
@@ -56,7 +63,7 @@ const model = computed(() => [
     {
         label: '거래처',
         path: '/companies',
-        visible: !isPlatform.value,
+        visible: inTenantView.value,
         items: [
             { label: '업체 관리', icon: 'pi pi-fw pi-briefcase', to: '/companies' },
         ],
@@ -64,7 +71,7 @@ const model = computed(() => [
     {
         label: '실적',
         path: '/performance',
-        visible: !isPlatform.value,
+        visible: inTenantView.value,
         items: [
             {
                 label: '실적 목록',
@@ -85,7 +92,7 @@ const model = computed(() => [
     },
     {
         label: '정산',
-        visible: !isPlatform.value,
+        visible: inTenantView.value,
         items: [
             {
                 label: '정산 관리',
@@ -95,7 +102,7 @@ const model = computed(() => [
             {
                 label: '수수료 명세',
                 icon: 'pi pi-fw pi-wallet',
-                to: isPharma.value
+                to: actingPharma.value
                     ? '/commission-summary'
                     : `/commission-summary/users/${authUserId.value}/statement`,
             },
@@ -103,28 +110,28 @@ const model = computed(() => [
                 label: '월간 보고서',
                 icon: 'pi pi-fw pi-chart-line',
                 to: '/reports/monthly',
-                visible: isPharma.value,
+                visible: actingPharma.value,
             },
         ],
     },
     {
         label: '관리',
         path: '/admin',
-        visible: isPharma.value,
+        visible: actingPharma.value,
         items: [
             {
                 label: '사용자 관리',
                 icon: 'pi pi-fw pi-user-edit',
                 to: '/users',
-                visible: isPharma.value,
+                visible: actingPharma.value,
             },
             {
                     label: '목표 관리',
                     icon: 'pi pi-fw pi-chart-bar',
                     to: '/sales-quotas',
-                    visible: isPharma.value,
+                    visible: actingPharma.value,
                 },
-            { label: '영업사원 (조회)', icon: 'pi pi-fw pi-id-card', to: '/clients/sales', visible: isPharma.value },
+            { label: '영업사원 (조회)', icon: 'pi pi-fw pi-id-card', to: '/clients/sales', visible: actingPharma.value },
             { label: '설정', icon: 'pi pi-fw pi-cog', to: '/profile' },
         ],
     },

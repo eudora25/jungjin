@@ -68,6 +68,8 @@ const submitAdmin = () =>
     });
 
 const roleLabel = (r: string) => (r === 'pharma' ? '관리자' : '영업사원');
+
+const enterTenant = () => router.post(route('platform.tenants.enter', props.tenant.id));
 </script>
 
 <template>
@@ -84,6 +86,8 @@ const roleLabel = (r: string) => (r === 'pharma' ? '관리자' : '영업사원')
                     <Link :href="route('platform.tenants.index')">
                         <Button label="목록으로" icon="pi pi-arrow-left" severity="secondary" outlined />
                     </Link>
+                    <Button label="이 제약사로 진입" icon="pi pi-sign-in" severity="help"
+                            @click="enterTenant" />
                     <Link v-if="can.update" :href="route('platform.tenants.edit', tenant.id)">
                         <Button label="수정" icon="pi pi-pencil" />
                     </Link>

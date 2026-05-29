@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -42,6 +43,16 @@ class HandleInertiaRequests extends Middleware
                     ]
                     : null,
             ],
+            // GAP-10 임퍼서네이션: platform 이 특정 제약사로 진입 중이면 그 정보
+            'impersonating' => function () use ($request) {
+                $tid = $request->session()->get('impersonated_tenant_id');
+                if (! $tid || ! $request->user()?->isPlatform()) {
+                    return null;
+                }
+                $tenant = Tenant::find($tid);
+
+                return $tenant ? ['id' => $tenant->id, 'name' => $tenant->name] : null;
+            },
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

@@ -21,14 +21,18 @@ class ResolveTenant
         $user = $request->user();
         $context = app(TenantContext::class);
 
-        if ($user && ! $user->isPlatform() && $user->tenant_id) {
-            $context->set((int) $user->tenant_id);
+        if ($user) {
+            if ($user->isPlatform()) {
+                // 플랫폼 운영자: 특정 제약사로 진입(임퍼서네이션)한 경우에만 그 테넌트로 스코프
+                $impersonated = $request->session()->get('impersonated_tenant_id');
+                if ($impersonated) {
+                    $context->set((int) $impersonated);
+                }
+            } elseif ($user->tenant_id) {
+                // admin(pharma)/sales(cso): 소속 제약사로 격리
+                $context->set((int) $user->tenant_id);
+            }
         }
-
-        // 후속(임퍼서네이션): super_admin 이 세션에서 테넌트를 선택했으면 그 값으로 설정.
-        // if ($user && $user->isPlatform() && $request->session()->has('impersonated_tenant_id')) {
-        //     $context->set((int) $request->session()->get('impersonated_tenant_id'));
-        // }
 
         return $next($request);
     }

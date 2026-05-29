@@ -114,6 +114,30 @@ class TenantController extends Controller
             ->with('success', "제약사 [{$tenant->name}] 를 삭제했습니다.");
     }
 
+    /** 임퍼서네이션 — 특정 제약사로 진입 (GAP-10) */
+    public function enter(Request $request, Tenant $tenant): RedirectResponse
+    {
+        abort_unless($request->user()->isPlatform(), 403);
+
+        $request->session()->put('impersonated_tenant_id', $tenant->id);
+
+        return redirect()
+            ->route('dashboard')
+            ->with('success', "제약사 [{$tenant->name}] (으)로 진입했습니다. 이제 해당 제약사 화면을 봅니다.");
+    }
+
+    /** 임퍼서네이션 종료 */
+    public function exit(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->isPlatform(), 403);
+
+        $request->session()->forget('impersonated_tenant_id');
+
+        return redirect()
+            ->route('platform.tenants.index')
+            ->with('success', '제약사 진입을 종료했습니다.');
+    }
+
     /** 위임형(D-2) — 제약사 admin 계정 생성 */
     public function storeAdmin(StoreTenantAdminRequest $request, Tenant $tenant): RedirectResponse
     {

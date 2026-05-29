@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Tenancy\TenantContext;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,6 +66,21 @@ class User extends Authenticatable
     public function isCso(): bool
     {
         return $this->role === self::ROLE_CSO;
+    }
+
+    /**
+     * 현재 테넌트의 "관리자처럼" 동작하는가 (전체 조회/관리 권한).
+     * - pharma: 항상 자사 관리자
+     * - platform: 특정 제약사로 임퍼서네이션(진입) 중일 때만 (TenantContext 설정됨)
+     * GAP-10 super_admin 임퍼서네이션.
+     */
+    public function managesCurrentTenant(): bool
+    {
+        if ($this->isPharma()) {
+            return true;
+        }
+
+        return $this->isPlatform() && app(TenantContext::class)->hasTenant();
     }
 
     /** 소속 제약사(테넌트) — platform 은 null */

@@ -40,7 +40,7 @@ class PerformanceController extends Controller
 
         $performances = Performance::query()
             ->with(['company:id,company_name', 'product:id,product_name,insurance_code', 'creator:id,name'])
-            ->when(! $user->isPharma(), fn ($q) => $q->where('created_by', $user->id))
+            ->when(! $user->managesCurrentTenant(), fn ($q) => $q->where('created_by', $user->id))
             ->when(in_array($status, Performance::STATUSES, true), fn ($q) => $q->where('status', $status))
             ->when($from, fn ($q) => $q->where('performance_date', '>=', $from))
             ->when($to, fn ($q) => $q->where('performance_date', '<=', $to))
@@ -63,7 +63,7 @@ class PerformanceController extends Controller
             'statuses' => Performance::STATUSES,
             'can' => [
                 'create' => $user->can('create', Performance::class),
-                'viewCreator' => $user->isPharma(),
+                'viewCreator' => $user->managesCurrentTenant(),
             ],
         ]);
     }

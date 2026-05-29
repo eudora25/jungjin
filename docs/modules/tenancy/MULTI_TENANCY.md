@@ -174,7 +174,8 @@
 | ✅ | MT-2(1부) | 기본 제약사 시드 + users 백필 | 🟢 |
 | ✅ | MT-4 | 도메인 5테이블 `tenant_id`(nullable)+FK+백필 | 🟢 |
 | **1** | **MT-6** | **super_admin 페이지** — super_admin 시드/게이팅 + 제약사(tenant) CRUD + 제약사 admin 생성(위임형) + 전용 메뉴 | 🟢 **완료 (2026-05-29)** |
-| 2 | MT-3 | 격리 엔진 — `ResolveTenant` + `TenantScope` + 생성 시 자동 주입 | 🟢 **완료 (2026-05-29)** (super_admin 임퍼서네이션 진입은 후속) |
+| 2 | MT-3 | 격리 엔진 — `ResolveTenant` + `TenantScope` + 생성 시 자동 주입 | 🟢 **완료 (2026-05-29)** |
+| 2.5 | 임퍼서네이션 | platform 이 제약사로 진입(세션) → 그 테넌트 스코프로 운영 화면 사용 | 🟢 **완료 (2026-05-29)** |
 | 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | ⚪ **다음** (단, 테스트 admin tenant 부여 선행 필요 — 아래 메모) |
 | 4 | MT-5 | Policy 테넌트 조건(admin/sales 동일 테넌트, super_admin 통과) | 🟢 **완료 (2026-05-29)** (단일 `Gate::before`. admin 소속 sales 관리 범위는 후속) |
 | 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | 🟢 **완료 (2026-05-29)** |
@@ -209,6 +210,17 @@
 - **CSV 일괄 등록(공공데이터 LOCALDATA)**: `/platform/{pharmacies,hospitals}/import` (super_admin) 추가 — 기존 `Pharmacy/HospitalImportService` 재사용(CP949→UTF-8, `관리번호`·`사업장명`, upsert). 기존 Import.vue 를 `handleRoute`/`indexRoute` props 로 파라미터화해 admin/super_admin 공용. `docs/data/samples/건강_약국·병원·의원.csv` 로 검증: 약국 70,145행·병원 8,272행 오류 0. `PlatformImportTest` 4 cases.
 - `fgetcsv()` PHP 8.4 deprecation 정리(`escape: ''` 명시) — 샘플 재검증 0 오류(회귀 없음).
 - **후속**: 의약품(tenant-scoped, 가격/수수료/첨부 등 무거움)·사용자(전역 계정) CRUD 는 별도 단계. 현재 `/platform/products`·`/platform/users` 는 목록·조회.
+
+### 6.6 임퍼서네이션 완료 (2026-05-29) — platform 의 제약사 진입
+
+D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진입"하면 그 테넌트 스코프로 운영 화면(실적/정산/거래처/마스터)을 그대로 사용.
+- 세션 `impersonated_tenant_id` + `ResolveTenant` 가 platform 의 세션값으로 컨텍스트 설정 → TenantScope 가 그 테넌트로 격리
+- `Platform\TenantController::enter/exit` + `POST /platform/tenants/{tenant}/enter`·`/platform/exit`
+- 제약사 상세 "이 제약사로 진입" 버튼 + `AdminLayout` 상단 배너("○○ 제약사 화면 보는 중 — 진입 종료")
+- 메뉴: 진입 중이면 platform 도 운영 그룹(마스터관리/거래처/실적/정산/관리) 노출, "플랫폼" 그룹 숨김 (`AppMenu` `actingPharma`/`inTenantView`)
+- `User::managesCurrentTenant()`(pharma 또는 진입 중 platform) → 실적/정산 목록 "전체 조회" 분기에 적용
+- `DashboardController`: platform 미진입 시 `/platform/tenants` 리다이렉트, 진입 중이면 제약사 대시보드 노출
+- 테스트 `ImpersonationTest` 5 cases. 전체 **339/339 PASS**
 
 ### 6.4 MT-7 완료 메모 (2026-05-29) — 격리 회귀 (보안 핵심)
 
