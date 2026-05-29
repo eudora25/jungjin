@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,30 +10,40 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Product extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
     use LogsActivity;
     use SoftDeletes;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_INACTIVE = 'inactive';
+
     public const STATUS_DISCONTINUED = 'discontinued';
 
     public const APPROVAL_DRAFT = 'draft';
+
     public const APPROVAL_PENDING = 'pending';
+
     public const APPROVAL_REVIEWED = 'reviewed';
+
     public const APPROVAL_APPROVED = 'approved';
+
     public const APPROVAL_REJECTED = 'rejected';
 
     public const DRUG_TYPE_GENERAL = 'general';
+
     public const DRUG_TYPE_ETC = 'etc';
+
     public const DRUG_TYPE_NARCOTIC = 'narcotic';
+
     public const DRUG_TYPE_PSYCHOTROPIC = 'psychotropic';
 
     /**
@@ -46,6 +57,7 @@ class Product extends Model
     ];
 
     protected $fillable = [
+        'tenant_id',
         'insurance_code',
         'standard_code',
         'barcode_gtin',
@@ -129,7 +141,7 @@ class Product extends Model
      * NIMS 관련 컬럼이 변경되었거나 NIMS 관리 대상이면 별도 채널(`nims.product`)로 분기.
      * 또한 `change_reason` 컨텍스트가 있으면 properties 에 저장.
      */
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName): void
+    public function tapActivity(Activity $activity, string $eventName): void
     {
         $changes = $activity->properties->toArray();
         $attrs = $changes['attributes'] ?? [];
@@ -171,6 +183,11 @@ class Product extends Model
     {
         return $this->hasMany(CompanyProductOverride::class)
             ->orderByDesc('effective_from');
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     public function creator(): BelongsTo
@@ -264,7 +281,7 @@ class Product extends Model
     /**
      * 가격 종류별 최신 1건씩 묶어서 반환 (대시보드/상세에서 캐시용).
      *
-     * @return array<string, \App\Models\ProductPrice|null>
+     * @return array<string, ProductPrice|null>
      */
     public function latestPricesByType(?CarbonInterface $on = null): array
     {

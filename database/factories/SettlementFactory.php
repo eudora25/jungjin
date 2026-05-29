@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Company;
 use App\Models\Settlement;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,6 +18,7 @@ class SettlementFactory extends Factory
     public function definition(): array
     {
         return [
+            'tenant_id' => Tenant::default()->id,
             // afterCreating 에서 거래처 ID 기준으로 정식 번호로 덮어씀
             'settlement_no' => 'PENDING-'.uniqid('', true),
             'company_id' => Company::factory(),

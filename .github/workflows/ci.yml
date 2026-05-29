@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_DEBUG: "false"
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_DATABASE: testing
+      LEGACY_DB_HOST: 127.0.0.1
+      LEGACY_DB_PORT: 3306
+      LEGACY_DB_USERNAME: root
+      LEGACY_DB_PASSWORD: root
+      LEGACY_DB_DATABASE: jungjin_legacy_testing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, dom, fileinfo, pdo_mysql
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Create databases
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mariadb-client
+          mariadb -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS testing;"
+          mariadb -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS jungjin_legacy_testing;"
+
+      - name: Migrate (testing)
+        run: php artisan migrate --force
+
+      - name: Pint (style check)
+        run: ./vendor/bin/pint --test
+
+      - name: Pest
+        run: ./vendor/bin/pest
+
+      - name: Build frontend
+        run: npm run build
+

@@ -6,9 +6,21 @@ import AppMenuItem from './AppMenuItem.vue';
 const page = usePage();
 const isAdmin = computed(() => page.props?.auth?.user?.role === 'admin');
 const isSales = computed(() => page.props?.auth?.user?.role === 'sales');
+const isSuperAdmin = computed(() => page.props?.auth?.user?.role === 'super_admin');
 const authUserId = computed(() => page.props?.auth?.user?.id);
 
 const model = computed(() => [
+    {
+        label: '플랫폼',
+        visible: isSuperAdmin.value,
+        items: [
+            { label: '제약사 관리', icon: 'pi pi-fw pi-building-columns', to: '/platform/tenants' },
+            { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/platform/products' },
+            { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/platform/hospitals' },
+            { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/platform/pharmacies' },
+            { label: '사용자 관리', icon: 'pi pi-fw pi-users', to: '/platform/users' },
+        ],
+    },
     {
         label: '대시보드',
         items: [

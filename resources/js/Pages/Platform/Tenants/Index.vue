@@ -1,0 +1,104 @@
+<script setup lang="ts">
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { debouncedWatch } from '@vueuse/core';
+import Button from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import InputText from 'primevue/inputtext';
+import Paginator from 'primevue/paginator';
+import Tag from 'primevue/tag';
+
+interface Tenant {
+    id: number;
+    name: string;
+    code: string | null;
+    business_registration_number: string | null;
+    status: 'active' | 'inactive';
+    users_count: number;
+}
+
+interface Paginated<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+const props = defineProps<{
+    tenants: Paginated<Tenant>;
+    filters: { search: string };
+}>();
+
+const search = ref(props.filters.search ?? '');
+
+const refresh = () => {
+    router.get(
+        route('platform.tenants.index'),
+        { search: search.value || undefined },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
+};
+
+debouncedWatch(search, refresh, { debounce: 400 });
+
+const onPage = (e: { page: number }) => {
+    router.get(
+        route('platform.tenants.index'),
+        { search: search.value || undefined, page: e.page + 1 },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
+};
+</script>
+
+<template>
+    <Head title="제약사 관리" />
+    <AdminLayout>
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl font-bold">제약사 관리</h1>
+                    <p class="text-surface-500 mt-1 text-sm">플랫폼에 입주한 제약사 — 전체 {{ tenants.total }}곳</p>
+                </div>
+                <Link :href="route('platform.tenants.create')">
+                    <Button label="제약사 등록" icon="pi pi-plus" />
+                </Link>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <InputText v-model="search" placeholder="제약사명·코드·사업자번호 검색" class="w-full md:w-[28rem]" />
+            </div>
+
+            <DataTable :value="tenants.data" striped-rows>
+                <template #empty>
+                    <div class="text-center py-10 text-surface-500">등록된 제약사가 없습니다.</div>
+                </template>
+                <Column header="제약사명">
+                    <template #body="{ data }">
+                        <Link :href="route('platform.tenants.show', data.id)" class="font-medium hover:text-primary">
+                            {{ data.name }}
+                        </Link>
+                        <div v-if="data.code" class="text-xs text-surface-400 mt-1">{{ data.code }}</div>
+                    </template>
+                </Column>
+                <Column header="사업자번호" style="width: 160px">
+                    <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
+                </Column>
+                <Column header="소속 사용자" style="width: 120px">
+                    <template #body="{ data }">{{ data.users_count }}명</template>
+                </Column>
+                <Column header="상태" style="width: 90px">
+                    <template #body="{ data }">
+                        <Tag :value="data.status === 'active' ? '활성' : '비활성'"
+                             :severity="data.status === 'active' ? 'success' : 'secondary'" />
+                    </template>
+                </Column>
+            </DataTable>
+
+            <Paginator :rows="tenants.per_page" :total-records="tenants.total"
+                       :first="(tenants.current_page - 1) * tenants.per_page" @page="onPage" />
+        </div>
+    </AdminLayout>
+</template>

@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Settlement extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
     use LogsActivity;
 
@@ -42,6 +45,7 @@ class Settlement extends Model
     ];
 
     protected $fillable = [
+        'tenant_id',
         'settlement_no',
         'company_id',
         'period_month',
@@ -76,6 +80,11 @@ class Settlement extends Model
         ];
     }
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -106,7 +115,7 @@ class Settlement extends Model
             ->setDescriptionForEvent(fn (string $event) => "settlement.{$event}");
     }
 
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName): void
+    public function tapActivity(Activity $activity, string $eventName): void
     {
         if ($reason = ChangeReason::current()) {
             $activity->properties = $activity->properties->put('reason', $reason);

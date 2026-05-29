@@ -2,16 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Models\Company;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Company>
+ * @extends Factory<Company>
  */
 class CompanyFactory extends Factory
 {
     public function definition(): array
     {
         return [
+            'tenant_id' => Tenant::default()->id,
             'company_name' => $this->faker->company(),
             'business_registration_number' => $this->faker->numerify('##########'),
             'representative_name' => $this->faker->name(),

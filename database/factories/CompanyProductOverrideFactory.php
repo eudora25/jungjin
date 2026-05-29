@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Company;
+use App\Models\CompanyProductOverride;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CompanyProductOverride>
+ * @extends Factory<CompanyProductOverride>
  */
 class CompanyProductOverrideFactory extends Factory
 {

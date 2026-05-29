@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\SalesQuota;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SalesQuota>
+ * @extends Factory<SalesQuota>
  */
 class SalesQuotaFactory extends Factory
 {
@@ -21,6 +22,7 @@ class SalesQuotaFactory extends Factory
         };
 
         return [
+            'tenant_id' => Tenant::default()->id,
             'user_id' => User::factory(),
             'product_id' => null,
             'period_type' => $periodType,
@@ -30,7 +32,7 @@ class SalesQuotaFactory extends Factory
         ];
     }
 
-    public function monthly(string $period = null): static
+    public function monthly(?string $period = null): static
     {
         return $this->state([
             'period_type' => 'monthly',
@@ -38,7 +40,7 @@ class SalesQuotaFactory extends Factory
         ]);
     }
 
-    public function quarterly(string $period = null): static
+    public function quarterly(?string $period = null): static
     {
         return $this->state([
             'period_type' => 'quarterly',
@@ -46,7 +48,7 @@ class SalesQuotaFactory extends Factory
         ]);
     }
 
-    public function yearly(string $period = null): static
+    public function yearly(?string $period = null): static
     {
         return $this->state([
             'period_type' => 'yearly',

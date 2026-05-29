@@ -5,10 +5,11 @@ namespace Database\Factories;
 use App\Models\Company;
 use App\Models\Performance;
 use App\Models\Product;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Performance>
+ * @extends Factory<Performance>
  */
 class PerformanceFactory extends Factory
 {
@@ -19,6 +20,7 @@ class PerformanceFactory extends Factory
         $unit = $this->faker->randomFloat(2, 1000, 100000);
 
         return [
+            'tenant_id' => Tenant::default()->id,
             'performance_no' => Performance::nextNumberFor($date),
             'performance_date' => $date->format('Y-m-d'),
             'company_id' => Company::factory(),

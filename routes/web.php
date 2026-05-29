@@ -15,6 +15,11 @@ use App\Http\Controllers\PerformanceFileController;
 use App\Http\Controllers\PerformanceImportController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PharmacyImportController;
+use App\Http\Controllers\Platform\HospitalController as PlatformHospitalController;
+use App\Http\Controllers\Platform\PharmacyController as PlatformPharmacyController;
+use App\Http\Controllers\Platform\ProductController as PlatformProductController;
+use App\Http\Controllers\Platform\TenantController as PlatformTenantController;
+use App\Http\Controllers\Platform\UserController as PlatformUserController;
 use App\Http\Controllers\ProductCommissionRateController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductFileController;
@@ -164,6 +169,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// GAP-10 MT-6: 플랫폼 운영자(super_admin) 전용 영역 (/platform/*)
+Route::middleware(['auth', 'role:super_admin'])->prefix('platform')->name('platform.')->group(function () {
+    // 제약사(테넌트) 관리 — 전체 CRUD
+    Route::resource('tenants', PlatformTenantController::class);
+    Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
+
+    // 전역 마스터/사용자 조회 (모든 제약사 횡단) — CRUD 는 후속 단계
+    Route::get('/products', [PlatformProductController::class, 'index'])->name('products.index');
+    Route::get('/hospitals', [PlatformHospitalController::class, 'index'])->name('hospitals.index');
+    Route::get('/pharmacies', [PlatformPharmacyController::class, 'index'])->name('pharmacies.index');
+    Route::get('/users', [PlatformUserController::class, 'index'])->name('users.index');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

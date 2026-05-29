@@ -8,6 +8,7 @@ use App\Models\SalesQuota;
 use App\Models\Settlement;
 use App\Models\User;
 use App\Services\QuotaAchievementService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -15,12 +16,15 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly QuotaAchievementService $achievement)
-    {
-    }
+    public function __construct(private readonly QuotaAchievementService $achievement) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        // 플랫폼 운영자(super_admin)는 플랫폼 영역으로 진입 (GAP-10 MT-6)
+        if ($request->user()->isSuperAdmin()) {
+            return redirect()->route('platform.tenants.index');
+        }
+
         $year = now()->year;
 
         $stats = [

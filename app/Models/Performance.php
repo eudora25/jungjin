@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use Carbon\CarbonInterface;
+use App\Models\Concerns\BelongsToTenant;
+use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -25,15 +27,21 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Performance extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
     use LogsActivity;
     use SoftDeletes;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_REVIEWED = 'reviewed';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     public const STATUSES = [
@@ -46,16 +54,23 @@ class Performance extends Model
     ];
 
     public const PRICE_SOURCE_OVERRIDE = 'override';
+
     public const PRICE_SOURCE_PRODUCT_SALE = 'product_sale';
+
     public const PRICE_SOURCE_PRODUCTS_PRICE = 'products_price';
+
     public const PRICE_SOURCE_MANUAL = 'manual';
 
     public const COMMISSION_SOURCE_OVERRIDE = 'override';
+
     public const COMMISSION_SOURCE_MATRIX = 'matrix';
+
     public const COMMISSION_SOURCE_MANUAL = 'manual';
+
     public const COMMISSION_SOURCE_NONE = 'none';
 
     protected $fillable = [
+        'tenant_id',
         'performance_no',
         'performance_date',
         'company_id',
@@ -95,6 +110,11 @@ class Performance extends Model
     /* ------------------------------------------------------------------ *
      | Relations                                                          |
      * ------------------------------------------------------------------ */
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 
     public function company(): BelongsTo
     {
@@ -212,7 +232,9 @@ class Performance extends Model
     {
         $d = $date ? Carbon::parse($date) : now();
         $prefix = $d->format('Ymd');
-        $last = static::withTrashed()
+        // performance_no 는 전역 unique → 테넌트 스코프를 우회해 전체 기준 최댓값으로 채번 (GAP-10 MT-3)
+        $last = static::withoutGlobalScope(TenantScope::class)
+            ->withTrashed()
             ->where('performance_no', 'like', $prefix.'-%')
             ->orderByDesc('performance_no')
             ->lockForUpdate()
@@ -246,7 +268,7 @@ class Performance extends Model
             ->setDescriptionForEvent(fn (string $event) => "performance.{$event}");
     }
 
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName): void
+    public function tapActivity(Activity $activity, string $eventName): void
     {
         if ($reason = ChangeReason::current()) {
             $props = $activity->properties->put('reason', $reason);

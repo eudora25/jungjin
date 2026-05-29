@@ -45,7 +45,7 @@
 | **M6** | 스케줄러·큐·알림, 운영 전환 | ⚪ 대기 | Scheduler/Queue 기반 준비, Job/알림 미작성 |
 | **공통** | 사용자 관리 (admin) | 🟢 완료 | CRUD + is_active 토글 + 비밀번호 재설정 + 로그인 차단 |
 
-**현재 테스트**: `sail test` 기준 **286개 전체 통과** (2026-05-29, GAP-10 MT-1·MT-2 포함)
+**현재 테스트**: `sail test` 기준 **313개 전체 통과** (2026-05-29, GAP-10 MT-1~6 포함)
 
 > §2.8 **도메인 검토 후보** 섹션은 본 프로젝트 채택 여부가 결정되지 않은 도메인 후보 **23종**(BIZ/PHARM/OPS·CRM·ERP/TECH)을 별도 관리합니다. 핵심 백로그(§2.4~2.6)와 분리해 가독성을 보존합니다.
 
@@ -105,7 +105,7 @@
 | **GAP-7** | **역할/권한 세분화 (검수자/정산 담당 등)** | P2 | M | `admin/sales` 2-role 한계 보완. 역할 확장 및 Policy 매트릭스 정의. §4.15. **GAP-10(멀티테넌시) 이후** 테넌트 내부 직무 역할로 설계 (직교 축) |
 | **GAP-8** | **감사 로그 운영 규정 (reason/보관/조회)** | P2 | S | reason 필수 액션 정의, 보관/정리 정책, 조회 권한 명문화. §4.16 |
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
-| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1·MT-2(1부) 🟢, **Now: MT-3**. cutover(OPS-7)는 MT-7 이후. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
+| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~6 🟢(격리 엔진·Policy 게이트 포함), **Now: MT-7/MT-8**. cutover(OPS-7)는 MT-7 이후. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
 
@@ -245,11 +245,30 @@
 - **MT-2 (DB, M, 선행: MT-1)**: 기본 제약사 시드 + 기존 데이터 백필 — 🟡 1부 완료
   - [x] **(1부)** 기본 제약사("기본 제약사"/`DEFAULT`) 시드 + 기존 admin/sales `tenant_id` 백필(super_admin 제외). 멱등 + down 복구. `DefaultTenantBackfillTest` 5/5
   - [ ] **(2부 → MT-4 로 이동)** products/companies/performances/settlements/sales_quotas `tenant_id` 부착·백필 → NOT NULL (사용자 결정으로 MT-4 와 묶음)
-- **MT-3 (BE, L, 선행: MT-1)**: `TenantScope`(global scope) + `ResolveTenant` 미들웨어 + 생성 시 tenant_id 자동 주입
-- **MT-4 (DB+BE, L, 선행: MT-3)**: tenant-scoped 테이블에 `tenant_id` 부착·적용 (products/companies/performances/settlements/sales_quotas)
-- **MT-5 (BE, M, 선행: MT-4)**: Policy 테넌트 조건 + super_admin 우회/선택
-- **MT-6 (FE, M, 선행: MT-5)**: super_admin 제약사 관리 화면(CRUD) + admin 의 소속 sales 관리 범위 조정 + 메뉴 role 반영
-- **MT-7 (Test, L, 선행: MT-4~6)**: 격리 누수·교차 테넌트 차단·super_admin 전역 회귀 테스트 (**보안 핵심**)
+- **MT-4 (DB+BE, L)**: tenant-scoped 테이블에 `tenant_id` 부착 — 🟢 완료 (2026-05-29, MT-3보다 먼저)
+  - [x] products/companies/performances/settlements/sales_quotas 에 `tenant_id`(**nullable**)+FK(restrict)+인덱스 + 기존 행 기본 제약사 백필
+  - [x] 5개 모델 `tenant()`·fillable + `Tenant::default()` + 5개 Factory 기본 tenant. `DomainTenantColumnTest` 5/5
+  - [ ] **NOT NULL 전환은 MT-3(자동 주입) 이후 finalize** (지금 NOT NULL 시 앱 생성 경로 깨짐 — 회귀로 확인)
+> **실행 순서 재정렬(2026-05-29, 사용자 지정)**: super_admin 페이지(MT-6) 먼저 → MT-3 → MT-4-finalize → MT-5 → MT-7 → MT-8. (§3 Now, `MULTI_TENANCY.md` §6.1)
+
+- **MT-6 (FE+BE, M)**: **super_admin 페이지** — 🟢 완료 (2026-05-29)
+  - [x] super_admin 시드/승격 명령 `tenancy:make-super-admin` + `role:super_admin` 라우트 게이팅
+  - [x] 제약사(tenant) CRUD: `TenantController`/`TenantPolicy`/`Store·UpdateTenantRequest`/라우트 + `Tenants/{Index,Create,Edit,Show}.vue`
+  - [x] 제약사 admin 계정 생성(위임형 D-2): `POST /tenants/{tenant}/admins` + `StoreTenantAdminRequest` + Show 모달
+  - [x] super_admin 전용 메뉴 "플랫폼 > 제약사 관리" + `/dashboard` → tenants.index 리다이렉트
+  - [x] `TenantManagementTest` 8 cases. 전체 299/299 PASS
+  - [ ] (임퍼서네이션 "테넌트 진입" 버튼은 MT-3 후 연결)
+- **MT-3 (BE, L, 선행: MT-6)**: 격리 엔진 — 🟢 완료 (2026-05-29)
+  - [x] `TenantContext` + `TenantScope`(컨텍스트 설정 시에만 필터) + `BelongsToTenant` 트레이트(스코프+자동주입)
+  - [x] `ResolveTenant` 미들웨어(web) — admin/sales 격리, super_admin/게스트 전역 + 5개 모델 적용 + `nextNumberFor` 스코프 우회
+  - [x] `TenantScopeTest` 6 cases. 전체 309/309 PASS, **회귀 0**
+  - [ ] super_admin 임퍼서네이션(테넌트 진입)은 후속
+- **MT-4-finalize (DB, S, 선행: MT-3 + 테스트 admin tenant 부여)**: 도메인 `tenant_id` NOT NULL ← **다음** (선행조건 `MULTI_TENANCY.md` §6.2 — 지금 강행 시 회귀)
+- **MT-5 (BE, M, 선행: MT-3)**: Policy 테넌트 조건 — 🟢 완료 (2026-05-29)
+  - [x] 단일 `Gate::before`: super_admin 전체 통과 + admin/sales 교차 테넌트 거부(`class_uses_recursive` 로 `BelongsToTenant` 모델 판정) + null 테넌트 위임
+  - [x] `TenantPolicyGuardTest` 4 cases. 전체 313/313 PASS, 회귀 0
+  - [ ] admin 의 소속 sales 관리 범위(자사 sales만 `/users` 노출)는 후속
+- **MT-7 (Test, L, 선행: MT-3~5)**: 격리 누수·교차 테넌트 차단·super_admin 전역 회귀 테스트 (**보안 핵심**)
 - **MT-8 (BE+FE, M, 선행: MT-5)**: 약국·병원 변경요청 승인 워크플로 — `master_change_requests` + 제약사 admin 요청(create/update) + super_admin 검토·승인 반영/반려 + 약국·병원 직접 쓰기 차단(조회만). 설계 §3.3
 
 <details>
@@ -424,7 +443,7 @@
 
 ## 3. 권장 진행 순서 (Now / Next / Later)
 
-> 기준: 2026-05-29. GAP-1~6·GAP-9·P2-7·P2-8 완료 + GAP-10 MT-1·MT-2(1부) 착수, 테스트 **286**개.
+> 기준: 2026-05-29. GAP-1~6·GAP-9·P2-7·P2-8 완료 + GAP-10 MT-1~6 착수, 테스트 **313**개.
 
 ### ✅ 확정된 운영 경로: **B (멀티테넌시 선행)**
 
@@ -432,7 +451,7 @@
 
 | 단계 | 내용 |
 |------|------|
-| **1. Now~Next** | GAP-10 **MT-1 → MT-7** (DB·Scope·Policy·UI·격리 테스트) |
+| **1. Now~Next** | GAP-10 **MT-6 → MT-3 → MT-4-finalize → MT-5 → MT-7 → MT-8** (§3·§6.1 실행 순서) |
 | **2. Later** | **OPS-6** → **OPS-7** cutover (테넌트 백필·MT-7 통과 후) |
 | **병행(여유 시)** | P2-1~4 보강 — **tenant 격리 회귀에 영향 없는** 항목만 |
 
@@ -442,30 +461,35 @@
 - cutover **목표 시점**(MT-7 완료 기준 역산)
 - MT-8(약국·병원 변경요청)을 1차에 포함할지 2차로 미룰지
 
-### 🔴 Now (다음 세션)
+### 🔴 Now (실행 순서 재정렬 — super_admin 페이지 우선, 2026-05-29)
 
-1. **GAP-10 MT-3 (BE)** — `TenantScope`(global scope) + `ResolveTenant` 미들웨어 + 생성 시 `tenant_id` 자동 주입
-2. **(MT-3 직후) MT-4** — products/companies/performances/settlements/sales_quotas `tenant_id` 부착·백필(MT-2 2부)
+> 사용자 지정 순서. 상세·의존성: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) §6.1.
 
-**최근 완료 (Now 제외)**: **MT-1** (tenants·super_admin·users.tenant_id) · **MT-2 1부** (기본 제약사 시드 + users 백필) · P2-8 · GAP-9 · GAP-1~6
+1. **GAP-10 MT-6 (super_admin 페이지)** ← **다음** — super_admin 시드/게이팅 + 제약사(tenant) CRUD + 제약사 admin 생성(위임형) + 전용 메뉴. (임퍼서네이션 진입 버튼은 MT-3 후 연결)
+2. **MT-3** — `ResolveTenant` + `TenantScope` + 생성 시 `tenant_id` 자동 주입 + super_admin 테넌트 진입
+3. **MT-4-finalize** — 도메인 `tenant_id` NOT NULL 전환
+4. **MT-5** — Policy 테넌트 조건 + admin 의 소속 sales 관리 범위
+5. **MT-7** — 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역)
+6. **MT-8** — 약국·병원 변경요청 승인 워크플로
 
-상세 체크리스트: §2.4 **GAP-10 작업 단위**, 설계 [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md)
+**최근 완료**: **MT-1**(tenants·super_admin·users.tenant_id) · **MT-2 1부**(기본 제약사 시드 + users 백필) · **MT-4**(도메인 tenant_id nullable+백필) · P2-8 · GAP-9 · GAP-1~6
 
-### 🟡 Next (MT-3~4 이후)
+상세 체크리스트: §2.4 **GAP-10 작업 단위**
 
-1. **MT-4~MT-5** — tenant-scoped 테이블·Policy·super_admin 테넌트 선택(임퍼서네이션)
-2. **MT-6~MT-7** — 제약사 관리 UI·**격리 누수 회귀 테스트**(보안 필수)
-3. **GAP-7** — 역할 세분화(**테넌트 내부** 직무, MT-5 이후)
-4. **GAP-1·GAP-4 연계** — 담당 거래처 기준 quota (테넌트 스코프 반영 후)
-5. **P2-1~P2-4** — MT-7 이후 또는 격리 무관 항목만
+### 🟡 Next (MT 이후)
+
+1. **GAP-7** — 역할 세분화(**테넌트 내부** 직무, MT-5 이후)
+2. **GAP-1·GAP-4 연계** — 담당 거래처 기준 quota (테넌트 스코프 반영 후)
+3. **P2-1~P2-4** — MT-7 이후 또는 격리 무관 항목만
 
 ### 🟢 Later (GAP-10·격리 검증 완료 후)
 
 1. **OPS-6** — 모니터링(Telescope/Sentry). **OPS-7 직전 필수**
 2. **OPS-7** — 레거시 최종 import·cutover (**테넌트 단위** dry-run·검증 포함)
-3. **MT-8** — 약국·병원 변경요청 승인 워크플로(필요 시 1차 범위에 포함 여부는 위 미확정 항목)
-4. **GAP-8** — 감사 로그 운영 규정
-5. **P2-9**, **P3-***, **§2.8** 도메인 후보 승격 검토
+3. **GAP-8** — 감사 로그 운영 규정
+4. **P2-9**, **P3-***, **§2.8** 도메인 후보 승격 검토
+
+> **MT-8**: §3 Now #6 에 포함. 2차로 미룰 경우 Now에서 제외하고 본 Later로 이동(미확정 항목).
 
 ---
 
@@ -510,14 +534,15 @@ ERP-2 EDI 연동         ─── M3 + M6 + TECH-3(선택)
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
-| 2.6 | 2026-05-29 | MT-1·MT-2(1부) 완료 반영 — §3 Now=**MT-3**, 테스트 **286** |
+| 2.7 | 2026-05-29 | **실행 순서 재정렬** — MT-4( nullable) 완료, §3 Now=**MT-6**→MT-3→…, 테스트 **291** |
+| 2.6 | 2026-05-29 | MT-1·MT-2(1부) 완료 반영 — §3 Now=MT-3, 테스트 286 |
 | 2.5 | 2026-05-29 | **운영 경로 B 확정** — §3 Now=GAP-10 MT-1~3, OPS-7은 Later |
 | 2.4 | 2026-05-29 | §3 Now/Next/Later 정리, cutover vs GAP-10 의사결정 표, §4 GAP-6 🟢 |
 | 2.3 | 2026-05-29 | GAP-9 완료, GAP-10 설계 등록 |
 
 ---
 
-**문서 버전**: 2.6
+**문서 버전**: 2.7
 **작성일**: 2026-04-20
-**최종 갱신**: 2026-05-29 (MT-1·MT-2(1부) 완료, Now=MT-3)
+**최종 갱신**: 2026-05-29 (MT-4 완료, 실행 순서 재정렬 — Now=MT-6, 테스트 291)
 **갱신 책임**: 작업 시작·완료 시 해당 항목 상태 변경 + 모듈 문서에 상세 기록

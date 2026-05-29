@@ -31,11 +31,11 @@
 | 월간 보고서 | 🟢 | GAP-6 `/reports/monthly` |
 | 마스터 IA | 🟢 | GAP-9 마스터 관리 메뉴 + `/master-data` |
 | 거래처·제품·약국·병원 | 🟡 MVP | **OPS-7** 레거시 최종 import 잔여 |
-| 멀티테넌시 | 🟡 진행 | **경로 B** — MT-1·MT-2(1부) 🟢, **Now: MT-3** (TenantScope) |
+| 멀티테넌시 | 🟡 진행 | **경로 B** — MT-1·MT-2(1부)·MT-4 🟢, **Now: MT-6** (super_admin 제약사 관리) |
 
-**테스트**: `./vendor/bin/sail test` → **286개** 전체 통과 (2026-05-29)
+**테스트**: `./vendor/bin/sail test` → **291개** 전체 통과 (2026-05-29)
 
-**다음 권장 작업**: [`ROADMAP.md`](../planning/ROADMAP.md) §3 — **GAP-10 MT-3** (`TenantScope`·`ResolveTenant`)
+**다음 권장 작업**: [`ROADMAP.md`](../planning/ROADMAP.md) §3 — **GAP-10 MT-6** (super_admin 시드/게이팅 + 제약사 CRUD)
 
 ## 검증 (로컬)
 

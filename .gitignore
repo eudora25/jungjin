@@ -23,5 +23,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# 개발 중 산출물 (Playwright/검증 스크린샷/생성 HTML)
+/.playwright-mcp
 /test-results
-.DS_Store
+/*.png
+/docs/manual/*.html
