@@ -40,6 +40,26 @@ test('제약사 목록에 관리자(pharma) 계정이 함께 표시된다', func
         );
 });
 
+test('제약사 상세 화면에 소속 사용자(관리자·영업사원)가 pharma 우선으로 표시된다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    $tenant = Tenant::factory()->create();
+    User::factory()->create(['role' => 'cso', 'tenant_id' => $tenant->id, 'name' => '영업원']);
+    User::factory()->create(['role' => 'pharma', 'tenant_id' => $tenant->id, 'name' => '대표관리자']);
+
+    $this->actingAs($super)
+        ->get(route('platform.tenants.show', $tenant))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Platform/Tenants/Show')
+            ->where('tenant.id', $tenant->id)
+            ->has('users', 2)
+            // FIELD(role,'pharma','cso') 정렬 — 관리자(pharma)가 먼저
+            ->where('users.0.role', 'pharma')
+            ->where('users.0.name', '대표관리자')
+            ->where('users.1.role', 'cso')
+        );
+});
+
 test('super_admin 은 제약사 등록 시 관리자(pharma) 계정을 함께 생성한다', function () {
     $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
 
