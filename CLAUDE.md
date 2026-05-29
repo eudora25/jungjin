@@ -15,7 +15,7 @@
 - **`docs/modules/performance-settlement/PERFORMANCE_SETTLEMENT.md`**: 실적·정산(Phase 4) 설계 + 변경 로그
 - **`docs/modules/client/CLIENT_MANAGEMENT.md`**: 약국·병원·영업사원 마스터(M4) 설계 + 변경 로그
 - **`docs/modules/master-data/MASTER_DATA_ADMIN.md`**: 기준정보 마스터 admin 분리(GAP-9) — 병의원·약국·의약품을 거래처와 독립 마스터로
-- **`docs/modules/tenancy/MULTI_TENANCY.md`**: 멀티테넌시(GAP-10, XL) — 제약사 테넌트 + `super_admin`/`admin`/`sales` 역할 계층 + 데이터 격리 (**구현중**: MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6 완료, 다음 MT-7/MT-8)
+- **`docs/modules/tenancy/MULTI_TENANCY.md`**: 멀티테넌시(GAP-10, XL) — 제약사 테넌트 + `super_admin`/`admin`/`sales` 역할 계층 + 데이터 격리 (**구현중**: MT-1~7 완료(격리 회귀 통과), 다음 MT-8/마스터 CRUD)
 - **`docs/modules/reports/MONTHLY_REPORT.md`**: 월간 보고서(GAP-6) 설계·스펙 (거래처/영업사원/제품 요약 Excel)
 
 ## 참조 경로
@@ -48,12 +48,13 @@
   - GAP-10 MT-6: super_admin 전용 `/platform/*` 영역 — 🟢 **완료** (제약사 CRUD + 제약사 admin 생성(위임형) + 의약품·병의원·약국·사용자 **전역 목록**(제약사 칸) + `tenancy:make-super-admin` + "플랫폼" 메뉴/대시보드 리다이렉트. 마스터 CRUD 는 후속)
   - GAP-10 MT-3: 테넌트 격리 엔진 — 🟢 **완료** (`TenantContext`+`TenantScope`+`BelongsToTenant`+`ResolveTenant` 미들웨어. admin/sales 자사 격리·super_admin 전역. 회귀 0. NOT NULL 전환(MT-4-finalize)은 선행조건 있음)
   - GAP-10 MT-5: 테넌트 권한 게이트 — 🟢 **완료** (단일 `Gate::before`: super_admin 전체 통과 + 교차 테넌트 거부 + null 테넌트 위임)
-- 테스트: `./vendor/bin/sail test` 기준 **313개 전체 통과** (2026-05-29)
+  - GAP-10 MT-7: 테넌트 격리 회귀 — 🟢 **완료** (`TenantIsolationTest` 8 — 거래처·실적·정산·목표 목록 자사 격리 / 교차 테넌트 상세 403 / 생성 자동주입. 회귀 0)
+- 테스트: `./vendor/bin/sail test` 기준 **321개 전체 통과** (2026-05-29)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)
 - **운영 경로 B 확정** — **GAP-10 멀티테넌시(MT-1~)** 선행 → MT-7 격리 검증 후 **OPS-6·OPS-7** cutover
-- **Now**: ~~MT-1~6(스키마·격리 엔진·Policy 게이트·super_admin 페이지)~~ 🟢 → **MT-7(격리 회귀 테스트)** / MT-8(변경요청 워크플로) / MT-4-finalize(NOT NULL §6.2) / super_admin 임퍼서네이션 / `/platform` 마스터 CRUD
+- **Now**: ~~MT-1~7(격리 엔진·게이트·회귀 통과)~~ 🟢 → **MT-8(변경요청 워크플로)** / `/platform` 마스터 CRUD / MT-4-finalize(NOT NULL §6.2) / super_admin 임퍼서네이션
 - **Later**: P2-1~4(소규모)·GAP-7/8·OPS-7·M6 알림
 
 ## 빌드 주의사항
@@ -61,7 +62,7 @@
 - 새 Vue 페이지 추가 후 테스트 전에 반드시 `npm run build` 실행 필요 (manifest 미등록 시 Inertia 렌더 500 오류)
 
 ## 작업 시작 시
-1. `docs/planning/ROADMAP.md` §3 확인 (현재: **경로 B** — GAP-10 **MT-7/MT-8**부터, `docs/modules/tenancy/MULTI_TENANCY.md` §6.1~§6.3)
+1. `docs/planning/ROADMAP.md` §3 확인 (현재: **경로 B** — GAP-10 **MT-8/마스터 CRUD**부터, `docs/modules/tenancy/MULTI_TENANCY.md` §6.1~§6.4)
 2. 모듈 설계/결정이 필요하면 `docs/modules/product/PRODUCT_MANAGEMENT.md`, `docs/modules/performance-settlement/PERFORMANCE_SETTLEMENT.md` 참고
 3. 구현 변경 후 `./vendor/bin/sail test`로 회귀 확인
 4. 새 Vue 페이지 추가 시 `npm run build` (호스트에서) → 그 다음 테스트

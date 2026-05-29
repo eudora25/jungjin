@@ -45,7 +45,7 @@
 | **M6** | 스케줄러·큐·알림, 운영 전환 | ⚪ 대기 | Scheduler/Queue 기반 준비, Job/알림 미작성 |
 | **공통** | 사용자 관리 (admin) | 🟢 완료 | CRUD + is_active 토글 + 비밀번호 재설정 + 로그인 차단 |
 
-**현재 테스트**: `sail test` 기준 **313개 전체 통과** (2026-05-29, GAP-10 MT-1~6 포함)
+**현재 테스트**: `sail test` 기준 **321개 전체 통과** (2026-05-29, GAP-10 MT-1~7 포함)
 
 > §2.8 **도메인 검토 후보** 섹션은 본 프로젝트 채택 여부가 결정되지 않은 도메인 후보 **23종**(BIZ/PHARM/OPS·CRM·ERP/TECH)을 별도 관리합니다. 핵심 백로그(§2.4~2.6)와 분리해 가독성을 보존합니다.
 
@@ -105,7 +105,7 @@
 | **GAP-7** | **역할/권한 세분화 (검수자/정산 담당 등)** | P2 | M | `admin/sales` 2-role 한계 보완. 역할 확장 및 Policy 매트릭스 정의. §4.15. **GAP-10(멀티테넌시) 이후** 테넌트 내부 직무 역할로 설계 (직교 축) |
 | **GAP-8** | **감사 로그 운영 규정 (reason/보관/조회)** | P2 | S | reason 필수 액션 정의, 보관/정리 정책, 조회 권한 명문화. §4.16 |
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
-| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~6 🟢(격리 엔진·Policy 게이트 포함), **Now: MT-7/MT-8**. cutover(OPS-7)는 MT-7 이후. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
+| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~7 🟢(격리 엔진·게이트·회귀 통과), **Now: MT-8/마스터 CRUD**. cutover(OPS-7)는 MT-7 이후. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
 
@@ -268,7 +268,9 @@
   - [x] 단일 `Gate::before`: super_admin 전체 통과 + admin/sales 교차 테넌트 거부(`class_uses_recursive` 로 `BelongsToTenant` 모델 판정) + null 테넌트 위임
   - [x] `TenantPolicyGuardTest` 4 cases. 전체 313/313 PASS, 회귀 0
   - [ ] admin 의 소속 sales 관리 범위(자사 sales만 `/users` 노출)는 후속
-- **MT-7 (Test, L, 선행: MT-3~5)**: 격리 누수·교차 테넌트 차단·super_admin 전역 회귀 테스트 (**보안 핵심**)
+- **MT-7 (Test, L, 선행: MT-3~5)**: 격리 회귀 테스트 — 🟢 완료 (2026-05-29)
+  - [x] `TenantIsolationTest` 8 cases — 거래처·실적·정산·목표 목록 자사 격리 / 교차 테넌트 상세 403 / 생성 시 tenant_id 자동주입(HTTP)
+  - [x] 2중 격리 확인(목록=TenantScope, 상세=authorize→Gate::before). 전체 321/321 PASS, 회귀 0
 - **MT-8 (BE+FE, M, 선행: MT-5)**: 약국·병원 변경요청 승인 워크플로 — `master_change_requests` + 제약사 admin 요청(create/update) + super_admin 검토·승인 반영/반려 + 약국·병원 직접 쓰기 차단(조회만). 설계 §3.3
 
 <details>
@@ -443,7 +445,7 @@
 
 ## 3. 권장 진행 순서 (Now / Next / Later)
 
-> 기준: 2026-05-29. GAP-1~6·GAP-9·P2-7·P2-8 완료 + GAP-10 MT-1~6 착수, 테스트 **313**개.
+> 기준: 2026-05-29. GAP-1~6·GAP-9·P2-7·P2-8 완료 + GAP-10 MT-1~7 착수, 테스트 **321**개.
 
 ### ✅ 확정된 운영 경로: **B (멀티테넌시 선행)**
 

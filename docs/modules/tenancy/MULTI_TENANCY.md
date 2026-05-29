@@ -173,7 +173,7 @@
 | 2 | MT-3 | 격리 엔진 — `ResolveTenant` + `TenantScope` + 생성 시 자동 주입 | 🟢 **완료 (2026-05-29)** (super_admin 임퍼서네이션 진입은 후속) |
 | 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | ⚪ **다음** (단, 테스트 admin tenant 부여 선행 필요 — 아래 메모) |
 | 4 | MT-5 | Policy 테넌트 조건(admin/sales 동일 테넌트, super_admin 통과) | 🟢 **완료 (2026-05-29)** (단일 `Gate::before`. admin 소속 sales 관리 범위는 후속) |
-| 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | ⚪ |
+| 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | 🟢 **완료 (2026-05-29)** |
 | 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | ⚪ |
 
 > **의존성 메모**: MT-6 제약사 CRUD 는 `tenants`(전역, super_admin 전용) 대상이라 `TenantScope` 불필요 → MT-3 전에 선행 가능. 단 **"테넌트 진입(임퍼서네이션)" 버튼은 MT-3(ResolveTenant) 완료 후 연결**한다. super_admin 계정은 MT-6 에서 시드/승격 경로 마련.
@@ -193,6 +193,16 @@
 - admin/sales (tenant_id 보유) → 자기 테넌트로 격리
 - super_admin / 콘솔 / 큐 / 게스트 → 미설정 = **전역**(비스코프) → 비-HTTP 경로·super_admin 안전
 - 덕분에 tenant_id 가 null 인 사용자(과도기·테스트)는 비스코프로 동작 → **기존 기능 무손상**
+
+### 6.4 MT-7 완료 메모 (2026-05-29) — 격리 회귀 (보안 핵심)
+
+`TenantIsolationTest` 8 cases — 실제 컨트롤러 HTTP 경유로 격리 검증:
+- **목록 격리(TenantScope/MT-3)**: 거래처·실적·정산·목표 index → admin 은 자기 제약사 것만.
+- **상세 차단**: 다른 제약사의 거래처·실적·정산 상세 → **403** (모든 `show` 의 `authorize` → Gate::before/MT-5).
+- **생성 자동 주입**: admin 이 거래처 생성 → `tenant_id` 자동으로 자기 제약사.
+
+> **2중 격리 구조 확인**: ① 목록/쿼리 = TenantScope 자동 필터, ② 단건 상세(route-model 바인딩) = `SubstituteBindings` 가 `ResolveTenant` 보다 먼저라 바인딩 자체는 스코프 미적용이지만, 모든 show/edit/update/delete 가 `authorize` 를 호출 → Gate::before 의 교차 테넌트 거부로 **403** 차단. (전 컨트롤러 authorize 호출이 프로젝트 규약)
+> 전체 **321/321 PASS, 회귀 0**.
 
 ### 6.3 MT-5 완료 메모 (2026-05-29) — 테넌트 권한 게이트
 
@@ -257,7 +267,7 @@
 **문서 버전**: 1.3
 **작성일**: 2026-05-29
 **최종 갱신**: 2026-05-29 (MT-4 도메인 tenant_id 부착 완료 — nullable+백필. 5/5 신규, 전체 291/291 PASS)
-**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6 완료(전체 313/313). 다음 = **MT-7(격리 회귀 테스트)** / MT-4-finalize(NOT NULL, §6.2) / MT-8(변경요청 워크플로) / super_admin 임퍼서네이션 / `/platform` 마스터 CRUD.
+**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7 완료(전체 321/321, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-8(변경요청 워크플로) / MT-4-finalize(NOT NULL §6.2) / super_admin 임퍼서네이션 / `/platform` 마스터 CRUD.
 
 ### MT-6 설계 보정 (2026-05-29) — super_admin = 전역 슈퍼유저
 
