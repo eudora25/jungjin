@@ -7,6 +7,7 @@ use App\Http\Controllers\CompanySalesAssignmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\HospitalImportController;
+use App\Http\Controllers\MasterChangeRequestController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\NoticeFileController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PharmacyImportController;
 use App\Http\Controllers\Platform\HospitalController as PlatformHospitalController;
 use App\Http\Controllers\Platform\HospitalImportController as PlatformHospitalImportController;
+use App\Http\Controllers\Platform\MasterChangeRequestController as PlatformMasterChangeRequestController;
 use App\Http\Controllers\Platform\PharmacyController as PlatformPharmacyController;
 use App\Http\Controllers\Platform\PharmacyImportController as PlatformPharmacyImportController;
 use App\Http\Controllers\Platform\ProductController as PlatformProductController;
@@ -70,6 +72,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/clients/sales', [SalesRepController::class, 'index'])
         ->middleware('role:pharma')
         ->name('sales.index');
+
+    // MT-8: 공유 마스터 변경요청 제출/조회 (제약사 admin)
+    Route::get('/master-change-requests', [MasterChangeRequestController::class, 'index'])->name('master-change-requests.index');
+    Route::post('/master-change-requests', [MasterChangeRequestController::class, 'store'])->name('master-change-requests.store');
 
     // 제품 검색 (자동완성용) — resource 보다 먼저 정의해 /products/{product} 와 충돌 방지
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
@@ -182,6 +188,11 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     // 임퍼서네이션 — 특정 제약사로 진입/종료 (GAP-10)
     Route::post('/tenants/{tenant}/enter', [PlatformTenantController::class, 'enter'])->name('tenants.enter');
     Route::post('/exit', [PlatformTenantController::class, 'exit'])->name('exit');
+
+    // MT-8: 공유 마스터 변경요청 검토 (승인/반려)
+    Route::get('/master-requests', [PlatformMasterChangeRequestController::class, 'index'])->name('master-requests.index');
+    Route::post('/master-requests/{masterRequest}/approve', [PlatformMasterChangeRequestController::class, 'approve'])->name('master-requests.approve');
+    Route::post('/master-requests/{masterRequest}/reject', [PlatformMasterChangeRequestController::class, 'reject'])->name('master-requests.reject');
 
     // 공유 마스터(약국·병의원) CSV 일괄 등록 — resource 보다 먼저 (/{pharmacy} 충돌 방지)
     Route::get('/pharmacies/import', [PlatformPharmacyImportController::class, 'form'])->name('pharmacies.import.form');

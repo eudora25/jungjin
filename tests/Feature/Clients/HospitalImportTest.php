@@ -18,7 +18,7 @@ function cp949_h(string $utf8): string
 test('관리자는 병의원 CSV를 분석하고 적용할 수 있다 (CP949) - 유형 매핑 포함', function () {
     Storage::fake('local');
 
-    $admin = User::factory()->create(['role' => 'pharma']);
+    $admin = User::factory()->create(['role' => 'platform']);
 
     $utf8 = implode("\n", [
         '관리번호,사업장명,영업상태명,의료기관종별명,진료과목내용명,도로명우편번호,도로명주소,전화번호',

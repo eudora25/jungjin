@@ -53,7 +53,8 @@
   - GAP-10 마스터 CRUD(1차): `/platform` 약국·병의원 전역 CRUD + 공공데이터 CSV 일괄 등록 — 🟢 **완료** (super_admin 직접 관리, 기존 Form Request·import 서비스 재사용. samples CSV 검증. 의약품·사용자 CRUD는 후속)
   - GAP-10 role 리네임 + 코드 테이블 — 🟢 **완료**: `users.role` = **`platform`/`pharma`/`cso`** (구 super_admin/admin/sales), 헬퍼 `isPlatform/isPharma/isCso`. 코드 의미는 `code_definitions`(group_code=`user_role`) 테이블에 저장·조회. tenant_id=null 로 구분 안 함
   - GAP-10 임퍼서네이션 — 🟢 **완료**: platform 이 제약사로 "진입"(세션) → 그 테넌트 스코프로 운영 화면 사용 + 상단 배너/진입 종료. `Platform\TenantController::enter/exit`, `User::managesCurrentTenant()`, AppMenu 진입 인지
-- 테스트: `./vendor/bin/sail test` 기준 **339개 전체 통과** (2026-05-29)
+  - GAP-10 MT-8 변경요청 워크플로(백엔드) — 🟡 **백엔드 완료**: 공유 마스터(약국·병의원) pharma 직접 쓰기 차단(platform 전용) + 변경요청 제출(pharma)→검토·승인/반려(platform) 반영. `master_change_requests`, `MasterChangeRequestService`, `MasterChangeRequestPolicy`. UI(요청 폼·검토 화면)는 후속
+- 테스트: `./vendor/bin/sail test` 기준 **350개 전체 통과** (2026-05-29)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)

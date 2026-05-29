@@ -10,7 +10,7 @@ class UpdateHospitalRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isPharma() ?? false;
+        return $this->user()?->isPlatform() ?? false; // MT-8: 공유 마스터 직접 쓰기는 platform 전용
     }
 
     public function rules(): array

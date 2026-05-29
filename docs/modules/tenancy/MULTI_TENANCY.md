@@ -179,7 +179,7 @@
 | 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | ⚪ **다음** (단, 테스트 admin tenant 부여 선행 필요 — 아래 메모) |
 | 4 | MT-5 | Policy 테넌트 조건(admin/sales 동일 테넌트, super_admin 통과) | 🟢 **완료 (2026-05-29)** (단일 `Gate::before`. admin 소속 sales 관리 범위는 후속) |
 | 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | 🟢 **완료 (2026-05-29)** |
-| 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | ⚪ |
+| 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | 🟡 **백엔드 완료 (2026-05-29)** — 워크플로/정책/테스트. UI(요청 폼·검토 화면) 후속 |
 
 > **의존성 메모**: MT-6 제약사 CRUD 는 `tenants`(전역, super_admin 전용) 대상이라 `TenantScope` 불필요 → MT-3 전에 선행 가능. 단 **"테넌트 진입(임퍼서네이션)" 버튼은 MT-3(ResolveTenant) 완료 후 연결**한다. super_admin 계정은 MT-6 에서 시드/승격 경로 마련.
 
@@ -210,6 +210,21 @@
 - **CSV 일괄 등록(공공데이터 LOCALDATA)**: `/platform/{pharmacies,hospitals}/import` (super_admin) 추가 — 기존 `Pharmacy/HospitalImportService` 재사용(CP949→UTF-8, `관리번호`·`사업장명`, upsert). 기존 Import.vue 를 `handleRoute`/`indexRoute` props 로 파라미터화해 admin/super_admin 공용. `docs/data/samples/건강_약국·병원·의원.csv` 로 검증: 약국 70,145행·병원 8,272행 오류 0. `PlatformImportTest` 4 cases.
 - `fgetcsv()` PHP 8.4 deprecation 정리(`escape: ''` 명시) — 샘플 재검증 0 오류(회귀 없음).
 - **후속**: 의약품(tenant-scoped, 가격/수수료/첨부 등 무거움)·사용자(전역 계정) CRUD 는 별도 단계. 현재 `/platform/products`·`/platform/users` 는 목록·조회.
+
+### 6.7 MT-8 백엔드 완료 (2026-05-29) — 공유 마스터 변경요청 승인 워크플로 (D-6)
+
+제약사(pharma) 는 공유 마스터(약국·병의원)를 **직접 쓰지 못하고**(이제 platform 전용), 변경요청을 제출 → platform 이 검토·승인 시 실제 마스터에 반영. 백엔드(워크플로/정책/테스트) 완료, UI(요청 폼·검토 화면)는 후속.
+
+- [migration] `2026_05_29_100600_create_master_change_requests_table` — `tenant_id`(scoped)·`requested_by`·`target_type`(pharmacy/hospital)·`target_id`(update 대상, nullable)·`request_type`(create/update)·`payload`(json)·`status`(pending/approved/rejected)·`reviewed_by`·`reviewed_at`·`review_note`·`applied_target_id`·softDeletes
+- [model] `MasterChangeRequest` — `BelongsToTenant`(pharma 자사만/platform 전역) + `targetModelClass()`·`isPending()`·관계(tenant/requester/reviewer)
+- [service] `MasterChangeRequestService` — `approve()`: 트랜잭션 + `payload->only(fillable)` 를 Pharmacy/Hospital create/update 반영 + status·applied_target_id 기록. `reject()`: status·review_note 기록. 둘 다 `isPending()` 가드(이미 처리 시 422)
+- [policy] `MasterChangeRequestPolicy` — viewAny(pharma|platform)·create(pharma)·review(platform 전용)
+- [request] `StoreMasterChangeRequestRequest` — target_type/request_type 검증, update 시 target_id `exists`, payload 필수 + 이름필드 필수
+- [controller] `MasterChangeRequestController`(pharma index/store, tenant 자동 주입) + `Platform\MasterChangeRequestController`(platform index/approve/reject)
+- [route] pharma: `GET|POST /master-change-requests` (auth 그룹). platform: `GET /platform/master-requests`·`POST .../{masterRequest}/approve|reject` (role:platform)
+- **직접 쓰기 차단**: `Pharmacy/HospitalPolicy` create/update/delete + `Store/Update{Pharmacy,Hospital}Request::authorize` + CSV import(`create` 정책) 모두 `isPharma()` → `isPlatform()` 전환. 기존 `PharmacyCrudTest`·`HospitalCrudTest`·`*ImportTest` 를 platform 쓰기/ pharma 403 으로 재작성
+- [test] `MasterChangeRequestTest` 8 cases(제출/cso 차단/검증/create 승인 반영/update 승인 반영/반려/pharma 승인 차단) + CRUD·Import 재작성. 전체 **350/350 PASS, 회귀 0**
+- **후속(MT-8 UI)**: pharma 요청 제출 폼(`MasterChangeRequests/Index.vue`) + platform 검토 화면(`Platform/MasterRequests/Index.vue`)
 
 ### 6.6 임퍼서네이션 완료 (2026-05-29) — platform 의 제약사 진입
 
@@ -297,7 +312,7 @@ D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진�
 **문서 버전**: 1.3
 **작성일**: 2026-05-29
 **최종 갱신**: 2026-05-29 (MT-4 도메인 tenant_id 부착 완료 — nullable+백필. 5/5 신규, 전체 291/291 PASS)
-**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7 완료(전체 321/321, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-8(변경요청 워크플로) / MT-4-finalize(NOT NULL §6.2) / super_admin 임퍼서네이션 / `/platform` 마스터 CRUD.
+**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7 완료 + MT-8 백엔드 완료(전체 350/350, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-8 UI(요청 폼·검토 화면) / MT-4-finalize(NOT NULL §6.2) / `/platform` 의약품·사용자 CRUD.
 
 ### MT-6 설계 보정 (2026-05-29) — super_admin = 전역 슈퍼유저
 

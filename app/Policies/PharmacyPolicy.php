@@ -19,16 +19,16 @@ class PharmacyPolicy
 
     public function create(User $user): bool
     {
-        return $user->isPharma();
+        return $user->isPlatform(); // MT-8: 공유 마스터 직접 쓰기는 platform 전용, pharma 는 변경요청
     }
 
     public function update(User $user, Pharmacy $pharmacy): bool
     {
-        return $user->isPharma();
+        return $user->isPlatform();
     }
 
     public function delete(User $user, Pharmacy $pharmacy): bool
     {
-        return $user->isPharma();
+        return $user->isPlatform();
     }
 }
