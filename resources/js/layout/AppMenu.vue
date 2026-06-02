@@ -26,6 +26,7 @@ const model = computed(() => [
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/platform/hospitals' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/platform/pharmacies' },
             { label: '변경요청 검토', icon: 'pi pi-fw pi-inbox', to: '/platform/master-requests' },
+            { label: '코드 그룹 관리', icon: 'pi pi-fw pi-sitemap', to: '/platform/code-groups' },
             { label: '사용자 관리', icon: 'pi pi-fw pi-users', to: '/platform/users' },
         ],
     },

@@ -16,6 +16,7 @@ use App\Http\Controllers\PerformanceFileController;
 use App\Http\Controllers\PerformanceImportController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PharmacyImportController;
+use App\Http\Controllers\Platform\CodeGroupController as PlatformCodeGroupController;
 use App\Http\Controllers\Platform\HospitalController as PlatformHospitalController;
 use App\Http\Controllers\Platform\HospitalImportController as PlatformHospitalImportController;
 use App\Http\Controllers\Platform\MasterChangeRequestController as PlatformMasterChangeRequestController;
@@ -204,6 +205,13 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     Route::resource('pharmacies', PlatformPharmacyController::class)
         ->parameters(['pharmacies' => 'pharmacy']);
     Route::resource('hospitals', PlatformHospitalController::class);
+
+    // 공통 코드 그룹/코드 정의 CRUD — platform 전용 (GAP-10)
+    Route::resource('code-groups', PlatformCodeGroupController::class)
+        ->parameters(['code-groups' => 'codeGroup']);
+    Route::post('/code-groups/{codeGroup}/definitions', [PlatformCodeGroupController::class, 'storeDefinition'])->name('code-groups.definitions.store');
+    Route::put('/code-groups/{codeGroup}/definitions/{definition}', [PlatformCodeGroupController::class, 'updateDefinition'])->name('code-groups.definitions.update');
+    Route::delete('/code-groups/{codeGroup}/definitions/{definition}', [PlatformCodeGroupController::class, 'destroyDefinition'])->name('code-groups.definitions.destroy');
 
     // 전역 조회 (의약품·사용자) — CRUD 는 후속 단계
     Route::get('/products', [PlatformProductController::class, 'index'])->name('products.index');
