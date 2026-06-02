@@ -3,11 +3,14 @@
 namespace App\Providers;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Hospital;
+use App\Models\Pharmacy;
 use App\Models\User;
 use App\Policies\CommissionSummaryPolicy;
 use App\Policies\MonthlyReportPolicy;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +32,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // 폴리모픽 타입 별칭(morph map) — DB 에 풀 클래스명 대신 짧은 별칭 저장.
+        // 비강제(non-enforcing): 미등록 모델(spatie activity_log 의 다양한 subject 등)은 기존대로 클래스명 사용.
+        // master_change_requests.target_type 의 'hospital'/'pharmacy' 표기와도 일관.
+        Relation::morphMap([
+            'hospital' => Hospital::class,
+            'pharmacy' => Pharmacy::class,
+        ]);
 
         // GAP-10 MT-5: 테넌트 권한 게이트 (모든 Policy 검사 이전에 실행)
         //  1) super_admin → 전체 통과 (플랫폼 운영자)
