@@ -55,13 +55,13 @@ const submit = () => form.post(route('platform.code-groups.store'));
                             <Textarea v-model="form.description" class="w-full" rows="3" placeholder="선택" />
                             <Message v-if="form.errors.description" severity="error" size="small" variant="simple">{{ form.errors.description }}</Message>
                         </div>
-                        <div class="flex gap-3">
-                            <div class="w-40">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+                            <div>
                                 <label class="block text-sm mb-1">정렬 순서</label>
-                                <InputNumber v-model="form.sort_order" class="w-full" :min="0" show-buttons />
+                                <InputNumber v-model="form.sort_order" class="w-full" :min="0" show-buttons fluid />
                                 <Message v-if="form.errors.sort_order" severity="error" size="small" variant="simple">{{ form.errors.sort_order }}</Message>
                             </div>
-                            <div class="w-40">
+                            <div>
                                 <label class="block text-sm mb-1">상태</label>
                                 <Select v-model="form.is_active" :options="activeOptions" option-label="label" option-value="value" class="w-full" />
                             </div>
