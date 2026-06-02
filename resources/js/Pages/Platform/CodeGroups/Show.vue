@@ -240,12 +240,12 @@ const confirmDeleteDefinition = (def: CodeDefinition) => {
                     <label class="block text-sm mb-1">설명</label>
                     <Textarea v-model="addForm.description" class="w-full" rows="2" />
                 </div>
-                <div class="flex gap-3">
-                    <div class="w-32">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm mb-1">정렬 순서</label>
-                        <InputNumber v-model="addForm.sort_order" class="w-full" :min="0" show-buttons />
+                        <InputNumber v-model="addForm.sort_order" class="w-full" :min="0" show-buttons fluid />
                     </div>
-                    <div class="w-32">
+                    <div>
                         <label class="block text-sm mb-1">상태</label>
                         <Select v-model="addForm.is_active" :options="activeOptions" option-label="label" option-value="value" class="w-full" />
                     </div>
@@ -273,12 +273,12 @@ const confirmDeleteDefinition = (def: CodeDefinition) => {
                     <label class="block text-sm mb-1">설명</label>
                     <Textarea v-model="editForm.description" class="w-full" rows="2" />
                 </div>
-                <div class="flex gap-3">
-                    <div class="w-32">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm mb-1">정렬 순서</label>
-                        <InputNumber v-model="editForm.sort_order" class="w-full" :min="0" show-buttons />
+                        <InputNumber v-model="editForm.sort_order" class="w-full" :min="0" show-buttons fluid />
                     </div>
-                    <div class="w-32">
+                    <div>
                         <label class="block text-sm mb-1">상태</label>
                         <Select v-model="editForm.is_active" :options="activeOptions" option-label="label" option-value="value" class="w-full" />
                     </div>
