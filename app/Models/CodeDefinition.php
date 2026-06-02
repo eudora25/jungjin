@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * 공통 코드 정의 — 구분 값(role 등)의 의미를 저장·조회. (GAP-10)
@@ -27,6 +28,12 @@ class CodeDefinition extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /** 상위 코드 그룹 (group_code 로 연결) */
+    public function codeGroup(): BelongsTo
+    {
+        return $this->belongsTo(CodeGroup::class, 'group_code', 'group_code');
     }
 
     public function scopeGroup(Builder $query, string $groupCode): Builder
