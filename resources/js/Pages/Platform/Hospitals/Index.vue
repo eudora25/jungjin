@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { formatBusinessNumber } from '@/utils/format';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { debouncedWatch } from '@vueuse/core';
@@ -117,7 +118,7 @@ const onPage = (e: { page: number }) => {
                         </Link>
                         <div v-if="data.matched_old_numbers?.length" class="mt-1">
                             <Tag v-for="n in data.matched_old_numbers" :key="n" severity="warn" class="mr-1"
-                                 :value="`과거 번호 ${n}`" v-tooltip.top="'옛 사업자번호로 검색되어 매칭됨'" />
+                                 :value="`과거 번호 ${formatBusinessNumber(n)}`" v-tooltip.top="'옛 사업자번호로 검색되어 매칭됨'" />
                         </div>
                     </template>
                 </Column>
@@ -125,7 +126,7 @@ const onPage = (e: { page: number }) => {
                     <template #body="{ data }">{{ data.phone ?? '-' }}</template>
                 </Column>
                 <Column header="사업자번호" style="width: 120px">
-                    <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
+                    <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="주소" style="min-width: 200px">
                     <template #body="{ data }">{{ data.address ?? '-' }}</template>

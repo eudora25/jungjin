@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { formatBusinessNumber } from '@/utils/format';
 import { Head, Link, router } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -105,7 +106,7 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <dt class="text-surface-500 mb-1">사업자등록번호</dt>
-                            <dd>{{ hospital.business_registration_number ?? '-' }}</dd>
+                            <dd>{{ formatBusinessNumber(hospital.business_registration_number) }}</dd>
                         </div>
                         <div>
                             <dt class="text-surface-500 mb-1">원장/대표자명</dt>

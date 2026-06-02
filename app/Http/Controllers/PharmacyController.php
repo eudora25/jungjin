@@ -17,15 +17,18 @@ class PharmacyController extends Controller
         $this->authorize('viewAny', Pharmacy::class);
 
         $search = trim((string) $request->input('search'));
+        $digits = preg_replace('/\D/', '', $search); // 사업자번호 검색용 (하이픈 무관)
         $status = $request->input('status');
 
         $pharmacies = Pharmacy::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
+            ->when($search !== '', function ($q) use ($search, $digits) {
+                $q->where(function ($q) use ($search, $digits) {
                     $q->where('pharmacy_name', 'like', "%{$search}%")
                         ->orWhere('pharmacy_code', 'like', "%{$search}%")
-                        ->orWhere('business_registration_number', 'like', "%{$search}%")
                         ->orWhere('contact_person_name', 'like', "%{$search}%");
+                    if ($digits !== '') {
+                        $q->orWhere('business_registration_number', 'like', "%{$digits}%");
+                    }
                 });
             })
             ->when(in_array($status, ['active', 'inactive'], true), fn ($q) => $q->where('status', $status))

@@ -46,6 +46,7 @@ class PharmacyController extends Controller
         $this->ensureSuperAdmin($request);
 
         $search = trim((string) $request->input('search', ''));
+        $digits = preg_replace('/\D/', '', $search); // 사업자번호 검색용 (하이픈 무관)
         $region = trim((string) $request->input('region', ''));
 
         if (! in_array($region, self::SIDO_OPTIONS, true)) {
@@ -53,19 +54,21 @@ class PharmacyController extends Controller
         }
 
         $pharmacies = Pharmacy::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
+            ->when($search !== '', function ($q) use ($search, $digits) {
+                $q->where(function ($q) use ($search, $digits) {
                     $q->where('pharmacy_name', 'like', "%{$search}%")
-                        ->orWhere('pharmacy_code', 'like', "%{$search}%")
-                        ->orWhere('business_registration_number', 'like', "%{$search}%")
-                        // 과거(폐업) 사업자번호로도 검색되도록 이력까지 매칭
-                        ->orWhereHas('numberHistories', fn ($h) => $h->where('business_registration_number', 'like', "%{$search}%"));
+                        ->orWhere('pharmacy_code', 'like', "%{$search}%");
+                    if ($digits !== '') {
+                        // 사업자번호는 숫자만 저장 — 입력 하이픈을 제거하고 매칭 (과거 이력 포함)
+                        $q->orWhere('business_registration_number', 'like', "%{$digits}%")
+                            ->orWhereHas('numberHistories', fn ($h) => $h->where('business_registration_number', 'like', "%{$digits}%"));
+                    }
                 });
             })
             // 과거 번호로 매칭된 경우 목록에 '과거 번호' 배지로 표시하기 위해 매칭 이력만 로드
-            ->when($search !== '', fn ($q) => $q->with(['numberHistories' => fn ($h) => $h
+            ->when($digits !== '', fn ($q) => $q->with(['numberHistories' => fn ($h) => $h
                 ->where('is_current', false)
-                ->where('business_registration_number', 'like', "%{$search}%")]))
+                ->where('business_registration_number', 'like', "%{$digits}%")]))
             ->when($region !== '', fn ($q) => $q->where('address', 'like', "{$region}%"))
             ->orderBy('pharmacy_name')
             ->paginate(20)
@@ -80,7 +83,7 @@ class PharmacyController extends Controller
                 'business_registration_number' => $p->business_registration_number,
                 'address' => $p->address,
                 'status' => $p->status,
-                'matched_old_numbers' => $search !== ''
+                'matched_old_numbers' => $digits !== ''
                     ? $p->numberHistories->pluck('business_registration_number')->values()->all()
                     : [],
             ]);

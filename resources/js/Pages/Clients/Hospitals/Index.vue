@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { formatBusinessNumber } from '@/utils/format';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { debouncedWatch } from '@vueuse/core';
@@ -168,7 +169,7 @@ const formatDate = (iso: string) =>
                     <template #body="{ data }">{{ data.specialty ?? '-' }}</template>
                 </Column>
                 <Column header="사업자번호" style="width: 150px">
-                    <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
+                    <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="담당자" style="width: 160px">
                     <template #body="{ data }">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Platform;
 
+use App\Http\Requests\Concerns\NormalizesBusinessNumber;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,6 +13,8 @@ use Illuminate\Validation\Rule;
  */
 class ChangeBusinessNumberRequest extends FormRequest
 {
+    use NormalizesBusinessNumber;
+
     private function entity(): ?Model
     {
         return $this->route('hospital') ?? $this->route('pharmacy');
@@ -26,9 +29,8 @@ class ChangeBusinessNumberRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'new_business_registration_number' => trim((string) $this->input('new_business_registration_number')),
-        ]);
+        // 숫자만 정규화 (하이픈 무관) — 현재 번호와의 비교·유니크 검사가 숫자 기준으로 동작
+        $this->normalizeBusinessNumber('new_business_registration_number');
     }
 
     public function rules(): array

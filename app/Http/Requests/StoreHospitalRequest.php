@@ -2,15 +2,23 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesBusinessNumber;
 use App\Models\Hospital;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreHospitalRequest extends FormRequest
 {
+    use NormalizesBusinessNumber;
+
     public function authorize(): bool
     {
         return $this->user()?->isPlatform() ?? false; // MT-8: 공유 마스터 직접 쓰기는 platform 전용
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeBusinessNumber();
     }
 
     public function rules(): array

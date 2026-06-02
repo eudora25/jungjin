@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { formatBusinessNumber } from '@/utils/format';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import Button from 'primevue/button';
@@ -207,7 +208,7 @@ const submitChange = () =>
                         </div>
                         <div>
                             <dt class="text-surface-500 mb-1">사업자등록번호</dt>
-                            <dd>{{ hospital.business_registration_number ?? '-' }}</dd>
+                            <dd>{{ formatBusinessNumber(hospital.business_registration_number) }}</dd>
                         </div>
                         <div>
                             <dt class="text-surface-500 mb-1">원장/대표자명</dt>
@@ -264,7 +265,7 @@ const submitChange = () =>
                         </template>
                         <Column header="사업자등록번호" style="min-width: 150px">
                             <template #body="{ data }">
-                                <span class="font-medium">{{ data.business_registration_number }}</span>
+                                <span class="font-medium">{{ formatBusinessNumber(data.business_registration_number) }}</span>
                                 <Tag v-if="data.is_current" value="현재" severity="success" class="ml-2" />
                             </template>
                         </Column>
@@ -437,7 +438,7 @@ const submitChange = () =>
         <Dialog v-model:visible="showChangeDialog" modal header="사업자등록번호 변경" :style="{ width: '32rem' }">
             <form class="flex flex-col gap-3" @submit.prevent="submitChange">
                 <p class="text-sm text-surface-500">
-                    현재 번호: <span class="font-medium">{{ hospital.business_registration_number ?? '미등록' }}</span>
+                    현재 번호: <span class="font-medium">{{ hospital.business_registration_number ? formatBusinessNumber(hospital.business_registration_number) : '미등록' }}</span>
                 </p>
                 <div>
                     <label class="block text-sm mb-1">새 사업자등록번호 <span class="text-red-500">*</span></label>

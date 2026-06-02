@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasBusinessNumberHistory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -77,6 +78,14 @@ class Hospital extends Model
         'longitude' => 'decimal:7',
         'source_synced_at' => 'datetime',
     ];
+
+    /** 사업자등록번호는 숫자만 저장 (하이픈 무관 검색·표시). import/factory 등 모든 쓰기 경로에서 정규화 */
+    protected function businessRegistrationNumber(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value === null ? null : (preg_replace('/\D/', '', (string) $value) ?: null),
+        );
+    }
 
     public function company(): BelongsTo
     {

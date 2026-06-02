@@ -17,16 +17,19 @@ class HospitalController extends Controller
         $this->authorize('viewAny', Hospital::class);
 
         $search = trim((string) $request->input('search'));
+        $digits = preg_replace('/\D/', '', $search); // 사업자번호 검색용 (하이픈 무관)
         $status = $request->input('status');
         $type = $request->input('type');
 
         $hospitals = Hospital::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
+            ->when($search !== '', function ($q) use ($search, $digits) {
+                $q->where(function ($q) use ($search, $digits) {
                     $q->where('hospital_name', 'like', "%{$search}%")
                         ->orWhere('hospital_code', 'like', "%{$search}%")
-                        ->orWhere('business_registration_number', 'like', "%{$search}%")
                         ->orWhere('contact_person_name', 'like', "%{$search}%");
+                    if ($digits !== '') {
+                        $q->orWhere('business_registration_number', 'like', "%{$digits}%");
+                    }
                 });
             })
             ->when(in_array($status, ['active', 'inactive'], true), fn ($q) => $q->where('status', $status))

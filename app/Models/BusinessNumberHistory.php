@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -31,6 +32,14 @@ class BusinessNumberHistory extends Model
             'valid_from' => 'date',
             'valid_to' => 'date',
         ];
+    }
+
+    /** 사업자등록번호는 숫자만 저장 (하이픈 무관) */
+    protected function businessRegistrationNumber(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value === null ? null : (preg_replace('/\D/', '', (string) $value) ?: null),
+        );
     }
 
     /** 소유 엔티티 (Hospital | Pharmacy) */

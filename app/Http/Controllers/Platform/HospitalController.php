@@ -46,6 +46,7 @@ class HospitalController extends Controller
         $this->ensureSuperAdmin($request);
 
         $search = trim((string) $request->input('search', ''));
+        $digits = preg_replace('/\D/', '', $search); // 사업자번호 검색용 (하이픈 무관)
         $region = trim((string) $request->input('region', ''));
         $type = trim((string) $request->input('type', ''));
 
@@ -57,19 +58,21 @@ class HospitalController extends Controller
         }
 
         $hospitals = Hospital::query()
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
+            ->when($search !== '', function ($q) use ($search, $digits) {
+                $q->where(function ($q) use ($search, $digits) {
                     $q->where('hospital_name', 'like', "%{$search}%")
-                        ->orWhere('hospital_code', 'like', "%{$search}%")
-                        ->orWhere('business_registration_number', 'like', "%{$search}%")
-                        // 과거(폐업) 사업자번호로도 검색되도록 이력까지 매칭
-                        ->orWhereHas('numberHistories', fn ($h) => $h->where('business_registration_number', 'like', "%{$search}%"));
+                        ->orWhere('hospital_code', 'like', "%{$search}%");
+                    if ($digits !== '') {
+                        // 사업자번호는 숫자만 저장 — 입력 하이픈을 제거하고 매칭 (과거 이력 포함)
+                        $q->orWhere('business_registration_number', 'like', "%{$digits}%")
+                            ->orWhereHas('numberHistories', fn ($h) => $h->where('business_registration_number', 'like', "%{$digits}%"));
+                    }
                 });
             })
             // 과거 번호로 매칭된 경우 목록에 '과거 번호' 배지로 표시하기 위해 매칭 이력만 로드
-            ->when($search !== '', fn ($q) => $q->with(['numberHistories' => fn ($h) => $h
+            ->when($digits !== '', fn ($q) => $q->with(['numberHistories' => fn ($h) => $h
                 ->where('is_current', false)
-                ->where('business_registration_number', 'like', "%{$search}%")]))
+                ->where('business_registration_number', 'like', "%{$digits}%")]))
             ->when($region !== '', fn ($q) => $q->where('address', 'like', "{$region}%"))
             ->when($type !== '', fn ($q) => $q->where('hospital_type', $type))
             ->orderBy('hospital_name')
@@ -86,7 +89,7 @@ class HospitalController extends Controller
                 'specialty' => $h->specialty,
                 'opened_on' => $h->opened_on?->format('Y-m-d'),
                 'status' => $h->status,
-                'matched_old_numbers' => $search !== ''
+                'matched_old_numbers' => $digits !== ''
                     ? $h->numberHistories->pluck('business_registration_number')->values()->all()
                     : [],
             ]);
