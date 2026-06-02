@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -84,7 +86,7 @@ class ProductPrice extends Model
      */
     public function scopeActiveOn(Builder $q, \DateTimeInterface|string|null $date = null): Builder
     {
-        $date = $date ? \Carbon\Carbon::parse($date)->toDateString() : now()->toDateString();
+        $date = $date ? Carbon::parse($date)->toDateString() : now()->toDateString();
 
         return $q->where('effective_from', '<=', $date)
             ->where(function ($qq) use ($date) {
@@ -94,7 +96,7 @@ class ProductPrice extends Model
 
     public function isActive(\DateTimeInterface|string|null $on = null): bool
     {
-        $date = $on ? \Carbon\Carbon::parse($on)->toDateString() : now()->toDateString();
+        $date = $on ? Carbon::parse($on)->toDateString() : now()->toDateString();
         if ($this->effective_from->gt($date)) {
             return false;
         }
@@ -120,7 +122,7 @@ class ProductPrice extends Model
             ->setDescriptionForEvent(fn (string $event) => "product.price.{$event}");
     }
 
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName): void
+    public function tapActivity(Activity $activity, string $eventName): void
     {
         if ($reason = ChangeReason::current()) {
             $props = $activity->properties->put('reason', $reason);

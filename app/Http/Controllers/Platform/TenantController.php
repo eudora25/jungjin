@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTenantAdminRequest;
 use App\Http\Requests\StoreTenantRequest;
+use App\Http\Requests\UpdateTenantAdminRequest;
 use App\Http\Requests\UpdateTenantRequest;
 use App\Models\Tenant;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,6 +68,11 @@ class TenantController extends Controller
                 'name' => $data['name'],
                 'code' => $data['code'] ?? null,
                 'business_registration_number' => $data['business_registration_number'] ?? null,
+                'representative_name' => $data['representative_name'] ?? null,
+                'postcode' => $data['postcode'] ?? null,
+                'address' => $data['address'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'email' => $data['email'] ?? null,
                 'status' => $data['status'],
                 'created_by' => $request->user()->id,
             ]);
@@ -93,14 +100,24 @@ class TenantController extends Controller
 
         $tenant->loadCount('users');
 
+        $search = trim((string) $request->input('search', ''));
+
         $users = $tenant->users()
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
             ->orderByRaw("FIELD(role, 'pharma', 'cso')")
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'is_active']);
+            ->paginate(10, ['id', 'name', 'email', 'role', 'is_active'])
+            ->withQueryString();
 
         return Inertia::render('Platform/Tenants/Show', [
             'tenant' => $tenant,
             'users' => $users,
+            'filters' => ['search' => $search],
             'can' => [
                 'update' => $request->user()->can('update', $tenant),
                 'delete' => $request->user()->can('delete', $tenant),
@@ -179,5 +196,64 @@ class TenantController extends Controller
         return redirect()
             ->route('platform.tenants.show', $tenant)
             ->with('success', "제약사 [{$tenant->name}] 의 관리자 계정을 생성했습니다.");
+    }
+
+    /** 위임형(D-2) — 제약사 소속 계정(관리자·영업사원) 수정 */
+    public function updateAdmin(UpdateTenantAdminRequest $request, Tenant $tenant, User $user): RedirectResponse
+    {
+        $this->authorizeTenantMember($tenant, $user);
+
+        $data = $request->validated();
+
+        $user->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ]);
+
+        return redirect()
+            ->route('platform.tenants.show', $tenant)
+            ->with('success', $this->memberLabel($user)." 계정 [{$user->name}] 정보를 수정했습니다. (비밀번호는 '비밀번호 재설정'에서 변경)");
+    }
+
+    /** 위임형(D-2) — 제약사 소속 계정(관리자·영업사원) 삭제 */
+    public function destroyAdmin(Request $request, Tenant $tenant, User $user): RedirectResponse
+    {
+        $this->authorize('manageAdmins', $tenant);
+        $this->authorizeTenantMember($tenant, $user);
+
+        $user->delete();
+
+        return redirect()
+            ->route('platform.tenants.show', $tenant)
+            ->with('success', $this->memberLabel($user)." 계정 [{$user->name}] 을(를) 삭제했습니다.");
+    }
+
+    /** 위임형(D-2) — 제약사 소속 계정(관리자·영업사원) 비밀번호 재설정 */
+    public function resetAdminPassword(Request $request, Tenant $tenant, User $user): RedirectResponse
+    {
+        $this->authorize('manageAdmins', $tenant);
+        $this->authorizeTenantMember($tenant, $user);
+
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        $user->update(['password' => Hash::make($data['password'])]);
+
+        return redirect()
+            ->route('platform.tenants.show', $tenant)
+            ->with('success', $this->memberLabel($user)." 계정 [{$user->name}] 의 비밀번호를 재설정했습니다.");
+    }
+
+    /** 대상 사용자가 해당 제약사 소속 계정(관리자·영업사원)인지 확인 — 아니면 404 */
+    protected function authorizeTenantMember(Tenant $tenant, User $user): void
+    {
+        abort_unless($user->tenant_id === $tenant->id && ! $user->isPlatform(), 404);
+    }
+
+    /** 소속 계정의 역할 한글 라벨 */
+    protected function memberLabel(User $user): string
+    {
+        return $user->isPharma() ? '관리자' : '영업사원';
     }
 }

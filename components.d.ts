@@ -16,5 +16,6 @@ declare module 'vue' {
   }
   export interface GlobalDirectives {
     StyleClass: typeof import('primevue/styleclass')['default']
+    Tooltip: typeof import('primevue/tooltip')['default']
   }
 }

@@ -15,8 +15,11 @@ class ProductFile extends Model
     use SoftDeletes;
 
     public const TYPE_LICENSE = 'license';
+
     public const TYPE_SAFETY = 'safety';
+
     public const TYPE_CATALOG = 'catalog';
+
     public const TYPE_ETC = 'etc';
 
     public const TYPES = [

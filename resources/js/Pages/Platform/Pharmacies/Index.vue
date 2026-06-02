@@ -21,6 +21,7 @@ interface PharmacyRow {
     business_registration_number: string | null;
     address: string | null;
     status: string;
+    matched_old_numbers: string[];
 }
 
 interface Paginated<T> {
@@ -98,6 +99,10 @@ const onPage = (e: { page: number }) => {
                             {{ data.pharmacy_name }}
                         </Link>
                         <div v-if="data.pharmacy_code" class="text-xs text-surface-400 mt-1">{{ data.pharmacy_code }}</div>
+                        <div v-if="data.matched_old_numbers?.length" class="mt-1">
+                            <Tag v-for="n in data.matched_old_numbers" :key="n" severity="warn" class="mr-1"
+                                 :value="`과거 번호 ${n}`" v-tooltip.top="'옛 사업자번호로 검색되어 매칭됨'" />
+                        </div>
                     </template>
                 </Column>
                 <Column header="대표" style="width: 110px">

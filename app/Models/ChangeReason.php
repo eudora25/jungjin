@@ -35,7 +35,6 @@ class ChangeReason
      *
      * @template T
      *
-     * @param  string|null  $reason
      * @param  \Closure(): T  $callback
      * @return T
      */

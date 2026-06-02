@@ -12,6 +12,11 @@ interface Tenant {
     name: string;
     code: string | null;
     business_registration_number: string | null;
+    representative_name: string | null;
+    postcode: string | null;
+    address: string | null;
+    phone: string | null;
+    email: string | null;
     status: 'active' | 'inactive';
 }
 
@@ -21,6 +26,11 @@ const form = useForm({
     name: props.tenant.name,
     code: props.tenant.code ?? '',
     business_registration_number: props.tenant.business_registration_number ?? '',
+    representative_name: props.tenant.representative_name ?? '',
+    postcode: props.tenant.postcode ?? '',
+    address: props.tenant.address ?? '',
+    phone: props.tenant.phone ?? '',
+    email: props.tenant.email ?? '',
     status: props.tenant.status,
 });
 
@@ -60,6 +70,35 @@ const submit = () => form.put(route('platform.tenants.update', props.tenant.id))
                             <label class="block text-sm mb-1">사업자등록번호</label>
                             <InputText v-model="form.business_registration_number" class="w-full" />
                             <Message v-if="form.errors.business_registration_number" severity="error" size="small" variant="simple">{{ form.errors.business_registration_number }}</Message>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">대표자명</label>
+                            <InputText v-model="form.representative_name" class="w-full" />
+                            <Message v-if="form.errors.representative_name" severity="error" size="small" variant="simple">{{ form.errors.representative_name }}</Message>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-32">
+                                <label class="block text-sm mb-1">우편번호</label>
+                                <InputText v-model="form.postcode" class="w-full" />
+                                <Message v-if="form.errors.postcode" severity="error" size="small" variant="simple">{{ form.errors.postcode }}</Message>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm mb-1">사업장 소재지</label>
+                                <InputText v-model="form.address" class="w-full" placeholder="도로명/지번 주소" />
+                                <Message v-if="form.errors.address" severity="error" size="small" variant="simple">{{ form.errors.address }}</Message>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="block text-sm mb-1">연락처</label>
+                                <InputText v-model="form.phone" class="w-full" />
+                                <Message v-if="form.errors.phone" severity="error" size="small" variant="simple">{{ form.errors.phone }}</Message>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm mb-1">이메일</label>
+                                <InputText v-model="form.email" type="email" class="w-full" />
+                                <Message v-if="form.errors.email" severity="error" size="small" variant="simple">{{ form.errors.email }}</Message>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm mb-1">상태</label>

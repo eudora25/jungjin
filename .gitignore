@@ -29,3 +29,10 @@ yarn-error.log
 /test-results
 /*.png
 /docs/manual/*.html
+
+# Claude Code 로컬 설정·작업 규칙 (커밋하지 않음 — 작업 소스만 추적)
+/.claude/
+/CLAUDE.local.md
+
+# 원본/샘플 데이터 (대용량 — 저장소에 커밋하지 않음)
+/docs/data/samples/

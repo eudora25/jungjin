@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -76,7 +78,7 @@ class CompanyProductOverride extends Model
 
     public function scopeActiveOn(Builder $q, CarbonInterface|string|null $on = null): Builder
     {
-        $date = $on ? \Carbon\Carbon::parse($on)->toDateString() : now()->toDateString();
+        $date = $on ? Carbon::parse($on)->toDateString() : now()->toDateString();
 
         return $q->where('effective_from', '<=', $date)
             ->where(function ($qq) use ($date) {
@@ -86,7 +88,7 @@ class CompanyProductOverride extends Model
 
     public function isActive(CarbonInterface|string|null $on = null): bool
     {
-        $date = $on ? \Carbon\Carbon::parse($on)->toDateString() : now()->toDateString();
+        $date = $on ? Carbon::parse($on)->toDateString() : now()->toDateString();
         if ($this->effective_from->gt($date)) {
             return false;
         }
@@ -111,7 +113,7 @@ class CompanyProductOverride extends Model
             ->setDescriptionForEvent(fn (string $event) => "product.override.{$event}");
     }
 
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName): void
+    public function tapActivity(Activity $activity, string $eventName): void
     {
         $reason = $this->reason ?? ChangeReason::current();
         if ($reason) {

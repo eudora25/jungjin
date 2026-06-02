@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use Tests\TestCase;
 
 /*
@@ -47,4 +49,24 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * 헤더 + 행들을 임시 xlsx 파일로 써서 경로를 반환 (심평원 import 테스트용).
+ *
+ * @param  array<int,string>  $headers
+ * @param  array<int,array<int,string>>  $rows
+ */
+function write_xlsx(array $headers, array $rows): string
+{
+    $path = tempnam(sys_get_temp_dir(), 'hira').'.xlsx';
+    $writer = new Writer;
+    $writer->openToFile($path);
+    $writer->addRow(Row::fromValues($headers));
+    foreach ($rows as $r) {
+        $writer->addRow(Row::fromValues($r));
+    }
+    $writer->close();
+
+    return $path;
 }

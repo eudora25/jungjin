@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { formatBusinessNumber } from '@/utils/format';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { debouncedWatch } from '@vueuse/core';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
+import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Paginator from 'primevue/paginator';
 import Tag from 'primevue/tag';
@@ -59,6 +61,12 @@ const onPage = (e: { page: number }) => {
         { preserveState: true, preserveScroll: true, replace: true },
     );
 };
+
+// 관리자 계정 전체 목록 레이어 팝업
+const adminsDialog = ref<Tenant | null>(null);
+const openAdmins = (tenant: Tenant) => {
+    adminsDialog.value = tenant;
+};
 </script>
 
 <template>
@@ -92,16 +100,18 @@ const onPage = (e: { page: number }) => {
                     </template>
                 </Column>
                 <Column header="사업자번호" style="width: 140px">
-                    <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
+                    <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="관리자 계정" style="min-width: 220px">
                     <template #body="{ data }">
-                        <div v-if="data.users.length" class="flex flex-col gap-1">
-                            <div v-for="admin in data.users" :key="admin.id" class="flex items-center gap-2">
-                                <span class="font-medium">{{ admin.name }}</span>
-                                <span class="text-surface-400 text-xs">{{ admin.email }}</span>
-                                <Tag v-if="!admin.is_active" value="비활성" severity="secondary" />
-                            </div>
+                        <div v-if="data.users.length" class="flex items-center gap-2">
+                            <span class="font-medium">{{ data.users[0].name }}</span>
+                            <span class="text-surface-400 text-xs">{{ data.users[0].email }}</span>
+                            <Tag v-if="!data.users[0].is_active" value="비활성" severity="secondary" />
+                            <Button v-if="data.users.length > 1"
+                                    :label="`외 ${data.users.length - 1}명`"
+                                    size="small" severity="secondary" text rounded
+                                    @click="openAdmins(data)" />
                         </div>
                         <span v-else class="text-surface-400 text-sm">관리자 미지정</span>
                     </template>
@@ -120,5 +130,27 @@ const onPage = (e: { page: number }) => {
             <Paginator :rows="tenants.per_page" :total-records="tenants.total"
                        :first="(tenants.current_page - 1) * tenants.per_page" @page="onPage" />
         </div>
+
+        <Dialog :visible="!!adminsDialog" modal :style="{ width: '32rem' }"
+                :header="adminsDialog ? `${adminsDialog.name} — 관리자 계정` : '관리자 계정'"
+                @update:visible="(v) => { if (!v) adminsDialog = null; }">
+            <div v-if="adminsDialog" class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
+                <div v-for="admin in adminsDialog.users" :key="admin.id"
+                     class="flex items-center justify-between gap-3 py-2">
+                    <div class="flex flex-col">
+                        <span class="font-medium">{{ admin.name }}</span>
+                        <span class="text-surface-400 text-xs">{{ admin.email }}</span>
+                    </div>
+                    <Tag :value="admin.is_active ? '활성' : '비활성'"
+                         :severity="admin.is_active ? 'success' : 'secondary'" />
+                </div>
+            </div>
+            <template #footer>
+                <Link v-if="adminsDialog" :href="route('platform.tenants.show', adminsDialog.id)">
+                    <Button label="제약사 상세로" icon="pi pi-arrow-right" icon-pos="right" text />
+                </Link>
+                <Button label="닫기" severity="secondary" outlined @click="adminsDialog = null" />
+            </template>
+        </Dialog>
     </AdminLayout>
 </template>

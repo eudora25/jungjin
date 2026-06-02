@@ -13,6 +13,7 @@ import Aura from '@primeuix/themes/aura';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import StyleClass from 'primevue/styleclass';
+import Tooltip from 'primevue/tooltip';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Jungjin';
 
@@ -41,6 +42,7 @@ createInertiaApp({
             .use(ConfirmationService);
 
         app.directive('styleclass', StyleClass);
+        app.directive('tooltip', Tooltip);
 
         app.mount(el);
     },

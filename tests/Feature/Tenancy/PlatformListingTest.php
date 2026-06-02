@@ -46,6 +46,69 @@ test('super_admin 은 공유 병의원·약국을 조회한다', function () {
     $this->actingAs($super)->get(route('platform.pharmacies.index'))->assertOk();
 });
 
+test('병의원 목록은 지역·진료과목·인허가일자 컬럼을 포함한다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    Hospital::factory()->create([
+        'hospital_name' => '테스트의원',
+        'address' => '서울특별시 종로구 대학로 101 (연건동)',
+        'phone' => '02-111-2222',
+        'specialty' => '내과',
+        'opened_on' => '1990-03-15',
+        'business_registration_number' => null,
+    ]);
+
+    $this->actingAs($super)
+        ->get(route('platform.hospitals.index'))
+        ->assertInertia(fn ($page) => $page
+            ->component('Platform/Hospitals/Index')
+            ->where('hospitals.data.0.region', '서울특별시')
+            ->where('hospitals.data.0.specialty', '내과')
+            ->where('hospitals.data.0.opened_on', '1990-03-15')
+            ->where('hospitals.data.0.phone', '02-111-2222')
+            ->where('hospitals.data.0.business_registration_number', null)
+        );
+});
+
+test('병의원 목록을 지역(시도)으로 필터링한다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    Hospital::factory()->create(['hospital_name' => '서울의원', 'address' => '서울특별시 종로구 대학로 1']);
+    Hospital::factory()->create(['hospital_name' => '부산의원', 'address' => '부산광역시 해운대구 1']);
+
+    $this->actingAs($super)
+        ->get(route('platform.hospitals.index', ['region' => '서울특별시']))
+        ->assertInertia(fn ($page) => $page
+            ->has('hospitals.data', 1)
+            ->where('hospitals.data.0.hospital_name', '서울의원')
+            ->where('filters.region', '서울특별시')
+        );
+});
+
+test('병의원 목록을 구분(유형)으로 필터링한다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    Hospital::factory()->create(['hospital_name' => '종합A', 'hospital_type' => 'general_hospital']);
+    Hospital::factory()->create(['hospital_name' => '치과B', 'hospital_type' => 'dental']);
+
+    $this->actingAs($super)
+        ->get(route('platform.hospitals.index', ['type' => 'dental']))
+        ->assertInertia(fn ($page) => $page
+            ->has('hospitals.data', 1)
+            ->where('hospitals.data.0.hospital_name', '치과B')
+        );
+});
+
+test('잘못된 지역·구분 값은 무시한다', function () {
+    $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
+    Hospital::factory()->count(2)->create();
+
+    $this->actingAs($super)
+        ->get(route('platform.hospitals.index', ['region' => '없는도', 'type' => 'invalid']))
+        ->assertInertia(fn ($page) => $page
+            ->has('hospitals.data', 2)
+            ->where('filters.region', '')
+            ->where('filters.type', '')
+        );
+});
+
 test('약국 목록은 지역·대표·전화·주소 컬럼을 포함한다', function () {
     $super = User::factory()->create(['role' => 'platform', 'tenant_id' => null]);
     Pharmacy::factory()->create([

@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { debouncedWatch } from '@vueuse/core';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import InputText from 'primevue/inputtext';
 import Paginator from 'primevue/paginator';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 
 interface HospitalRow {
     id: number;
-    hospital_name: string;
-    hospital_code: string | null;
+    region: string | null;
     hospital_type: string | null;
+    hospital_name: string;
+    phone: string | null;
     business_registration_number: string | null;
+    address: string | null;
+    specialty: string | null;
+    opened_on: string | null;
     status: string;
+    matched_old_numbers: string[];
 }
 
 interface Paginated<T> {
@@ -29,23 +35,37 @@ interface Paginated<T> {
 
 const props = defineProps<{
     hospitals: Paginated<HospitalRow>;
-    filters: { search: string };
+    filters: { search: string; region: string; type: string };
+    regionOptions: string[];
+    typeOptions: string[];
 }>();
 
 const search = ref(props.filters.search ?? '');
+const region = ref(props.filters.region || null);
+const type = ref(props.filters.type || null);
 
 const typeLabels: Record<string, string> = {
     general_hospital: '종합병원', hospital: '병원', clinic: '의원', dental: '치과', oriental: '한의원', other: '기타',
 };
 
+const regionSelect = computed(() => props.regionOptions.map((r) => ({ label: r, value: r })));
+const typeSelect = computed(() => props.typeOptions.map((t) => ({ label: typeLabels[t] ?? t, value: t })));
+
+const query = (extra: Record<string, unknown> = {}) => ({
+    search: search.value || undefined,
+    region: region.value || undefined,
+    type: type.value || undefined,
+    ...extra,
+});
+
 const refresh = () => {
-    router.get(route('platform.hospitals.index'), { search: search.value || undefined },
+    router.get(route('platform.hospitals.index'), query(),
         { preserveState: true, preserveScroll: true, replace: true });
 };
-debouncedWatch(search, refresh, { debounce: 400 });
+debouncedWatch([search, region, type], refresh, { debounce: 300 });
 
 const onPage = (e: { page: number }) => {
-    router.get(route('platform.hospitals.index'), { search: search.value || undefined, page: e.page + 1 },
+    router.get(route('platform.hospitals.index'), query({ page: e.page + 1 }),
         { preserveState: true, preserveScroll: true, replace: true });
 };
 </script>
@@ -69,30 +89,54 @@ const onPage = (e: { page: number }) => {
                 </div>
             </div>
 
-            <InputText v-model="search" placeholder="병의원명·코드·사업자번호 검색" class="w-full md:w-[28rem]" />
+            <div class="flex flex-col sm:flex-row gap-2">
+                <InputText v-model="search" placeholder="병의원명·코드·사업자번호 검색" class="w-full sm:w-80" />
+                <Select v-model="region" :options="regionSelect" option-label="label" option-value="value"
+                        placeholder="지역(시도)" show-clear class="w-full sm:w-48" />
+                <Select v-model="type" :options="typeSelect" option-label="label" option-value="value"
+                        placeholder="구분" show-clear class="w-full sm:w-40" />
+            </div>
 
-            <DataTable :value="hospitals.data" striped-rows>
+            <DataTable :value="hospitals.data" striped-rows class="text-sm">
                 <template #empty>
                     <div class="text-center py-10 text-surface-500">등록된 병의원이 없습니다.</div>
                 </template>
-                <Column header="병의원명">
-                    <template #body="{ data }">
-                        <Link :href="route('platform.hospitals.show', data.id)" class="font-medium hover:text-primary">
-                            {{ data.hospital_name }}
-                        </Link>
-                        <div v-if="data.hospital_code" class="text-xs text-surface-400 mt-1">{{ data.hospital_code }}</div>
-                    </template>
+                <Column header="지역" style="width: 120px">
+                    <template #body="{ data }">{{ data.region ?? '-' }}</template>
                 </Column>
-                <Column header="유형" style="width: 120px">
+                <Column header="구분" style="width: 90px">
                     <template #body="{ data }">
                         <Tag v-if="data.hospital_type" :value="typeLabels[data.hospital_type] ?? data.hospital_type" severity="info" />
                         <span v-else>-</span>
                     </template>
                 </Column>
-                <Column header="사업자번호" style="width: 150px">
+                <Column header="의료기관명" style="min-width: 160px">
+                    <template #body="{ data }">
+                        <Link :href="route('platform.hospitals.show', data.id)" class="font-medium hover:text-primary">
+                            {{ data.hospital_name }}
+                        </Link>
+                        <div v-if="data.matched_old_numbers?.length" class="mt-1">
+                            <Tag v-for="n in data.matched_old_numbers" :key="n" severity="warn" class="mr-1"
+                                 :value="`과거 번호 ${n}`" v-tooltip.top="'옛 사업자번호로 검색되어 매칭됨'" />
+                        </div>
+                    </template>
+                </Column>
+                <Column header="전화번호" style="width: 120px">
+                    <template #body="{ data }">{{ data.phone ?? '-' }}</template>
+                </Column>
+                <Column header="사업자번호" style="width: 120px">
                     <template #body="{ data }">{{ data.business_registration_number ?? '-' }}</template>
                 </Column>
-                <Column header="상태" style="width: 90px">
+                <Column header="주소" style="min-width: 200px">
+                    <template #body="{ data }">{{ data.address ?? '-' }}</template>
+                </Column>
+                <Column header="진료과목" style="width: 110px">
+                    <template #body="{ data }">{{ data.specialty ?? '-' }}</template>
+                </Column>
+                <Column header="인허가일자" style="width: 110px">
+                    <template #body="{ data }">{{ data.opened_on ?? '-' }}</template>
+                </Column>
+                <Column header="상태" style="width: 80px">
                     <template #body="{ data }">
                         <Tag :value="data.status === 'active' ? '활성' : '비활성'" :severity="data.status === 'active' ? 'success' : 'secondary'" />
                     </template>

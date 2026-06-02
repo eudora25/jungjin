@@ -180,64 +180,16 @@ class HospitalImportService
                         throw new \RuntimeException("행 {$lineNo} 검증 실패");
                     }
 
-                    $kind = $this->trimOrNull($row['의료기관종별명'] ?? $row['업태구분명'] ?? null);
-                    $type = $kind ? $this->mapHospitalType($kind) : null;
-                    $specialty = $this->firstSpecialty($this->trimOrNull($row['진료과목내용명'] ?? null));
-
-                    $batch[] = [
-                        'hospital_code' => $code,
-                        'hospital_name' => $name,
-                        'hospital_type' => $type,
-                        'specialty' => $specialty,
-                        'postcode' => $this->trimOrNull($row['도로명우편번호'] ?? $row['소재지우편번호'] ?? null),
-                        'address' => $this->trimOrNull($row['도로명주소'] ?? $row['지번주소'] ?? null),
-                        'phone' => $this->trimOrNull($row['전화번호'] ?? null),
-                        'status' => $this->mapStatus($rawStatus),
-                        'created_by' => $userId,
-                        'updated_by' => $userId,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                        'deleted_at' => null,
-                    ];
+                    $batch[] = $this->buildRow($row, $code, $name, $rawStatus, $userId, $now);
 
                     if (count($batch) >= $batchSize) {
-                        DB::table('hospitals')->upsert(
-                            $batch,
-                            ['hospital_code'],
-                            [
-                                'hospital_name',
-                                'hospital_type',
-                                'specialty',
-                                'postcode',
-                                'address',
-                                'phone',
-                                'status',
-                                'updated_by',
-                                'updated_at',
-                                'deleted_at',
-                            ],
-                        );
+                        DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->updateColumns());
                         $batch = [];
                     }
                 }
 
                 if (! empty($batch)) {
-                    DB::table('hospitals')->upsert(
-                        $batch,
-                        ['hospital_code'],
-                        [
-                            'hospital_name',
-                            'hospital_type',
-                            'specialty',
-                            'postcode',
-                            'address',
-                            'phone',
-                            'status',
-                            'updated_by',
-                            'updated_at',
-                            'deleted_at',
-                        ],
-                    );
+                    DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->updateColumns());
                 }
             });
         } finally {
@@ -340,5 +292,106 @@ class HospitalImportService
         }
 
         return implode(' / ', $parts);
+    }
+
+    /**
+     * 인허가 CSV 한 행을 hospitals upsert 페이로드로 변환.
+     * 좌표(A)는 TM 좌표계라 위경도(WGS84)에 저장하지 않는다 — 위경도는 심평원(B)에서 채움.
+     *
+     * @param  array<string,string|null>  $row
+     * @return array<string,mixed>
+     */
+    private function buildRow(array $row, string $code, string $name, string $rawStatus, ?int $userId, mixed $now): array
+    {
+        $kind = $this->trimOrNull($row['의료기관종별명'] ?? $row['업태구분명'] ?? null);
+
+        return [
+            'hospital_code' => $code,
+            'hospital_name' => $name,
+            'hospital_type' => $kind ? $this->mapHospitalType($kind) : null,
+            'specialty' => $this->firstSpecialty($this->trimOrNull($row['진료과목내용명'] ?? null)),
+            'postcode' => $this->trimOrNull($row['도로명우편번호'] ?? $row['소재지우편번호'] ?? null),
+            'address' => $this->trimOrNull($row['도로명주소'] ?? $row['지번주소'] ?? null),
+            'phone' => $this->trimOrNull($row['전화번호'] ?? null),
+            'status' => $this->mapStatus($rawStatus),
+            'opened_on' => $this->parseDate($row['인허가일자'] ?? null),
+            'closed_on' => $this->parseDate($row['폐업일자'] ?? null),
+            'suspend_begin_on' => $this->parseDate($row['휴업시작일자'] ?? null),
+            'suspend_end_on' => $this->parseDate($row['휴업종료일자'] ?? null),
+            'doctor_count' => $this->parseInt($row['의료인수'] ?? null),
+            'bed_count' => $this->parseInt($row['병상수'] ?? null),
+            'inpatient_room_count' => $this->parseInt($row['입원실수'] ?? null),
+            'total_area' => $this->parseDecimal($row['총면적'] ?? null),
+            'license_authority_code' => $this->trimOrNull($row['개방자치단체코드'] ?? null),
+            'source_synced_at' => $this->parseDateTime($row['데이터갱신시점'] ?? null),
+            'created_by' => $userId,
+            'updated_by' => $userId,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'deleted_at' => null,
+        ];
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function updateColumns(): array
+    {
+        return [
+            'hospital_name', 'hospital_type', 'specialty', 'postcode', 'address', 'phone', 'status',
+            'opened_on', 'closed_on', 'suspend_begin_on', 'suspend_end_on',
+            'doctor_count', 'bed_count', 'inpatient_room_count', 'total_area',
+            'license_authority_code', 'source_synced_at',
+            'updated_by', 'updated_at', 'deleted_at',
+        ];
+    }
+
+    private function parseDate(mixed $v): ?string
+    {
+        $s = $this->trimOrNull($v);
+        if ($s === null) {
+            return null;
+        }
+        // 'YYYY-MM-DD' 또는 'YYYYMMDD'
+        if (preg_match('/^(\d{4})-?(\d{2})-?(\d{2})/', $s, $m)) {
+            return "{$m[1]}-{$m[2]}-{$m[3]}";
+        }
+
+        return null;
+    }
+
+    private function parseDateTime(mixed $v): ?string
+    {
+        $s = $this->trimOrNull($v);
+        if ($s === null) {
+            return null;
+        }
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/', $s, $m)) {
+            return "{$m[1]} {$m[2]}";
+        }
+
+        return $this->parseDate($s);
+    }
+
+    private function parseInt(mixed $v): ?int
+    {
+        $s = $this->trimOrNull($v);
+        if ($s === null || ! preg_match('/-?\d+/', $s, $m)) {
+            return null;
+        }
+        $n = (int) $m[0];
+
+        return $n < 0 ? null : $n;
+    }
+
+    private function parseDecimal(mixed $v): ?string
+    {
+        $s = $this->trimOrNull($v);
+        if ($s === null) {
+            return null;
+        }
+        $s = str_replace(',', '', $s);
+
+        return is_numeric($s) ? $s : null;
     }
 }

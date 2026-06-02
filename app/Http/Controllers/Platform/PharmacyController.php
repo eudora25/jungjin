@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Platform\ChangeBusinessNumberRequest;
 use App\Http\Requests\Platform\StorePharmacyRequest;
 use App\Http\Requests\Platform\UpdatePharmacyRequest;
 use App\Models\Pharmacy;
@@ -56,9 +57,15 @@ class PharmacyController extends Controller
                 $q->where(function ($q) use ($search) {
                     $q->where('pharmacy_name', 'like', "%{$search}%")
                         ->orWhere('pharmacy_code', 'like', "%{$search}%")
-                        ->orWhere('business_registration_number', 'like', "%{$search}%");
+                        ->orWhere('business_registration_number', 'like', "%{$search}%")
+                        // 과거(폐업) 사업자번호로도 검색되도록 이력까지 매칭
+                        ->orWhereHas('numberHistories', fn ($h) => $h->where('business_registration_number', 'like', "%{$search}%"));
                 });
             })
+            // 과거 번호로 매칭된 경우 목록에 '과거 번호' 배지로 표시하기 위해 매칭 이력만 로드
+            ->when($search !== '', fn ($q) => $q->with(['numberHistories' => fn ($h) => $h
+                ->where('is_current', false)
+                ->where('business_registration_number', 'like', "%{$search}%")]))
             ->when($region !== '', fn ($q) => $q->where('address', 'like', "{$region}%"))
             ->orderBy('pharmacy_name')
             ->paginate(20)
@@ -73,6 +80,9 @@ class PharmacyController extends Controller
                 'business_registration_number' => $p->business_registration_number,
                 'address' => $p->address,
                 'status' => $p->status,
+                'matched_old_numbers' => $search !== ''
+                    ? $p->numberHistories->pluck('business_registration_number')->values()->all()
+                    : [],
             ]);
 
         return Inertia::render('Platform/Pharmacies/Index', [
@@ -96,10 +106,28 @@ class PharmacyController extends Controller
         $data['updated_by'] = $request->user()->id;
 
         $pharmacy = Pharmacy::create($data);
+        $pharmacy->seedBusinessNumberHistory($request->user()->id);
 
         return redirect()
             ->route('platform.pharmacies.show', $pharmacy)
             ->with('success', '약국을 등록했습니다.');
+    }
+
+    /** 사업자등록번호 변경 — 과거 번호 마감 + 새 번호 현재로, 이력 기록 */
+    public function changeBusinessNumber(ChangeBusinessNumberRequest $request, Pharmacy $pharmacy): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $pharmacy->changeBusinessNumber($data['new_business_registration_number'], [
+            'valid_from' => $data['valid_from'] ?? null,
+            'previous_valid_to' => $data['previous_valid_to'] ?? null,
+            'reason' => $data['reason'] ?? null,
+            'note' => $data['note'] ?? null,
+        ], $request->user()->id);
+
+        return redirect()
+            ->route('platform.pharmacies.show', $pharmacy)
+            ->with('success', '사업자등록번호를 변경하고 이력에 기록했습니다.');
     }
 
     public function show(Request $request, Pharmacy $pharmacy): Response
@@ -110,7 +138,27 @@ class PharmacyController extends Controller
 
         return Inertia::render('Platform/Pharmacies/Show', [
             'pharmacy' => $pharmacy,
+            'numberHistories' => $this->numberHistoryPayload($pharmacy),
         ]);
+    }
+
+    /** 사업자번호 이력 페이로드 (현재 → 과거 순) */
+    private function numberHistoryPayload(Pharmacy $pharmacy): array
+    {
+        return $pharmacy->numberHistories()
+            ->orderByDesc('is_current')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($h) => [
+                'id' => $h->id,
+                'business_registration_number' => $h->business_registration_number,
+                'is_current' => $h->is_current,
+                'valid_from' => $h->valid_from?->toDateString(),
+                'valid_to' => $h->valid_to?->toDateString(),
+                'reason' => $h->reason,
+                'note' => $h->note,
+            ])
+            ->all();
     }
 
     public function edit(Request $request, Pharmacy $pharmacy): Response

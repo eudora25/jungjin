@@ -2,6 +2,7 @@
 
 > 본 문서는 정진팜의 **거래처 중 약국/병원 유형의 독립 마스터 모듈** 및 **영업사원 목록 뷰**의 단일 설계 문서입니다. ROADMAP 상 **P0-1**.
 > 앞으로 남은 작업·다음 단계는 [`docs/planning/ROADMAP.md`](../../planning/ROADMAP.md) 로 통합 관리합니다.
+> 🔗 병의원 공공데이터(인허가 CSV + 심평원 Excel) 정규화 적재 설계: [`HOSPITAL_PUBLIC_DATA.md`](HOSPITAL_PUBLIC_DATA.md)
 
 ---
 

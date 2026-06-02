@@ -19,6 +19,7 @@ use App\Http\Controllers\PharmacyImportController;
 use App\Http\Controllers\Platform\CodeGroupController as PlatformCodeGroupController;
 use App\Http\Controllers\Platform\HospitalController as PlatformHospitalController;
 use App\Http\Controllers\Platform\HospitalImportController as PlatformHospitalImportController;
+use App\Http\Controllers\Platform\HospitalPublicDataController as PlatformHospitalPublicDataController;
 use App\Http\Controllers\Platform\MasterChangeRequestController as PlatformMasterChangeRequestController;
 use App\Http\Controllers\Platform\PharmacyController as PlatformPharmacyController;
 use App\Http\Controllers\Platform\PharmacyImportController as PlatformPharmacyImportController;
@@ -185,6 +186,9 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     // 제약사(테넌트) 관리 — 전체 CRUD
     Route::resource('tenants', PlatformTenantController::class);
     Route::post('/tenants/{tenant}/admins', [PlatformTenantController::class, 'storeAdmin'])->name('tenants.admins.store');
+    Route::put('/tenants/{tenant}/admins/{user}', [PlatformTenantController::class, 'updateAdmin'])->name('tenants.admins.update');
+    Route::delete('/tenants/{tenant}/admins/{user}', [PlatformTenantController::class, 'destroyAdmin'])->name('tenants.admins.destroy');
+    Route::post('/tenants/{tenant}/admins/{user}/reset-password', [PlatformTenantController::class, 'resetAdminPassword'])->name('tenants.admins.reset-password');
 
     // 임퍼서네이션 — 특정 제약사로 진입/종료 (GAP-10)
     Route::post('/tenants/{tenant}/enter', [PlatformTenantController::class, 'enter'])->name('tenants.enter');
@@ -201,10 +205,18 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     Route::get('/hospitals/import', [PlatformHospitalImportController::class, 'form'])->name('hospitals.import.form');
     Route::post('/hospitals/import', [PlatformHospitalImportController::class, 'handle'])->name('hospitals.import.handle');
 
+    // 병의원 심평원(HIRA) Excel 보강 업로드 (큐 적재) — resource 보다 먼저
+    Route::get('/hospitals/public-data', [PlatformHospitalPublicDataController::class, 'index'])->name('hospitals.public-data.index');
+    Route::post('/hospitals/public-data', [PlatformHospitalPublicDataController::class, 'store'])->name('hospitals.public-data.store');
+
     // 공유 마스터(약국·병의원) 전역 CRUD — super_admin 이 직접 관리 (D-6)
     Route::resource('pharmacies', PlatformPharmacyController::class)
         ->parameters(['pharmacies' => 'pharmacy']);
     Route::resource('hospitals', PlatformHospitalController::class);
+
+    // 사업자등록번호 변경 (과거 번호 이력 기록) — 병의원·약국
+    Route::post('/hospitals/{hospital}/business-number', [PlatformHospitalController::class, 'changeBusinessNumber'])->name('hospitals.business-number.change');
+    Route::post('/pharmacies/{pharmacy}/business-number', [PlatformPharmacyController::class, 'changeBusinessNumber'])->name('pharmacies.business-number.change');
 
     // 공통 코드 그룹/코드 정의 CRUD — platform 전용 (GAP-10)
     Route::resource('code-groups', PlatformCodeGroupController::class)
