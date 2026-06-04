@@ -45,7 +45,7 @@
 | **M6** | 스케줄러·큐·알림, 운영 전환 | ⚪ 대기 | Scheduler/Queue 기반 준비, Job/알림 미작성 |
 | **공통** | 사용자 관리 (admin) | 🟢 완료 | CRUD + is_active 토글 + 비밀번호 재설정 + 로그인 차단 |
 
-**현재 테스트**: `sail test` 기준 **450개 전체 통과** (2026-06-04, GAP-10 MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** + 코드 그룹 CRUD·병의원 공공데이터·사업자번호 이력/정규화 + **GAP-12 MOIS API 증분 동기화(R1~R7)** 포함)
+**현재 테스트**: `sail test` 기준 **454개 전체 통과** (2026-06-04, GAP-10 MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** + 코드 그룹 CRUD·병의원 공공데이터·사업자번호 이력/정규화 + **GAP-12 MOIS API 증분 동기화(R1~R9, 이력 UI 포함)** 포함)
 
 > §2.8 **도메인 검토 후보** 섹션은 본 프로젝트 채택 여부가 결정되지 않은 도메인 후보 **23종**(BIZ/PHARM/OPS·CRM·ERP/TECH)을 별도 관리합니다. 핵심 백로그(§2.4~2.6)와 분리해 가독성을 보존합니다.
 
@@ -107,7 +107,7 @@
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
 | **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** 🟢 + 약국·병의원 CRUD·코드 그룹 CRUD·임퍼서네이션 🟢. **Now: platform 사용자·의약품 CRUD / admin 소속 sales 관리 범위**. cutover(OPS-7)는 후속. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
 | **GAP-11** | **의약품 도메인 재설계 (공유 마스터 + 제약사 취급품)** | P2 | XL | 🟢 설계 확정(D-1~5) · 착수 대기. 단일 `products`(테넌트 복제) → `drug_products`(공유, platform) + `company_drug_products`(제약사 취급+수수료, 등급 매트릭스 유지). 실적→취급품 참조. Pample 경량 차용. **GAP-10 안정화 후** DR-1 착수. 설계: [`DRUG_DOMAIN_REDESIGN.md`](../modules/product/DRUG_DOMAIN_REDESIGN.md) |
-| ~~**GAP-12**~~ | ~~**행안부(MOIS) 공공데이터 API 증분 동기화**~~ | P2 | M | 🟢 **R1~R7 완료** (2026-06-04): 공용 매퍼·API 클라이언트·proj4php 좌표·이력/커서·증분 서비스(I/U/D·SKIP·커서)·Job/명령/스케줄러(비활성). **R7 실데이터 검증**으로 `MNG_NO==hospital_code` 가정 확정(97건 중 80 update·17 insert) + 상태필드(SALS_STTS_NM)·커서 형식 버그 정정. 30 테스트·전체 450 PASS. **R8(이력 UI)은 선택 후속**. 설계: [`HOSPITAL_LOCALDATA_API_SYNC.md`](../modules/client/HOSPITAL_LOCALDATA_API_SYNC.md) |
+| ~~**GAP-12**~~ | ~~**행안부(MOIS) 공공데이터 API 증분 동기화**~~ | P2 | M | 🟢 **R1~R9 완료** (2026-06-04): 공용 매퍼·API 클라이언트·proj4php 좌표·이력/커서·증분 서비스(I/U/D·SKIP·커서)·Job/명령/스케줄러(비활성)·**플랫폼 이력/수동 트리거 UI(R8)**. **R7 실데이터 검증**으로 `MNG_NO==hospital_code` 가정 확정(97건 중 80 update·17 insert) + 상태필드(SALS_STTS_NM)·커서 형식 버그 정정. 34 테스트·전체 454 PASS. ⏳ 운영 활성화(`MOIS_SYNC_ENABLED=true`)만 남음. 설계: [`HOSPITAL_LOCALDATA_API_SYNC.md`](../modules/client/HOSPITAL_LOCALDATA_API_SYNC.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
 
@@ -225,7 +225,7 @@
 - [x] **R5 (BE, M)**: `HospitalMoisSyncService`(업종 순회·D-2 lookback 커서·페이징·DAT_UPDT_SE I/U/D·변경감지 SKIP·커서 전진·report·격리) + 8 (`fffc9b0`)
 - [x] **R6 (BE, S)**: `SyncHospitalMoisJob` + `hospitals:sync-mois {--since}{--svc}{--dry-run}{--queue}` + Scheduler(04:30·`config(mois.enabled)` 비활성) + 4 (`9a511b1`)
 - [x] **R7 (검증, S)**: 실데이터 검증 — `MNG_NO==hospital_code` 확정(6/2 변경분 97건 중 80 update·17 insert). 버그 정정: 상태=`SALS_STTS_NM`(BZSTAT_SE_NM 종별명 오인), 커서 14자리 정규화. 회귀 2 (`13e0d46`)
-- [ ] **R8 (FE, 선택, S, 선행: R6)**: `/platform/hospitals/mois-sync` 이력·수동 트리거 UI + `role:platform` 권한 테스트
+- [x] **R8 (FE, S)**: `/platform/hospitals/mois-sync` 이력·업종 커서·수동 트리거(업종 선택·dry-run) UI + 메뉴 + `role:platform` 권한 테스트 4 (`1a79992`)
 - [x] **R9 (Doc, S)**: ROADMAP/설계문서/CLIENT_MANAGEMENT 진행 로그 반영
 
 #### GAP-9 작업 단위 — 기준정보 마스터 admin 분리 (병의원·약국·의약품)
@@ -560,7 +560,7 @@ ERP-2 EDI 연동         ─── M3 + M6 + TECH-3(선택)
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
-| 2.10 | 2026-06-04 | **GAP-12 R1~R7 완료** — 행안부(MOIS) API 증분 동기화(공용 매퍼·API 클라이언트·proj4php 좌표·이력/커서·증분 서비스 I/U/D·Job/명령/스케줄러 비활성). R7 실데이터 검증으로 `MNG_NO==hospital_code` 확정 + 상태필드/커서 형식 버그 정정. R8(이력 UI) 선택 후속. 테스트 **450** |
+| 2.10 | 2026-06-04 | **GAP-12 R1~R9 완료** — 행안부(MOIS) API 증분 동기화(공용 매퍼·API 클라이언트·proj4php 좌표·이력/커서·증분 서비스 I/U/D·Job/명령/스케줄러 비활성·**플랫폼 이력/수동 트리거 UI**). R7 실데이터 검증으로 `MNG_NO==hospital_code` 확정 + 상태필드/커서 형식 버그 정정. 운영 활성화만 남음. 테스트 **454** |
 | 2.9 | 2026-06-04 | **MT-4-finalize 완료** — 도메인 `tenant_id` NOT NULL 전환(UserFactory 기본 테넌트 + Performance/Settlement 거래처 테넌트 상속). §3 Now=platform 사용자·의약품 CRUD, 테스트 **416** |
 | 2.8 | 2026-06-02 | **MT-8 완료** + 코드 그룹/코드 정의 CRUD · 병의원 공공데이터(HIRA) import · 사업자번호 이력+숫자 정규화(morph map) · 약국 목록 보강. §3 Now=MT-4-finalize/platform 사용자·의약품 CRUD, 테스트 **417** |
 | 2.7 | 2026-05-29 | **실행 순서 재정렬** — MT-4( nullable) 완료, §3 Now=**MT-6**→MT-3→…, 테스트 **291** |
@@ -573,5 +573,5 @@ ERP-2 EDI 연동         ─── M3 + M6 + TECH-3(선택)
 
 **문서 버전**: 2.10
 **작성일**: 2026-04-20
-**최종 갱신**: 2026-06-04 (GAP-12 R1~R7 완료 — MOIS API 증분 동기화·실데이터 검증, R8 이력 UI 선택 후속, 테스트 450)
+**최종 갱신**: 2026-06-04 (GAP-12 R1~R9 완료 — MOIS API 증분 동기화·실데이터 검증·이력 UI, 운영 활성화만 남음, 테스트 454)
 **갱신 책임**: 작업 시작·완료 시 해당 항목 상태 변경 + 모듈 문서에 상세 기록

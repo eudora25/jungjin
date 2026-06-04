@@ -2,7 +2,7 @@
 
 > 상위: [`CLIENT_MANAGEMENT.md`](CLIENT_MANAGEMENT.md) · 선행: [`HOSPITAL_PUBLIC_DATA.md`](HOSPITAL_PUBLIC_DATA.md)
 > 목적: 행정안전부 **공공데이터포털(data.go.kr) 표준데이터 OpenAPI** 로 병의원 인허가 데이터의 **변경분(신규·변경·폐업)** 만 주기적으로 수신해 `hospitals` 마스터에 **건건 upsert** 한다.
-> 상태: **🟢 R1~R7 구현 완료** (2026-06-04, 실데이터 검증 통과) — R8(이력 UI) 선택 후속
+> 상태: **🟢 R1~R9 구현 완료** (2026-06-04, 실데이터 검증 통과·이력 UI 포함) — 운영 활성화(`MOIS_SYNC_ENABLED=true`)만 남음
 > 결정(2026-06-04): 수신 방식 = **변경분 API 증분 동기화** / 진행 = **설계 문서 우선** → 구현 완료
 
 ---
@@ -153,8 +153,8 @@
 - 명령: `hospitals:sync-mois {--since=YYYYMMDD} {--svc=*} {--dry-run}` (`--dry-run`=분류 카운트만).
 - Scheduler(`routes/console.php`): 일 1회(예 04:30, HIRA와 시각 분리) 디스패치. 기본 비활성 플래그(`config`) 후 운영 검증 뒤 활성.
 
-### 4-6. Platform UI (선택·후속)
-- `/platform/hospitals/mois-sync` — 동기화 이력(업종별 report·상태) + "지금 동기화" + 마지막 커서 표시. 기존 `Platform/Hospitals/PublicData.vue` 패턴 재사용, 메뉴 "마스터 관리/병의원" 하위.
+### 4-6. Platform UI — 🟢 완료 (R8)
+- `/platform/hospitals/mois-sync` — 업종별 커서·스케줄 활성여부·"지금 동기화"(업종 선택·dry-run 토글)·이력 테이블(업종별 +신규/~변경/✕폐업/=스킵). `HospitalMoisSyncController`(index/store, isPlatform 가드) + 큐 디스패치(trigger=manual). 메뉴 "플랫폼 / 병의원 API 동기화(MOIS)".
 
 ---
 
@@ -239,7 +239,7 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 - [x] **R5** `HospitalMoisSyncService`(업종 순회·페이징·DAT_UPDT_SE·upsert·SKIP·커서·report·격리, 8) — `fffc9b0`
 - [x] **R6** `SyncHospitalMoisJob` + `hospitals:sync-mois` + Scheduler(04:30·비활성 플래그, 4) — `9a511b1`
 - [x] **R7** 실데이터 증분 검증 — `MNG_NO==hospital_code` 확정(6/2 변경분 97건 중 80 update·17 insert). 상태필드(`SALS_STTS_NM`)·커서 형식 버그 정정(회귀 2) — `13e0d46`
-- [ ] **R8** (선택) Platform 이력·수동 트리거 UI(`/platform/hospitals/mois-sync`) + 권한 테스트
+- [x] **R8** Platform 이력·업종 커서·수동 트리거(업종 선택·dry-run) UI(`/platform/hospitals/mois-sync`) + 메뉴 + 권한 테스트 4 — `1a79992`
 - [x] **R9** ROADMAP/설계문서/CLIENT_MANAGEMENT 진행 로그 반영
 
 ---
@@ -268,6 +268,6 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 
 ---
 
-**문서 버전**: 1.0 (R1~R7 구현·실데이터 검증 반영)
+**문서 버전**: 1.1 (R1~R9 구현·실데이터 검증·이력 UI 반영)
 **작성일**: 2026-06-04
-**상태**: **🟢 R1~R7 구현 완료** — 실데이터 검증 통과(테스트 30, 전체 450 PASS). 운영 활성화(`MOIS_SYNC_ENABLED=true`)·R8 이력 UI는 선택 후속
+**상태**: **🟢 R1~R9 구현 완료** — 실데이터 검증 통과(테스트 34, 전체 454 PASS). 운영 활성화(`MOIS_SYNC_ENABLED=true`)만 남음
