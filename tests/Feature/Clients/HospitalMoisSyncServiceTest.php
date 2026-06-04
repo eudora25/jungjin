@@ -203,3 +203,40 @@ test('커서는 구분자 포함 LAST_MDFCN_PNT 를 14자리로 정규화해 저
 
     expect(HospitalMoisCursor::where('api_id', '15154874')->value('last_synced_at'))->toBe('20260602094318');
 });
+
+test('규모 수치(GFA·SCKBD_CNT·HSPTLZRM_CNT·HCWKR_CNT)를 흡수한다', function () {
+    Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
+        moisItem([
+            'MNG_NO' => 'SZ-1', 'GFA' => '8500.50', 'SCKBD_CNT' => '120',
+            'HSPTLZRM_CNT' => '30', 'HCWKR_CNT' => '45',
+        ]),
+    ]))]);
+
+    $this->service->syncAll(['services' => ['clinics']]);
+
+    $h = Hospital::where('hospital_code', 'SZ-1')->first();
+    expect((float) $h->total_area)->toBe(8500.50);
+    expect($h->bed_count)->toBe(120);
+    expect($h->inpatient_room_count)->toBe(30);
+    expect($h->doctor_count)->toBe(45);
+});
+
+test('규모 수치만 바뀌어도 변경 감지로 UPDATE 한다', function () {
+    Hospital::create([
+        'hospital_code' => 'SZ-2', 'hospital_name' => '병상병원', 'hospital_type' => 'clinic',
+        'status' => 'active', 'opened_on' => '2020-01-01', 'bed_count' => 10,
+    ]);
+
+    Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
+        [
+            'MNG_NO' => 'SZ-2', 'BPLC_NM' => '병상병원', 'SALS_STTS_NM' => '영업',
+            'MDLCR_INST_BTP_NM' => '의원', 'LCPMT_YMD' => '2020-01-01',
+            'SCKBD_CNT' => '20', 'LAST_MDFCN_PNT' => '20260604010000', 'DAT_UPDT_SE' => 'U',
+        ],
+    ]))]);
+
+    $sync = $this->service->syncAll(['services' => ['clinics']]);
+
+    expect($sync->report['clinics']['updated'])->toBe(1);
+    expect(Hospital::where('hospital_code', 'SZ-2')->value('bed_count'))->toBe(20);
+});

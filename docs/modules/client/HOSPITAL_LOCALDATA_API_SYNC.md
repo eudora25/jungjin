@@ -93,6 +93,8 @@
 | `TCBIZ_BGNG_YMD` / `TCBIZ_END_YMD` | 휴업시작/종료 | `suspend_begin_on` / `suspend_end_on` | |
 | `MDEXM_SBJCT_CN_NM` | 진료과목명 | `specialty`(레거시 단일) | 첫 과목; 다중은 B(HIRA) |
 | `CRD_INFO_X` / `CRD_INFO_Y` | 좌표 | `longitude` / `latitude` | **EPSG:5174→WGS84 변환**(§4-4) |
+| `GFA` / `SCKBD_CNT` / `HSPTLZRM_CNT` / `HCWKR_CNT` | 총면적/병상수/입원실수/의료인수 | `total_area` / `bed_count` / `inpatient_room_count` / `doctor_count` | CSV 경로와 파리티(2026-06-04 보강). 변경감지 비교 포함 |
+| `MNATH` / `LCTN_AREA` (병원) | 관할 위임단위/소재지면적 | — | **의도적 미매핑**(§2-1) |
 | `LAST_MDFCN_PNT` | 최종수정시점 | `source_synced_at` + 커서 | 증분 기준. ⚠️ **R7 정정**: 응답은 `yyyy-MM-dd HH:mm:ss`(구분자 포함) → 커서/cond 용 14자리(`yyyyMMddHHmmss`)로 정규화 |
 | `DAT_UPDT_SE` | 변경구분 **I/U/D** | (로직) | §5 신규/변경/**폐업** |
 

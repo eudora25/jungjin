@@ -27,6 +27,7 @@ class HospitalMoisSyncService
     private const COMPARE_FIELDS = [
         'hospital_name', 'address', 'postcode', 'phone', 'hospital_type', 'status',
         'opened_on', 'closed_on', 'suspend_begin_on', 'suspend_end_on', 'latitude', 'longitude',
+        'doctor_count', 'bed_count', 'inpatient_room_count', 'total_area',
     ];
 
     public function __construct(
@@ -254,6 +255,11 @@ class HospitalMoisSyncService
             'suspend_end_on' => $item['TCBIZ_END_YMD'] ?? null,
             'license_authority_code' => $item['OPN_ATMY_GRP_CD'] ?? null,
             'source_synced_at' => $item['LAST_MDFCN_PNT'] ?? null,
+            // 규모 수치 (CSV 경로와 파리티) — GFA 총면적·SCKBD_CNT 병상수·HSPTLZRM_CNT 입원실수·HCWKR_CNT 의료인수
+            'total_area' => $item['GFA'] ?? null,
+            'bed_count' => $item['SCKBD_CNT'] ?? null,
+            'inpatient_room_count' => $item['HSPTLZRM_CNT'] ?? null,
+            'doctor_count' => $item['HCWKR_CNT'] ?? null,
         ];
 
         $coord = $this->geo->convert($item['CRD_INFO_X'] ?? null, $item['CRD_INFO_Y'] ?? null);
