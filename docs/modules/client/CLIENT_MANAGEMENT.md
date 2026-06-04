@@ -3,6 +3,7 @@
 > 본 문서는 정진팜의 **거래처 중 약국/병원 유형의 독립 마스터 모듈** 및 **영업사원 목록 뷰**의 단일 설계 문서입니다. ROADMAP 상 **P0-1**.
 > 앞으로 남은 작업·다음 단계는 [`docs/planning/ROADMAP.md`](../../planning/ROADMAP.md) 로 통합 관리합니다.
 > 🔗 병의원 공공데이터(인허가 CSV + 심평원 Excel) 정규화 적재 설계: [`HOSPITAL_PUBLIC_DATA.md`](HOSPITAL_PUBLIC_DATA.md)
+> 🔗 병의원 행안부(MOIS) API 증분 동기화(GAP-12, R1~R7 완료): [`HOSPITAL_LOCALDATA_API_SYNC.md`](HOSPITAL_LOCALDATA_API_SYNC.md)
 
 ---
 
@@ -90,6 +91,7 @@ sales 사용자는 목록·상세 조회는 가능, 등록 버튼은 숨김(`can
 | C-S4 | Vue 페이지 (Index/Create/Edit/Show × 2 + Sales Index) | 🟢 완료 | 2026-04-20 | 2026-04-20 | Partials 공용 Form 컴포넌트 |
 | C-S5 | Pest 테스트 | 🟢 완료 | 2026-04-20 | 2026-04-20 | 17/17 PASS · 전체 151/151 PASS |
 | C-S6 | sales UI 스모크(권한 누수 보강) | 🟢 완료 | 2026-04-20 | 2026-04-20 | `/clients/sales` admin-only 잠금 + 메뉴 노출 제한 + 스모크 테스트 |
+| GAP-12 | 병의원 MOIS API 증분 동기화(R1~R7) | 🟢 완료 | 2026-06-04 | 2026-06-04 | 공용 매퍼·API 클라이언트·proj4php 좌표·이력/커서·증분 서비스·Job/명령/스케줄러(비활성). 실데이터 검증으로 `MNG_NO==hospital_code` 확정. 설계: [`HOSPITAL_LOCALDATA_API_SYNC.md`](HOSPITAL_LOCALDATA_API_SYNC.md). R8 이력 UI 선택 후속 |
 | **GAP-4** | **영업사원-거래처 담당 배정** | 🟢 완료 | 2026-05-19 | 2026-05-19 | `company_sales_assignments` + Model/Policy/Controller/검색 담당 필터 + 거래처 상세 배정 UI + Sales 대시보드 "내 담당" 카드. 상세: [`ROADMAP.md`](../../planning/ROADMAP.md) GAP-4, [`PRODUCT_SPEC.md`](../../planning/PRODUCT_SPEC.md) §4.12 |
 
 ### 4.2 변경 파일 요약

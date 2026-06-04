@@ -2,8 +2,8 @@
 
 > 상위: [`CLIENT_MANAGEMENT.md`](CLIENT_MANAGEMENT.md) · 선행: [`HOSPITAL_PUBLIC_DATA.md`](HOSPITAL_PUBLIC_DATA.md)
 > 목적: 행정안전부 **공공데이터포털(data.go.kr) 표준데이터 OpenAPI** 로 병의원 인허가 데이터의 **변경분(신규·변경·폐업)** 만 주기적으로 수신해 `hospitals` 마스터에 **건건 upsert** 한다.
-> 상태: **설계 문서 v0.2 — Pample 검증 구현 반영** (구현 착수 전 리뷰 대기) — 2026-06-04
-> 결정(2026-06-04): 수신 방식 = **변경분 API 증분 동기화** / 진행 = **설계 문서 우선**
+> 상태: **🟢 R1~R7 구현 완료** (2026-06-04, 실데이터 검증 통과) — R8(이력 UI) 선택 후속
+> 결정(2026-06-04): 수신 방식 = **변경분 API 증분 동기화** / 진행 = **설계 문서 우선** → 구현 완료
 
 ---
 
@@ -87,13 +87,13 @@
 | `ROAD_NM_ZIP` → `LCTN_ZIP` | 도로명/소재지우편번호 | `postcode` | 도로명 우선 |
 | `TELNO` | 전화번호 | `phone` | |
 | `MDLCR_INST_BTP_NM` | 의료기관종별명 | `hospital_type` | `mapHospitalType()` 재사용 |
-| `SALS_STTS_CD` | 영업상태코드(01영업/03폐업) | `status` | 코드 매핑(§4-3) |
+| `SALS_STTS_NM` → `SALS_STTS_CD` | 영업상태명(우선)/코드(01영업) | `status` | 코드 매핑(§4-3). ⚠️ **R7 정정**: `BZSTAT_SE_NM` 은 영업상태가 아니라 종별명이라 미사용 |
 | `LCPMT_YMD` | 인허가일자 | `opened_on` | `yyyy-MM-dd` 파싱 |
 | `CLSBIZ_YMD` | 폐업일자 | `closed_on` | |
 | `TCBIZ_BGNG_YMD` / `TCBIZ_END_YMD` | 휴업시작/종료 | `suspend_begin_on` / `suspend_end_on` | |
 | `MDEXM_SBJCT_CN_NM` | 진료과목명 | `specialty`(레거시 단일) | 첫 과목; 다중은 B(HIRA) |
 | `CRD_INFO_X` / `CRD_INFO_Y` | 좌표 | `longitude` / `latitude` | **EPSG:5174→WGS84 변환**(§4-4) |
-| `LAST_MDFCN_PNT` | 최종수정시점 | `source_synced_at` + 커서 | 증분 기준 |
+| `LAST_MDFCN_PNT` | 최종수정시점 | `source_synced_at` + 커서 | 증분 기준. ⚠️ **R7 정정**: 응답은 `yyyy-MM-dd HH:mm:ss`(구분자 포함) → 커서/cond 용 14자리(`yyyyMMddHHmmss`)로 정규화 |
 | `DAT_UPDT_SE` | 변경구분 **I/U/D** | (로직) | §5 신규/변경/**폐업** |
 
 > ⚠️ 응답 날짜는 `yyyy-MM-dd`(요청은 `yyyyMMdd`). 빈 문자열은 NULL 대신 빈값으로 오므로 **일괄 `emptyToNull`**.
@@ -232,27 +232,33 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 
 ## 9. 작업 목록
 
-- [ ] **R1** `HospitalRowMapper` 추출 + `HospitalImportService` 가 사용(기존 CSV 테스트 그린)
-- [ ] **R2** `config/mois.php` + `.env` + `HospitalMoisApiClient`(+`Http::fake` 테스트)
-- [ ] **R3** `proj4php` 도입 + `Epsg5174ToWgs84` 변환 유틸 + 테스트
-- [ ] **R4** `hospital_mois_syncs`·`hospital_mois_cursors` 마이그레이션 + 모델(comment)
-- [ ] **R5** `HospitalMoisSyncService`(업종 순회·페이징·DAT_UPDT_SE·upsert·커서·report) + 테스트
-- [ ] **R6** `SyncHospitalMoisJob` + `hospitals:sync-mois` + Scheduler(비활성 플래그) 등록
-- [ ] **R7** 실데이터 1회 증분(소규모 since) 검증 — `MNG_NO==hospital_code` 교차 확인·충돌 리포트로 §6 가정 확정
-- [ ] **R8** (선택) Platform 이력·수동 트리거 UI + 권한 테스트
-- [ ] **R9** ROADMAP/CLIENT_MANAGEMENT 진행 로그 반영
+- [x] **R1** `HospitalRowMapper` 추출 + `HospitalImportService` 가 사용(CSV 테스트 그린) — `75a04f9`
+- [x] **R2** `config/mois.php` + `.env` + `HospitalMoisApiClient`(`Http::fake` 6) — `dda958d`
+- [x] **R3** `proj4php` 도입 + `Epsg5174ToWgs84`(5) — `2ad8f22`
+- [x] **R4** `hospital_mois_syncs`·`hospital_mois_cursors` 마이그레이션 + 모델(comment, 3) — `3f1da4b`
+- [x] **R5** `HospitalMoisSyncService`(업종 순회·페이징·DAT_UPDT_SE·upsert·SKIP·커서·report·격리, 8) — `fffc9b0`
+- [x] **R6** `SyncHospitalMoisJob` + `hospitals:sync-mois` + Scheduler(04:30·비활성 플래그, 4) — `9a511b1`
+- [x] **R7** 실데이터 증분 검증 — `MNG_NO==hospital_code` 확정(6/2 변경분 97건 중 80 update·17 insert). 상태필드(`SALS_STTS_NM`)·커서 형식 버그 정정(회귀 2) — `13e0d46`
+- [ ] **R8** (선택) Platform 이력·수동 트리거 UI(`/platform/hospitals/mois-sync`) + 권한 테스트
+- [x] **R9** ROADMAP/설계문서/CLIENT_MANAGEMENT 진행 로그 반영
 
 ---
 
-## 10. 미결 결정 (구현 착수 전)
+## 10. 미결 결정 (해소 현황)
 
-> ✅ 해소: **업종 Base path/ID**(§2-1) · **인증키 보유**(§7) · **키 운영방침=재사용**(2026-06-04 결정). 아래만 남음.
+> R1~R7 구현·검증으로 대부분 해소. 운영 활성화·코드 매핑 고도화만 남음.
 
-1. ~~인증키 운영 방침~~ — 🟢 **결정: Pample data.go.kr serviceKey 재사용**(2026-06-04). Jungjin `.env` `MOIS_API_KEY` 에 동일 키 주입(커밋 금지). 일 호출 한도만 확인 → `numOfRows`·`usleep` 정책.
-2. **코드 매핑 저장**(§4-3) — `mapStatus/mapHospitalType` 보강 vs `code_definitions` 그룹(`mois_biz_status` 등) 신설. (권장: code_definitions — Pample도 `code.meta` 활용)
-3. **좌표 라이브러리** — `proj4php` 채택 확정(또는 동등). EPSG:5174 정의 등록.
-4. **실행 주기·활성화** — 일 1회 04:30(HIRA와 분리), 운영 검증 후 `MOIS_SYNC_ENABLED=true`.
-5. **부속의료기관 type** — `hospital_type` 매핑 정책(Pample 미결과 동일).
+1. ~~인증키 운영 방침~~ — 🟢 **재사용**(Pample serviceKey, `.env MOIS_API_KEY`, 커밋 금지). R7 실호출 정상.
+2. **코드 매핑 저장**(§4-3) — 🟢 현 단계는 `HospitalRowMapper.mapStatus/mapHospitalType` 재사용 + `resolveStatusRaw`(SALS_STTS_NM/CD). `code_definitions` 그룹화는 필요 시 후속.
+3. ~~좌표 라이브러리~~ — 🟢 **`proj4php` 채택**, EPSG:5174 정의(towgs84 미적용, Pample 일치) 등록. 골든 케이스 검증.
+4. **실행 주기·활성화** — 🟢 스케줄 04:30 등록(HIRA와 분리). ⏳ 운영 검증 후 `MOIS_SYNC_ENABLED=true` (현재 비활성).
+5. **부속의료기관 type** — `MDLCR_INST_BTP_NM` → `mapHospitalType` 재사용(의원/병원과 동일 규칙).
+
+### R7 실데이터 검증 결과 (2026-06-04)
+- **연결**: clinics 정상(totalCount 5,321/월), 인증키 동작.
+- **식별자**: `MNG_NO == hospital_code` **확정** — 기존 master 131,177건이 25자리 PHMA 형식(API와 동일·구조 세그먼트 `041100` 공유). 6/2 변경분 97건 중 **80 update + 17 insert**, 중복 없음.
+- **정정된 가정**: ① 영업상태는 `SALS_STTS_NM`(없으면 `SALS_STTS_CD`) — `BZSTAT_SE_NM` 은 종별명이었음. ② `LAST_MDFCN_PNT` 응답은 구분자 포함 → 14자리 정규화.
+- **잔여 리스크(낮음)**: 동일 의원이 master/API 간 다른 코드를 갖는 예외는 미발견이나, 최초 운영 수회는 중복(inserted) 비율 모니터링 권장.
 
 ---
 
@@ -262,6 +268,6 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 
 ---
 
-**문서 버전**: 0.4 (인증키 재사용 결정 반영)
+**문서 버전**: 1.0 (R1~R7 구현·실데이터 검증 반영)
 **작성일**: 2026-06-04
-**상태**: **착수 준비 완료** — 인증키(재사용)·업종 경로·매핑 모두 확정. R1(매퍼 추출)부터 진행 가능
+**상태**: **🟢 R1~R7 구현 완료** — 실데이터 검증 통과(테스트 30, 전체 450 PASS). 운영 활성화(`MOIS_SYNC_ENABLED=true`)·R8 이력 UI는 선택 후속
