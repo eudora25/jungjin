@@ -107,6 +107,7 @@
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
 | **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** 🟢 + 약국·병의원 CRUD·코드 그룹 CRUD·임퍼서네이션 🟢. **Now: platform 사용자·의약품 CRUD / admin 소속 sales 관리 범위**. cutover(OPS-7)는 후속. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
 | **GAP-11** | **의약품 도메인 재설계 (공유 마스터 + 제약사 취급품)** | P2 | XL | 🟢 설계 확정(D-1~5) · 착수 대기. 단일 `products`(테넌트 복제) → `drug_products`(공유, platform) + `company_drug_products`(제약사 취급+수수료, 등급 매트릭스 유지). 실적→취급품 참조. Pample 경량 차용. **GAP-10 안정화 후** DR-1 착수. 설계: [`DRUG_DOMAIN_REDESIGN.md`](../modules/product/DRUG_DOMAIN_REDESIGN.md) |
+| **GAP-12** | **행안부(MOIS) 공공데이터 API 증분 동기화** | P2 | M | 🔵 **설계 확정(v0.4)·착수** — §2.4 HIRA 수동 업로드의 후속(API 자동 증분). 변경분(I/U/D)만 수신해 `hospitals` 건건 upsert. Pample 검증 구현 차용(위험 낮음). 인증키 재사용·업종 경로·매핑 확정. 설계: [`HOSPITAL_LOCALDATA_API_SYNC.md`](../modules/client/HOSPITAL_LOCALDATA_API_SYNC.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
 
@@ -212,6 +213,20 @@
   - [ ] 월 1회 `activity_log` 5년 초과 삭제/아카이브 작업 정의 + 스케줄 등록
 - **GAP-8-5 (Ops, 선택, S, 선행: GAP-8-3)**: 운영 점검 체크리스트 추가
   - [ ] `docs/operations/OPERATIONS.md`에 월간 점검(큐/스케줄/백업/audit 정리) 추가
+
+#### GAP-12 작업 단위 — 행안부(MOIS) 공공데이터 API 증분 동기화
+
+> 설계: [`HOSPITAL_LOCALDATA_API_SYNC.md`](../modules/client/HOSPITAL_LOCALDATA_API_SYNC.md) §9. **테스트 먼저**. 인증키 재사용(`.env MOIS_API_KEY`, 커밋 금지)·업종 경로·매핑 확정.
+
+- **R1 (Refactor, S, 선행: 없음)**: `HospitalRowMapper` 추출 — `HospitalImportService` 의 `buildRow/updateColumns/mapStatus/mapHospitalType/parseDate/parseInt/parseDecimal/firstSpecialty` 를 공용 매퍼로 이동, CSV(한글헤더)·API(영문필드) 어댑터가 논리 키로 호출. 기존 CSV 테스트 그린 유지
+- **R2 (BE, M, 선행: R1)**: `config/mois.php` + `.env` + `HospitalMoisApiClient`(`Http::baseUrl()->retry`, `cond[]` 쿼리, `resultCode` 검사) + `Http::fake()` 테스트
+- **R3 (BE, S, 선행: 없음)**: `proj4php` 도입 + `Epsg5174ToWgs84` 변환 유틸(한반도 범위 밖 NULL) + 테스트
+- **R4 (DB, S, 선행: 없음)**: `hospital_mois_syncs`·`hospital_mois_cursors` 마이그레이션(테이블+모든 컬럼 comment) + 모델
+- **R5 (BE, M, 선행: R1~R4)**: `HospitalMoisSyncService`(업종 순회·페이징·DAT_UPDT_SE I/U/D 분기·upsert·변경감지 SKIP·커서 전진·report) + 멱등/격리 테스트
+- **R6 (BE, S, 선행: R5)**: `SyncHospitalMoisJob` + `hospitals:sync-mois {--since} {--svc} {--dry-run}` + Scheduler(비활성 플래그)
+- **R7 (검증, S, 선행: R6)**: 실데이터 1회 소규모 증분 검증 — `MNG_NO==hospital_code` 교차 확인·충돌 리포트로 §6 가정 확정
+- **R8 (FE, 선택, S, 선행: R6)**: `/platform/hospitals/mois-sync` 이력·수동 트리거 UI + `role:platform` 권한 테스트
+- **R9 (Doc, S, 선행: R7)**: ROADMAP/CLIENT_MANAGEMENT 진행 로그 반영
 
 #### GAP-9 작업 단위 — 기준정보 마스터 admin 분리 (병의원·약국·의약품)
 
