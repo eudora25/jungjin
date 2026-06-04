@@ -15,6 +15,8 @@ class HospitalImportService
 
     public const PREVIEW_LIMIT_DEFAULT = 200;
 
+    public function __construct(private readonly HospitalRowMapper $mapper = new HospitalRowMapper) {}
+
     /**
      * @return array{headers: array<int,string>, row_count: int, summary: array<string,int>, results: array<int, array<string,mixed>>, errors: array<int,string>}
      */
@@ -71,9 +73,9 @@ class HospitalImportService
                     $rowErrors[] = '영업상태명은 필수입니다.';
                 }
 
-                $status = $rawStatus ? $this->mapStatus($rawStatus) : null;
+                $status = $rawStatus ? $this->mapper->mapStatus($rawStatus) : null;
                 $kind = $this->trimOrNull($row['의료기관종별명'] ?? $row['업태구분명'] ?? null);
-                $type = $kind ? $this->mapHospitalType($kind) : null;
+                $type = $kind ? $this->mapper->mapHospitalType($kind) : null;
 
                 $existing = null;
                 if ($code !== null) {
@@ -180,16 +182,16 @@ class HospitalImportService
                         throw new \RuntimeException("행 {$lineNo} 검증 실패");
                     }
 
-                    $batch[] = $this->buildRow($row, $code, $name, $rawStatus, $userId, $now);
+                    $batch[] = $this->mapper->buildPayload($this->csvToLogical($row), $userId, $now);
 
                     if (count($batch) >= $batchSize) {
-                        DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->updateColumns());
+                        DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->mapper->updateColumns());
                         $batch = [];
                     }
                 }
 
                 if (! empty($batch)) {
-                    DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->updateColumns());
+                    DB::table('hospitals')->upsert($batch, ['hospital_code'], $this->mapper->updateColumns());
                 }
             });
         } finally {
@@ -232,55 +234,6 @@ class HospitalImportService
         return $s === '' ? null : $s;
     }
 
-    private function mapStatus(string $raw): string
-    {
-        if (str_contains($raw, '영업') && ! str_contains($raw, '폐업') && ! str_contains($raw, '취소')) {
-            return 'active';
-        }
-
-        return 'inactive';
-    }
-
-    private function mapHospitalType(string $kind): ?string
-    {
-        if (str_contains($kind, '종합병원')) {
-            return 'general_hospital';
-        }
-
-        if (str_contains($kind, '치과')) {
-            return 'dental';
-        }
-
-        if (str_contains($kind, '한방') || str_contains($kind, '한의')) {
-            return 'oriental';
-        }
-
-        if (str_contains($kind, '의원')) {
-            return 'clinic';
-        }
-
-        if (str_contains($kind, '병원')) {
-            return 'hospital';
-        }
-
-        return 'other';
-    }
-
-    private function firstSpecialty(?string $raw): ?string
-    {
-        if ($raw === null) {
-            return null;
-        }
-
-        // "내과, 신경과, ..." → 첫 항목만 (DB 100자 제한)
-        $first = trim((string) strtok($raw, ','));
-        if ($first === '') {
-            return null;
-        }
-
-        return mb_substr($first, 0, 100);
-    }
-
     private function identifier(?string $code, ?string $name): string
     {
         $parts = [];
@@ -295,103 +248,33 @@ class HospitalImportService
     }
 
     /**
-     * 인허가 CSV 한 행을 hospitals upsert 페이로드로 변환.
-     * 좌표(A)는 TM 좌표계라 위경도(WGS84)에 저장하지 않는다 — 위경도는 심평원(B)에서 채움.
+     * 인허가 CSV 한 행(한글 헤더)을 공용 매퍼의 "논리 키" 연관배열로 변환.
+     * 좌표(A)는 TM 좌표계라 위경도(WGS84)에 저장하지 않는다(키 미포함) — 위경도는 심평원(B)/MOIS API 에서 채움.
      *
      * @param  array<string,string|null>  $row
      * @return array<string,mixed>
      */
-    private function buildRow(array $row, string $code, string $name, string $rawStatus, ?int $userId, mixed $now): array
-    {
-        $kind = $this->trimOrNull($row['의료기관종별명'] ?? $row['업태구분명'] ?? null);
-
-        return [
-            'hospital_code' => $code,
-            'hospital_name' => $name,
-            'hospital_type' => $kind ? $this->mapHospitalType($kind) : null,
-            'specialty' => $this->firstSpecialty($this->trimOrNull($row['진료과목내용명'] ?? null)),
-            'postcode' => $this->trimOrNull($row['도로명우편번호'] ?? $row['소재지우편번호'] ?? null),
-            'address' => $this->trimOrNull($row['도로명주소'] ?? $row['지번주소'] ?? null),
-            'phone' => $this->trimOrNull($row['전화번호'] ?? null),
-            'status' => $this->mapStatus($rawStatus),
-            'opened_on' => $this->parseDate($row['인허가일자'] ?? null),
-            'closed_on' => $this->parseDate($row['폐업일자'] ?? null),
-            'suspend_begin_on' => $this->parseDate($row['휴업시작일자'] ?? null),
-            'suspend_end_on' => $this->parseDate($row['휴업종료일자'] ?? null),
-            'doctor_count' => $this->parseInt($row['의료인수'] ?? null),
-            'bed_count' => $this->parseInt($row['병상수'] ?? null),
-            'inpatient_room_count' => $this->parseInt($row['입원실수'] ?? null),
-            'total_area' => $this->parseDecimal($row['총면적'] ?? null),
-            'license_authority_code' => $this->trimOrNull($row['개방자치단체코드'] ?? null),
-            'source_synced_at' => $this->parseDateTime($row['데이터갱신시점'] ?? null),
-            'created_by' => $userId,
-            'updated_by' => $userId,
-            'created_at' => $now,
-            'updated_at' => $now,
-            'deleted_at' => null,
-        ];
-    }
-
-    /**
-     * @return array<int,string>
-     */
-    private function updateColumns(): array
+    private function csvToLogical(array $row): array
     {
         return [
-            'hospital_name', 'hospital_type', 'specialty', 'postcode', 'address', 'phone', 'status',
-            'opened_on', 'closed_on', 'suspend_begin_on', 'suspend_end_on',
-            'doctor_count', 'bed_count', 'inpatient_room_count', 'total_area',
-            'license_authority_code', 'source_synced_at',
-            'updated_by', 'updated_at', 'deleted_at',
+            'code' => $row['관리번호'] ?? null,
+            'name' => $row['사업장명'] ?? null,
+            'status_raw' => $row['영업상태명'] ?? null,
+            'kind' => $row['의료기관종별명'] ?? $row['업태구분명'] ?? null,
+            'specialties' => $row['진료과목내용명'] ?? null,
+            'postcode' => $row['도로명우편번호'] ?? $row['소재지우편번호'] ?? null,
+            'address' => $row['도로명주소'] ?? $row['지번주소'] ?? null,
+            'phone' => $row['전화번호'] ?? null,
+            'opened_on' => $row['인허가일자'] ?? null,
+            'closed_on' => $row['폐업일자'] ?? null,
+            'suspend_begin_on' => $row['휴업시작일자'] ?? null,
+            'suspend_end_on' => $row['휴업종료일자'] ?? null,
+            'doctor_count' => $row['의료인수'] ?? null,
+            'bed_count' => $row['병상수'] ?? null,
+            'inpatient_room_count' => $row['입원실수'] ?? null,
+            'total_area' => $row['총면적'] ?? null,
+            'license_authority_code' => $row['개방자치단체코드'] ?? null,
+            'source_synced_at' => $row['데이터갱신시점'] ?? null,
         ];
-    }
-
-    private function parseDate(mixed $v): ?string
-    {
-        $s = $this->trimOrNull($v);
-        if ($s === null) {
-            return null;
-        }
-        // 'YYYY-MM-DD' 또는 'YYYYMMDD'
-        if (preg_match('/^(\d{4})-?(\d{2})-?(\d{2})/', $s, $m)) {
-            return "{$m[1]}-{$m[2]}-{$m[3]}";
-        }
-
-        return null;
-    }
-
-    private function parseDateTime(mixed $v): ?string
-    {
-        $s = $this->trimOrNull($v);
-        if ($s === null) {
-            return null;
-        }
-        if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/', $s, $m)) {
-            return "{$m[1]} {$m[2]}";
-        }
-
-        return $this->parseDate($s);
-    }
-
-    private function parseInt(mixed $v): ?int
-    {
-        $s = $this->trimOrNull($v);
-        if ($s === null || ! preg_match('/-?\d+/', $s, $m)) {
-            return null;
-        }
-        $n = (int) $m[0];
-
-        return $n < 0 ? null : $n;
-    }
-
-    private function parseDecimal(mixed $v): ?string
-    {
-        $s = $this->trimOrNull($v);
-        if ($s === null) {
-            return null;
-        }
-        $s = str_replace(',', '', $s);
-
-        return is_numeric($s) ? $s : null;
     }
 }
