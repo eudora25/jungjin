@@ -15,7 +15,8 @@ function moisItem(array $overrides = []): array
     return array_merge([
         'MNG_NO' => 'C-1',
         'BPLC_NM' => '가나의원',
-        'BZSTAT_SE_NM' => '영업/정상',
+        'SALS_STTS_NM' => '영업/정상',
+        'SALS_STTS_CD' => '01',
         'MDLCR_INST_BTP_NM' => '의원',
         'MDEXM_SBJCT_CN_NM' => '내과, 외과',
         'ROAD_NM_ADDR' => '서울 종로구 1',
@@ -108,7 +109,7 @@ test('변경 없는 행은 SKIP 한다', function () {
     Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
         // 좌표·주소 없는 동일값 행 (DAT_UPDT_SE=U)
         [
-            'MNG_NO' => 'C-4', 'BPLC_NM' => '동일의원', 'BZSTAT_SE_NM' => '영업',
+            'MNG_NO' => 'C-4', 'BPLC_NM' => '동일의원', 'SALS_STTS_NM' => '영업',
             'MDLCR_INST_BTP_NM' => '의원', 'LCPMT_YMD' => '2020-01-01',
             'LAST_MDFCN_PNT' => '20260604010000', 'DAT_UPDT_SE' => 'U',
         ],
@@ -177,4 +178,28 @@ test('한 업종이 실패해도 다른 업종은 처리된다 (격리)', functi
     expect($sync->report['hospitals']['inserted'])->toBe(1);
     expect($sync->status)->toBe(HospitalMoisSync::STATUS_COMPLETED);
     expect(Hospital::where('hospital_code', 'HP-1')->value('hospital_type'))->toBe('general_hospital');
+});
+
+// --- R7 실데이터 검증으로 확인된 형식 회귀 ---
+
+test('상태명이 없으면 SALS_STTS_CD(01 영업/그 외 폐업)로 매핑한다', function () {
+    Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
+        ['MNG_NO' => 'CD-1', 'BPLC_NM' => '코드영업', 'SALS_STTS_CD' => '01', 'MDLCR_INST_BTP_NM' => '의원', 'DAT_UPDT_SE' => 'I', 'LAST_MDFCN_PNT' => '2026-06-02 09:00:00'],
+        ['MNG_NO' => 'CD-2', 'BPLC_NM' => '코드폐업', 'SALS_STTS_CD' => '03', 'MDLCR_INST_BTP_NM' => '의원', 'DAT_UPDT_SE' => 'I', 'LAST_MDFCN_PNT' => '2026-06-02 09:00:00'],
+    ]))]);
+
+    $this->service->syncAll(['services' => ['clinics']]);
+
+    expect(Hospital::where('hospital_code', 'CD-1')->value('status'))->toBe('active');
+    expect(Hospital::where('hospital_code', 'CD-2')->value('status'))->toBe('inactive');
+});
+
+test('커서는 구분자 포함 LAST_MDFCN_PNT 를 14자리로 정규화해 저장한다', function () {
+    Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
+        moisItem(['MNG_NO' => 'NORM-1', 'LAST_MDFCN_PNT' => '2026-06-02 09:43:18']),
+    ]))]);
+
+    $this->service->syncAll(['services' => ['clinics']]);
+
+    expect(HospitalMoisCursor::where('api_id', '15154874')->value('last_synced_at'))->toBe('20260602094318');
 });

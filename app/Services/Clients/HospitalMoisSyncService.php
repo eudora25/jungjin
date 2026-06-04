@@ -153,7 +153,8 @@ class HospitalMoisSyncService
 
                 continue;
             }
-            $mdfcn = $this->mapper->trimOrNull($item['LAST_MDFCN_PNT'] ?? null);
+            // 응답은 'yyyy-MM-dd HH:mm:ss' 형식 → 커서/cond 용 14자리(yyyyMMddHHmmss)로 정규화
+            $mdfcn = $this->normalizePoint($item['LAST_MDFCN_PNT'] ?? null);
             $maxCursor = $this->maxStr($maxCursor, $mdfcn);
             $prepared[] = [
                 'code' => $code,
@@ -265,11 +266,13 @@ class HospitalMoisSyncService
     }
 
     /**
-     * 영업상태 원시값: 상태구분명(BZSTAT_SE_NM)이 있으면 우선, 없으면 코드(01 영업/그 외 폐업).
+     * 영업상태 원시값: 영업상태명(SALS_STTS_NM = '영업/정상'·'폐업' 등)이 있으면 우선,
+     * 없으면 영업상태코드(SALS_STTS_CD: 01 영업 / 그 외 폐업).
+     * (BZSTAT_SE_NM 은 영업상태가 아니라 종별명이므로 사용하지 않는다 — R7 실데이터로 확인.)
      */
     private function resolveStatusRaw(array $item): ?string
     {
-        $name = $this->mapper->trimOrNull($item['BZSTAT_SE_NM'] ?? null);
+        $name = $this->mapper->trimOrNull($item['SALS_STTS_NM'] ?? null);
         if ($name !== null) {
             return $name;
         }
@@ -329,7 +332,16 @@ class HospitalMoisSyncService
 
     private function normalizeSince(string $since): string
     {
-        $digits = preg_replace('/\D/', '', $since);
+        return $this->normalizePoint($since) ?? str_pad('', 14, '0');
+    }
+
+    /** 'yyyy-MM-dd HH:mm:ss'·'yyyyMMdd'·'yyyyMMddHHmmss' 등 → 14자리(yyyyMMddHHmmss). */
+    private function normalizePoint(mixed $v): ?string
+    {
+        $digits = preg_replace('/\D/', '', (string) ($v ?? ''));
+        if ($digits === '') {
+            return null;
+        }
 
         return str_pad(substr($digits, 0, 14), 14, '0');
     }

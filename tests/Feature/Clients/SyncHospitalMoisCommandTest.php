@@ -15,7 +15,7 @@ function fakeMoisOk(): void
             'body' => [
                 'totalCount' => 1, 'pageNo' => 1, 'numOfRows' => 100,
                 'items' => ['item' => [[
-                    'MNG_NO' => 'CMD-1', 'BPLC_NM' => '명령의원', 'BZSTAT_SE_NM' => '영업/정상',
+                    'MNG_NO' => 'CMD-1', 'BPLC_NM' => '명령의원', 'SALS_STTS_NM' => '영업/정상',
                     'MDLCR_INST_BTP_NM' => '의원', 'LCPMT_YMD' => '2021-05-05',
                     'LAST_MDFCN_PNT' => '20260604010000', 'DAT_UPDT_SE' => 'I',
                 ]]],
