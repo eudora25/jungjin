@@ -25,6 +25,7 @@ const model = computed(() => [
             { label: '의약품 관리', icon: 'pi pi-fw pi-tag', to: '/platform/products' },
             { label: '병의원 관리', icon: 'pi pi-fw pi-building', to: '/platform/hospitals' },
             { label: '병의원 보강(공공데이터)', icon: 'pi pi-fw pi-database', to: '/platform/hospitals/public-data' },
+            { label: '병의원 API 동기화(MOIS)', icon: 'pi pi-fw pi-sync', to: '/platform/hospitals/mois-sync' },
             { label: '약국 관리', icon: 'pi pi-fw pi-shop', to: '/platform/pharmacies' },
             { label: '변경요청 검토', icon: 'pi pi-fw pi-inbox', to: '/platform/master-requests' },
             { label: '코드 그룹 관리', icon: 'pi pi-fw pi-sitemap', to: '/platform/code-groups' },
