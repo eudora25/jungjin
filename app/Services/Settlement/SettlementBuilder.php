@@ -29,6 +29,8 @@ class SettlementBuilder
                     'period_month' => $periodMonth,
                 ],
                 [
+                    // 정산은 소속 거래처와 동일 제약사(테넌트) — 컨텍스트 없이도(큐·콘솔) 안전하게 상속
+                    'tenant_id' => $company->tenant_id,
                     'settlement_no' => Settlement::settlementNoFor($periodMonth, $company->id),
                     'status' => Settlement::STATUS_DRAFT,
                     'created_by' => $user->id,

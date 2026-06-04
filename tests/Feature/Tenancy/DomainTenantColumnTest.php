@@ -41,7 +41,8 @@ test('tenant_id FK — 존재하지 않는 제약사 ID 는 거부된다', funct
         ->toThrow(QueryException::class);
 });
 
-test('현재 tenant_id 는 nullable — NOT NULL 전환은 MT-3(자동 주입) 이후', function () {
-    // MT-4 단계: 앱 생성 경로가 아직 tenant_id 를 세팅하지 않으므로 nullable 유지.
-    expect(Product::factory()->create(['tenant_id' => null])->tenant_id)->toBeNull();
+test('MT-4-finalize 이후 tenant_id 는 NOT NULL — null 생성은 거부된다', function () {
+    // 컨텍스트가 없고 tenant_id 를 명시적으로 null 로 두면 DB 제약(NOT NULL)에 걸린다.
+    expect(fn () => Product::factory()->create(['tenant_id' => null]))
+        ->toThrow(QueryException::class);
 });

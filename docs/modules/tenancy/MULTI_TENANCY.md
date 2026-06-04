@@ -176,7 +176,7 @@
 | **1** | **MT-6** | **super_admin 페이지** — super_admin 시드/게이팅 + 제약사(tenant) CRUD + 제약사 admin 생성(위임형) + 전용 메뉴 | 🟢 **완료 (2026-05-29)** |
 | 2 | MT-3 | 격리 엔진 — `ResolveTenant` + `TenantScope` + 생성 시 자동 주입 | 🟢 **완료 (2026-05-29)** |
 | 2.5 | 임퍼서네이션 | platform 이 제약사로 진입(세션) → 그 테넌트 스코프로 운영 화면 사용 | 🟢 **완료 (2026-05-29)** |
-| 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | ⚪ **다음** (단, 테스트 admin tenant 부여 선행 필요 — 아래 메모) |
+| 3 | MT-4-finalize | 도메인 `tenant_id` NOT NULL 전환 | 🟢 **완료 (2026-06-04)** — 5테이블 NOT NULL. UserFactory 비-platform 기본 테넌트 + Performance/Settlement 가 거래처 테넌트 상속(컨텍스트 없이도 안전). 전체 416 PASS |
 | 4 | MT-5 | Policy 테넌트 조건(admin/sales 동일 테넌트, super_admin 통과) | 🟢 **완료 (2026-05-29)** (단일 `Gate::before`. admin 소속 sales 관리 범위는 후속) |
 | 5 | MT-7 | 격리 회귀 테스트(누수·교차 테넌트 차단·super_admin 전역) | 🟢 **완료 (2026-05-29)** |
 | 6 | MT-8 | 약국·병원 변경요청 승인 워크플로 | 🟢 **완료 (2026-05-29)** — 워크플로/정책/테스트 + UI(요청 폼·검토 화면) |
@@ -258,7 +258,10 @@ D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진�
 - 테스트 `TenantPolicyGuardTest` 4 cases. 전체 **313/313 PASS, 회귀 0**.
 - `super_admin` 전체 통과가 기존 admin/sales 정책에 영향 없음(super_admin 은 기존 테스트에 등장하지 않음).
 
-**⚠️ MT-4-finalize(NOT NULL) 선행 조건**: 현재 `tenant_id` 는 nullable. NOT NULL 로 바꾸려면 **앱 생성 경로가 항상 tenant_id 를 채워야** 하는데, 컨텍스트 미설정(테스트의 tenant 없는 admin, super_admin 전역 생성)에서는 null 이 들어갈 수 있다. → NOT NULL 전환 전에 (a) 기존 feature 테스트의 admin/sales 에 tenant 부여, (b) super_admin 의 도메인 생성 경로에서 tenant 명시 주입 규칙 확정이 필요. 그래서 **MT-4-finalize 는 별도 단계로 둔다**(지금 강행하면 회귀).
+**✅ MT-4-finalize(NOT NULL) 완료 (2026-06-04)** — `2026_06_04_100000_finalize_domain_tenant_id_not_null`로 5개 도메인 테이블 `tenant_id` 를 NOT NULL 전환. 선행 조건 해소 방법:
+- **(a) UserFactory**: 비-platform(pharma/cso) 사용자에 기본 제약사(DEFAULT) 자동 부여(`afterMaking`) → HTTP 생성 경로에서 `ResolveTenant` 컨텍스트가 잡혀 자동 주입. platform·명시 tenant_id 는 그대로.
+- **(b) 비-HTTP 생성 경로**: `PerformanceResolver::fill()`·`SettlementBuilder` 가 **거래처(company)의 tenant_id 를 상속** → 큐·콘솔·임포트 등 컨텍스트 없는 경로에서도 항상 채워짐(자동 주입은 `empty` 일 때만이라 명시값과 충돌 없음).
+- 결과: 회귀 0, 전체 **416 PASS**. (과도기 "null 테넌트 pharma" 시나리오는 무효화되어 관련 테스트 제거)
 
 ---
 
@@ -286,8 +289,8 @@ D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진�
 | **MT-4 도메인 tenant_id 부착** | 🟢 완료 | 2026-05-29. products/companies/performances/settlements/sales_quotas 에 `tenant_id`(**nullable**)+FK(restrict)+인덱스 추가, 기존 행 기본 제약사 백필. 5개 모델 `tenant()`·fillable, 5개 Factory 기본 tenant. **NOT NULL 전환은 MT-3 자동주입 이후로 연기**(앱 생성 경로 보호). `DomainTenantColumnTest` 5/5 · 전체 291/291 PASS |
 | MT-6 | ⚪ 대기 (**다음**) | super_admin 시드/게이팅 + 제약사(tenant) CRUD + 제약사 admin 생성 + 전용 메뉴 (§6.1 #1) |
 | MT-3 | ⚪ 대기 | MT-6 후 — `TenantScope` + `ResolveTenant` + 생성 시 tenant_id 자동 주입 + 테넌트 진입(임퍼서네이션) |
-| MT-4-finalize | ⚪ 대기 | MT-3 완료 후 도메인 `tenant_id` NOT NULL 전환 |
-| MT-5~8 | ⚪ 대기 | Policy/super_admin/UI/테스트/변경요청 |
+| MT-4-finalize | 🟢 완료 (2026-06-04) | 도메인 `tenant_id` NOT NULL 전환 — UserFactory 기본 테넌트 + Performance/Settlement 거래처 테넌트 상속 |
+| MT-5~8 | 🟢 완료 | Policy/super_admin/UI/테스트/변경요청 (위 표 참조) |
 
 ### MT-1 변경 파일
 - [migration] `2026_05_29_100000_create_tenants_table.php`, `..100100_add_tenant_and_super_admin_role_to_users_table.php`
@@ -306,14 +309,19 @@ D-4(테넌트 선택 후 진입) 구현. platform 이 특정 제약사로 "진�
 - [model] `Tenant::default()` 헬퍼(code=DEFAULT firstOrCreate)
 - [factory] 위 5개 Factory — `tenant_id` 기본값 `Tenant::default()->id`
 - [test] `tests/Feature/Tenancy/DomainTenantColumnTest.php` (신규, 5 cases)
-- **잔여**: NOT NULL 전환(MT-3 자동주입 후 finalize 마이그레이션)
+
+### MT-4-finalize 변경 파일 (2026-06-04)
+- [migration] `2026_06_04_100000_finalize_domain_tenant_id_not_null.php` — 5테이블 `tenant_id` NOT NULL(+잔여 null 백필 안전망)
+- [factory] `UserFactory::configure()` — 비-platform 사용자에 기본 제약사(DEFAULT) 자동 부여
+- [service] `PerformanceResolver::fill()`·`SettlementBuilder` — 거래처(company)의 tenant_id 상속(컨텍스트 없는 경로 보호)
+- [test] `DomainTenantColumnTest`(nullable→NOT NULL 거부로 갱신) · `TenantPolicyGuardTest`(과도기 null-admin 케이스 제거)
 
 ---
 
-**문서 버전**: 1.3
+**문서 버전**: 1.4
 **작성일**: 2026-05-29
-**최종 갱신**: 2026-05-29 (MT-4 도메인 tenant_id 부착 완료 — nullable+백필. 5/5 신규, 전체 291/291 PASS)
-**상태**: 🟡 구현중 — MT-1·MT-2(1부)·MT-3·MT-4·MT-5·MT-6·MT-7·MT-8 완료(전체 352/352, 격리 회귀 통과). **핵심 격리 완성.** 남음 = MT-4-finalize(NOT NULL §6.2) / `/platform` 의약품·사용자 CRUD.
+**최종 갱신**: 2026-06-04 (MT-4-finalize 완료 — 도메인 tenant_id NOT NULL 전환, 전체 416 PASS)
+**상태**: 🟢 핵심 완료 — MT-1~8 + MT-4-finalize 완료(전체 416, 격리 회귀 통과). 남음 = `/platform` 의약품·사용자 CRUD / admin 의 소속 sales 관리 범위.
 
 ### MT-6 설계 보정 (2026-05-29) — super_admin = 전역 슈퍼유저
 

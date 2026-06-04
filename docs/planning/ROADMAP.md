@@ -45,7 +45,7 @@
 | **M6** | 스케줄러·큐·알림, 운영 전환 | ⚪ 대기 | Scheduler/Queue 기반 준비, Job/알림 미작성 |
 | **공통** | 사용자 관리 (admin) | 🟢 완료 | CRUD + is_active 토글 + 비밀번호 재설정 + 로그인 차단 |
 
-**현재 테스트**: `sail test` 기준 **417개 전체 통과** (2026-06-02, GAP-10 MT-1~8 + 코드 그룹 CRUD·병의원 공공데이터·사업자번호 이력/정규화 포함)
+**현재 테스트**: `sail test` 기준 **416개 전체 통과** (2026-06-04, GAP-10 MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** + 코드 그룹 CRUD·병의원 공공데이터·사업자번호 이력/정규화 포함)
 
 > §2.8 **도메인 검토 후보** 섹션은 본 프로젝트 채택 여부가 결정되지 않은 도메인 후보 **23종**(BIZ/PHARM/OPS·CRM·ERP/TECH)을 별도 관리합니다. 핵심 백로그(§2.4~2.6)와 분리해 가독성을 보존합니다.
 
@@ -105,7 +105,7 @@
 | **GAP-7** | **역할/권한 세분화 (검수자/정산 담당 등)** | P2 | M | `admin/sales` 2-role 한계 보완. 역할 확장 및 Policy 매트릭스 정의. §4.15. **GAP-10(멀티테넌시) 이후** 테넌트 내부 직무 역할로 설계 (직교 축) |
 | **GAP-8** | **감사 로그 운영 규정 (reason/보관/조회)** | P2 | S | reason 필수 액션 정의, 보관/정리 정책, 조회 권한 명문화. §4.16 |
 | ~~**GAP-9**~~ | ~~**기준정보 마스터 admin 분리 (병의원·약국·의약품)**~~ | P2 | S | 🟢 완료 (2026-05-29): "마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변. 3/3 PASS · 전체 276/276. 설계: [`MASTER_DATA_ADMIN.md`](../modules/master-data/MASTER_DATA_ADMIN.md) |
-| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~8 🟢(격리 엔진·게이트·회귀·변경요청 워크플로) + 약국·병의원 CRUD·코드 그룹/코드 정의 CRUD·임퍼서네이션 🟢. **Now: MT-4-finalize / platform 사용자·의약품 CRUD**. cutover(OPS-7)는 후속. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
+| **GAP-10** | **멀티테넌시 (제약사 테넌트 + 역할 계층)** | **P0** | **XL** | 🟡 **경로 B 확정** — MT-1~8 + **MT-4-finalize(tenant_id NOT NULL)** 🟢 + 약국·병의원 CRUD·코드 그룹 CRUD·임퍼서네이션 🟢. **Now: platform 사용자·의약품 CRUD / admin 소속 sales 관리 범위**. cutover(OPS-7)는 후속. 설계: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) |
 | **GAP-11** | **의약품 도메인 재설계 (공유 마스터 + 제약사 취급품)** | P2 | XL | 🟢 설계 확정(D-1~5) · 착수 대기. 단일 `products`(테넌트 복제) → `drug_products`(공유, platform) + `company_drug_products`(제약사 취급+수수료, 등급 매트릭스 유지). 실적→취급품 참조. Pample 경량 차용. **GAP-10 안정화 후** DR-1 착수. 설계: [`DRUG_DOMAIN_REDESIGN.md`](../modules/product/DRUG_DOMAIN_REDESIGN.md) |
 
 #### GAP-4 작업 단위 — 영업사원-거래처 담당 배정 (🟢 완료)
@@ -264,7 +264,10 @@
   - [x] `ResolveTenant` 미들웨어(web) — admin/sales 격리, super_admin/게스트 전역 + 5개 모델 적용 + `nextNumberFor` 스코프 우회
   - [x] `TenantScopeTest` 6 cases. 전체 309/309 PASS, **회귀 0**
   - [ ] super_admin 임퍼서네이션(테넌트 진입)은 후속
-- **MT-4-finalize (DB, S, 선행: MT-3 + 테스트 admin tenant 부여)**: 도메인 `tenant_id` NOT NULL ← **다음** (선행조건 `MULTI_TENANCY.md` §6.2 — 지금 강행 시 회귀)
+- **MT-4-finalize (DB, S)**: 도메인 `tenant_id` NOT NULL — 🟢 완료 (2026-06-04)
+  - [x] `2026_06_04_100000_finalize_domain_tenant_id_not_null` — 5테이블 NOT NULL(+잔여 null 백필 안전망)
+  - [x] UserFactory 비-platform 기본 테넌트(afterMaking) + `PerformanceResolver`/`SettlementBuilder` 거래처 테넌트 상속(컨텍스트 없는 경로 보호)
+  - [x] `DomainTenantColumnTest`(NOT NULL 거부로 갱신)·`TenantPolicyGuardTest`(과도기 케이스 제거). 전체 416 PASS
 - **MT-5 (BE, M, 선행: MT-3)**: Policy 테넌트 조건 — 🟢 완료 (2026-05-29)
   - [x] 단일 `Gate::before`: super_admin 전체 통과 + admin/sales 교차 테넌트 거부(`class_uses_recursive` 로 `BelongsToTenant` 모델 판정) + null 테넌트 위임
   - [x] `TenantPolicyGuardTest` 4 cases. 전체 313/313 PASS, 회귀 0
@@ -460,7 +463,7 @@
 
 | 단계 | 내용 |
 |------|------|
-| **1. Now~Next** | GAP-10 **MT-6→MT-3→MT-5→MT-7→MT-8 🟢 완료** → **남은 것: MT-4-finalize / platform 사용자·의약품 CRUD** |
+| **1. Now~Next** | GAP-10 **MT-6→MT-3→MT-5→MT-7→MT-8 + MT-4-finalize 🟢 완료** → **남은 것: platform 사용자·의약품 CRUD / admin 소속 sales 관리 범위** |
 | **2. Later** | **OPS-6** → **OPS-7** cutover (테넌트 백필·MT-7 통과 후) |
 | **병행(여유 시)** | P2-1~4 보강 — **tenant 격리 회귀에 영향 없는** 항목만 |
 
@@ -470,15 +473,16 @@
 - cutover **목표 시점**(MT-7 완료 기준 역산)
 - MT-8(약국·병원 변경요청)을 1차에 포함할지 2차로 미룰지
 
-### 🔴 Now (2026-06-02 갱신 — MT 핵심·코드/마스터 완료, 잔여 정리)
+### 🔴 Now (2026-06-04 갱신 — MT 전 단계 완료, 잔여 정리)
 
 > 상세·의존성: [`MULTI_TENANCY.md`](../modules/tenancy/MULTI_TENANCY.md) §6.1~§6.4.
 
-1. **MT-4-finalize** — 도메인 `tenant_id` NOT NULL 전환 (선행조건 `MULTI_TENANCY.md` §6.2 — 테스트 admin 테넌트 부여 후)
-2. **platform 사용자·의약품 CRUD** — `/platform` 전역 CRUD (약국·병의원·코드 그룹은 완료, 사용자·의약품은 조회만)
-3. **admin 의 소속 sales 관리 범위** — 자사 sales만 `/users` 노출 (MT-5 후속)
+1. **platform 사용자·의약품 CRUD** — `/platform` 전역 CRUD (약국·병의원·코드 그룹은 완료, 사용자·의약품은 조회만)
+2. **admin 의 소속 sales 관리 범위** — 자사 sales만 `/users` 노출 (MT-5 후속)
+3. **OPS-6 → OPS-7** — 모니터링 후 레거시 최종 import·cutover (격리 검증 완료)
 
-**최근 완료(2026-06-02)**: **MT-8**(약국·병원 변경요청 워크플로) · **공통 코드 그룹/코드 정의 CRUD** · **병의원 공공데이터(HIRA) import** · **사업자번호 이력+숫자 정규화(morph map)** · 약국 목록 보강 · 제약사 등록 시 관리자 동시 생성 · 임퍼서네이션
+**최근 완료(2026-06-04)**: **MT-4-finalize**(도메인 `tenant_id` NOT NULL — UserFactory 기본 테넌트 + Performance/Settlement 거래처 테넌트 상속)
+**최근 완료(2026-06-02)**: **MT-8**(변경요청 워크플로) · **코드 그룹/코드 정의 CRUD** · **병의원 공공데이터(HIRA) import** · **사업자번호 이력+숫자 정규화(morph map)** · 약국 목록 보강 · 임퍼서네이션
 **이전 완료**: MT-1~7(격리 엔진·게이트·회귀) · role 리네임(platform/pharma/cso) · P2-8 · GAP-9 · GAP-1~6
 
 상세 체크리스트: §2.4 **GAP-10 작업 단위**
@@ -541,6 +545,7 @@ ERP-2 EDI 연동         ─── M3 + M6 + TECH-3(선택)
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| 2.9 | 2026-06-04 | **MT-4-finalize 완료** — 도메인 `tenant_id` NOT NULL 전환(UserFactory 기본 테넌트 + Performance/Settlement 거래처 테넌트 상속). §3 Now=platform 사용자·의약품 CRUD, 테스트 **416** |
 | 2.8 | 2026-06-02 | **MT-8 완료** + 코드 그룹/코드 정의 CRUD · 병의원 공공데이터(HIRA) import · 사업자번호 이력+숫자 정규화(morph map) · 약국 목록 보강. §3 Now=MT-4-finalize/platform 사용자·의약품 CRUD, 테스트 **417** |
 | 2.7 | 2026-05-29 | **실행 순서 재정렬** — MT-4( nullable) 완료, §3 Now=**MT-6**→MT-3→…, 테스트 **291** |
 | 2.6 | 2026-05-29 | MT-1·MT-2(1부) 완료 반영 — §3 Now=MT-3, 테스트 286 |
@@ -550,7 +555,7 @@ ERP-2 EDI 연동         ─── M3 + M6 + TECH-3(선택)
 
 ---
 
-**문서 버전**: 2.8
+**문서 버전**: 2.9
 **작성일**: 2026-04-20
-**최종 갱신**: 2026-06-02 (MT-8 + 코드 그룹 CRUD·병의원 공공데이터·사업자번호 이력/정규화 완료, Now=MT-4-finalize, 테스트 417)
+**최종 갱신**: 2026-06-04 (MT-4-finalize 완료 — 도메인 tenant_id NOT NULL, Now=platform 사용자·의약품 CRUD, 테스트 416)
 **갱신 책임**: 작업 시작·완료 시 해당 항목 상태 변경 + 모듈 문서에 상세 기록

@@ -37,11 +37,5 @@ test('super_admin 은 모든 제약사 자원에 대한 권한이 통과된다',
         ->and($super->can('delete', $productB))->toBeTrue();
 });
 
-test('tenant_id 없는 admin(과도기)은 기존 Policy 로 위임된다', function () {
-    $a = Tenant::factory()->create();
-    $adminNull = User::factory()->create(['role' => 'pharma', 'tenant_id' => null]);
-    $productA = Product::factory()->create(['tenant_id' => $a->id]);
-
-    // 교차 테넌트 거부 로직을 타지 않고 ProductPolicy(admin 허용)로 위임
-    expect($adminNull->can('update', $productA))->toBeTrue();
-});
+// (제거) "tenant_id 없는 admin(과도기)" — MT-4-finalize 이후 비-platform 사용자는 항상 테넌트에 소속되므로
+//        null 테넌트 pharma 시나리오는 더 이상 유효하지 않다. Gate::before 의 null 위임 분기는 방어용으로 유지.

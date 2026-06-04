@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,20 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * 비-platform 사용자(pharma/cso)는 기본 제약사(DEFAULT)에 소속시킨다.
+     * (GAP-10 MT-4-finalize: 도메인 tenant_id NOT NULL — admin/sales 가 tenant 컨텍스트를 가져야
+     *  HTTP 생성 경로에서 tenant_id 가 자동 주입됨. platform 또는 명시 tenant_id 는 그대로 둔다.)
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (User $user) {
+            if ($user->role !== User::ROLE_PLATFORM && $user->tenant_id === null) {
+                $user->tenant_id = Tenant::default()->id;
+            }
+        });
     }
 
     /**

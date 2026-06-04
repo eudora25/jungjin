@@ -3,6 +3,7 @@
 namespace App\Services\Performance;
 
 use App\Models\Company;
+use App\Models\CompanyProductOverride;
 use App\Models\Performance;
 use App\Models\Product;
 use App\Models\ProductPrice;
@@ -53,6 +54,8 @@ class PerformanceResolver
         $perf->fill(array_merge(
             $base,
             [
+                // 실적은 소속 거래처와 동일 제약사(테넌트) — 컨텍스트(HTTP) 없이도(큐·콘솔·임포트) 안전하게 상속
+                'tenant_id' => $company->tenant_id,
                 'company_id' => $company->id,
                 'product_id' => $product->id,
             ],
@@ -63,7 +66,7 @@ class PerformanceResolver
     }
 
     /**
-     * @param  \App\Models\CompanyProductOverride|null  $override  resolve() 에서 한 번만 조회한 override
+     * @param  CompanyProductOverride|null  $override  resolve() 에서 한 번만 조회한 override
      * @return array{unit_price: float, price_source: string, price_override_id: int|null, price_id: int|null}
      */
     private function resolvePrice(mixed $override, Product $product, CarbonInterface $on): array
@@ -97,7 +100,7 @@ class PerformanceResolver
     }
 
     /**
-     * @param  \App\Models\CompanyProductOverride|null  $override  resolve() 에서 한 번만 조회한 override
+     * @param  CompanyProductOverride|null  $override  resolve() 에서 한 번만 조회한 override
      * @return array{commission_rate: float|null, commission_source: string, commission_rate_id: int|null}
      */
     private function resolveCommission(mixed $override, Company $company, Product $product, CarbonInterface $on): array
