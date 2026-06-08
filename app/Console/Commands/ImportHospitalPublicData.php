@@ -105,11 +105,17 @@ class ImportHospitalPublicData extends Command
         }
         $r = $institution->import($path);
         $this->info(sprintf(
-            '  - 총 %d / 매칭 %d / 미매칭 %d (그중 동명 모호 %d) / ykiho 충돌 %d — 매칭률 %.1f%%',
-            $r['total'], $r['matched'], $r['unmatched'], $r['ambiguous'], $r['conflict'], $r['match_rate'],
+            '  - 총 %d / 매칭 %d (그중 대표행 선택 %d) / 미매칭 %d (동명 모호 %d) / ykiho 충돌 %d — 매칭률 %.1f%%',
+            $r['total'], $r['matched'], $r['tie_broken'], $r['unmatched'], $r['ambiguous'], $r['conflict'], $r['match_rate'],
         ));
         if (! empty($r['unmatched_samples'])) {
             $this->line('  - 미매칭 예시: '.implode(', ', array_map(fn ($s) => $s['name'], array_slice($r['unmatched_samples'], 0, 5))));
+        }
+        if (! empty($r['conflict_samples'])) {
+            $this->line('  - ykiho 충돌 예시: '.implode(', ', array_map(
+                fn ($s) => sprintf('%s(소유#%d↔대상#%d)', $s['name'], $s['owner_id'], $s['target_id']),
+                array_slice($r['conflict_samples'], 0, 10),
+            )));
         }
     }
 

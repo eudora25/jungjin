@@ -58,6 +58,10 @@ test('이미 다른 병의원에 부착된 ykiho 는 충돌로 건너뛴다(유�
     expect($target->refresh()->ykiho)->toBeNull();
     // 원래 소유 병원은 그대로
     expect(Hospital::where('ykiho', 'YK-DUP')->count())->toBe(1);
+    // 충돌 상세에 소유/대상 병원이 기록된다
+    expect($report['conflict_samples'])->toHaveCount(1);
+    expect($report['conflict_samples'][0]['ykiho'])->toBe('YK-DUP');
+    expect($report['conflict_samples'][0]['target_id'])->toBe($target->id);
 });
 
 test('원천에 동일 ykiho 가 서로 다른 병원에 매칭돼도 첫 1건만 부착하고 나머지는 충돌', function () {
@@ -80,8 +84,15 @@ test('원천에 동일 ykiho 가 서로 다른 병원에 매칭돼도 첫 1건�
     expect(Hospital::where('ykiho', 'YK-SAME')->count())->toBe(1);
 });
 
-test('동일 기관명+우편번호가 2건 이상이면 모호로 보류한다', function () {
-    Hospital::factory()->count(2)->create(['hospital_name' => '같은의원', 'postcode' => '12345', 'ykiho' => null]);
+test('동일 기관명+우편번호가 여러 건이면 영업(active) 대표행에 부착한다(타이브레이크)', function () {
+    $closed = Hospital::factory()->create([
+        'hospital_name' => '같은의원', 'postcode' => '12345', 'ykiho' => null,
+        'status' => 'inactive', 'opened_on' => '2018-01-01', 'closed_on' => '2020-01-01',
+    ]);
+    $active = Hospital::factory()->create([
+        'hospital_name' => '같은의원', 'postcode' => '12345', 'ykiho' => null,
+        'status' => 'active', 'opened_on' => '2021-01-01', 'closed_on' => null,
+    ]);
 
     $path = write_xlsx(
         ['암호화요양기호', '요양기관명', '우편번호'],
@@ -91,8 +102,53 @@ test('동일 기관명+우편번호가 2건 이상이면 모호로 보류한다'
     $report = app(HiraInstitutionImportService::class)->import($path);
     @unlink($path);
 
+    expect($report['matched'])->toBe(1);
+    expect($report['tie_broken'])->toBe(1);
+    expect($report['ambiguous'])->toBe(0);
+    expect($active->refresh()->ykiho)->toBe('YK-9'); // 영업행이 대표
+    expect($closed->refresh()->ykiho)->toBeNull();
+});
+
+test('전부 폐업이면 개설일 최신 행을 대표로 선택한다', function () {
+    $old = Hospital::factory()->create([
+        'hospital_name' => '폐업의원', 'postcode' => '54321', 'ykiho' => null,
+        'status' => 'inactive', 'opened_on' => '2015-01-01', 'closed_on' => '2017-01-01',
+    ]);
+    $recent = Hospital::factory()->create([
+        'hospital_name' => '폐업의원', 'postcode' => '54321', 'ykiho' => null,
+        'status' => 'inactive', 'opened_on' => '2019-01-01', 'closed_on' => '2022-01-01',
+    ]);
+
+    $path = write_xlsx(
+        ['암호화요양기호', '요양기관명', '우편번호'],
+        [['YK-R', '폐업의원', '54321']],
+    );
+
+    $report = app(HiraInstitutionImportService::class)->import($path);
+    @unlink($path);
+
+    expect($report['matched'])->toBe(1);
+    expect($report['tie_broken'])->toBe(1);
+    expect($recent->refresh()->ykiho)->toBe('YK-R'); // 개설일 최신
+    expect($old->refresh()->ykiho)->toBeNull();
+});
+
+test('우편번호 없이 기관명만 동명이 여러 건이면 보류한다(다른 위치 가능)', function () {
+    // 우편번호가 서로 다른 동명 2건 — HIRA 행은 우편번호 없음 → 2순위 폴백에서 모호
+    Hospital::factory()->create(['hospital_name' => '동명의원', 'postcode' => '11111', 'ykiho' => null]);
+    Hospital::factory()->create(['hospital_name' => '동명의원', 'postcode' => '22222', 'ykiho' => null]);
+
+    $path = write_xlsx(
+        ['암호화요양기호', '요양기관명', '우편번호'],
+        [['YK-N', '동명의원', '']],
+    );
+
+    $report = app(HiraInstitutionImportService::class)->import($path);
+    @unlink($path);
+
     expect($report['matched'])->toBe(0);
     expect($report['ambiguous'])->toBe(1);
+    expect($report['tie_broken'])->toBe(0);
     expect(Hospital::whereNotNull('ykiho')->count())->toBe(0);
 });
 
