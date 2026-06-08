@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Checkbox from 'primevue/checkbox';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
+import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
+import ProgressSpinner from 'primevue/progressspinner';
 import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
 
@@ -41,11 +43,93 @@ const form = useForm<{ services: string[]; dry_run: boolean }>({
     dry_run: false,
 });
 
-const submit = () => {
-    form.post(route('platform.hospitals.mois-sync.store'), {
-        preserveScroll: true,
-    });
+// --- 진행 모달 상태 ---
+const dialogVisible = ref(false);
+const starting = ref(false);
+const syncPhase = ref<'running' | 'failed' | 'timeout'>('running');
+const syncError = ref<string | null>(null);
+const startError = ref<string | null>(null);
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
+let pollAttempts = 0;
+const POLL_INTERVAL_MS = 1500;
+const POLL_MAX_ATTEMPTS = 400; // 약 10분 안전 상한
+
+const labelsFor = (keys: string[]): string =>
+    props.services
+        .filter((s) => keys.includes(s.key))
+        .map((s) => s.label)
+        .join(', ');
+
+const targetLabels = ref('');
+
+const stopPolling = () => {
+    if (pollTimer !== null) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
+    }
 };
+
+const finishWithList = () => {
+    stopPolling();
+    dialogVisible.value = false;
+    router.reload({ only: ['syncs', 'services'] });
+};
+
+const pollStatus = async (id: number) => {
+    pollAttempts += 1;
+    try {
+        const { data } = await window.axios.get(route('platform.hospitals.mois-sync.status', id));
+        if (data.status === 'completed') {
+            finishWithList();
+            return;
+        }
+        if (data.status === 'failed') {
+            syncPhase.value = 'failed';
+            syncError.value = data.error ?? '동기화에 실패했습니다.';
+            stopPolling();
+            router.reload({ only: ['syncs', 'services'] });
+            return;
+        }
+    } catch {
+        // 일시적 오류는 무시하고 다음 폴링 재시도
+    }
+    if (pollAttempts >= POLL_MAX_ATTEMPTS) {
+        syncPhase.value = 'timeout';
+        stopPolling();
+        return;
+    }
+    pollTimer = setTimeout(() => pollStatus(id), POLL_INTERVAL_MS);
+};
+
+const submit = async () => {
+    if (form.services.length === 0 || starting.value) return;
+    starting.value = true;
+    startError.value = null;
+    syncError.value = null;
+    syncPhase.value = 'running';
+    pollAttempts = 0;
+    try {
+        const { data } = await window.axios.post(route('platform.hospitals.mois-sync.store'), {
+            services: form.services,
+            dry_run: form.dry_run,
+        });
+        targetLabels.value = labelsFor(form.services);
+        dialogVisible.value = true;
+        pollStatus(data.id);
+    } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } } };
+        startError.value = err.response?.data?.message ?? '동기화 시작에 실패했습니다.';
+    } finally {
+        starting.value = false;
+    }
+};
+
+const closeDialog = () => {
+    stopPolling();
+    dialogVisible.value = false;
+};
+
+onBeforeUnmount(stopPolling);
 
 const refresh = () => router.reload({ only: ['syncs', 'services'] });
 
@@ -136,10 +220,13 @@ const isDryRun = (row: SyncRow): boolean => row.params?.dry_run === true;
                             <label for="dry-run" class="text-sm">모의 실행(dry-run) — 분류 카운트만, DB 미반영</label>
                         </div>
                         <div>
-                            <Button type="submit" label="동기화 시작" icon="pi pi-sync" :loading="form.processing"
+                            <Button type="submit" label="동기화 시작" icon="pi pi-sync" :loading="starting"
                                     :disabled="form.services.length === 0" />
-                            <span class="text-surface-500 text-xs ml-3">백그라운드(큐)에서 처리됩니다. 잠시 후 새로고침하세요.</span>
+                            <span class="text-surface-500 text-xs ml-3">진행 상황이 모달로 표시되며, 완료되면 자동으로 닫힙니다.</span>
                         </div>
+                        <Message v-if="startError" severity="error" size="small" variant="simple">
+                            {{ startError }}
+                        </Message>
                     </form>
                 </template>
             </Card>
@@ -181,5 +268,39 @@ const isDryRun = (row: SyncRow): boolean => row.params?.dry_run === true;
                 </template>
             </Card>
         </div>
+
+        <Dialog
+            v-model:visible="dialogVisible"
+            modal
+            :closable="syncPhase !== 'running'"
+            :close-on-escape="syncPhase !== 'running'"
+            :draggable="false"
+            :style="{ width: '28rem' }"
+            header="MOIS 동기화"
+        >
+            <div v-if="syncPhase === 'running'" class="flex flex-col items-center gap-4 py-4 text-center">
+                <ProgressSpinner style="width: 48px; height: 48px" stroke-width="4" />
+                <div>
+                    <p class="font-medium">동기화를 진행 중입니다…</p>
+                    <p class="text-surface-500 text-sm mt-1">대상: {{ targetLabels || '전체' }}</p>
+                    <p class="text-surface-400 text-xs mt-2">완료되면 이 창은 자동으로 닫힙니다.</p>
+                </div>
+            </div>
+
+            <div v-else-if="syncPhase === 'failed'" class="flex flex-col gap-3 py-2">
+                <Message severity="error" :closable="false">동기화에 실패했습니다.</Message>
+                <p v-if="syncError" class="text-sm text-surface-600 break-all">{{ syncError }}</p>
+            </div>
+
+            <div v-else class="flex flex-col gap-3 py-2">
+                <Message severity="warn" :closable="false">
+                    완료 확인 시간이 초과되었습니다. 큐 워커 동작 여부를 확인하고, 아래 이력에서 최종 상태를 확인하세요.
+                </Message>
+            </div>
+
+            <template v-if="syncPhase !== 'running'" #footer>
+                <Button label="닫기" text @click="closeDialog" />
+            </template>
+        </Dialog>
     </AdminLayout>
 </template>

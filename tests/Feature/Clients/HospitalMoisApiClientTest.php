@@ -47,7 +47,7 @@ test('serviceKey·페이징·cond[] 쿼리를 구성해 호출하고 items 를 �
             && str_contains($url, 'pageNo=1')
             && str_contains($url, 'numOfRows=100')
             && str_contains($url, 'returnType=json')
-            && str_contains($url, 'LAST_MDFCN_PNT')
+            && str_contains($url, 'DAT_UPDT_PNT')
             && str_contains($url, '20260601000000')
             && str_contains($url, '20260602000000');
     });
@@ -87,7 +87,7 @@ test('from/to 가 null 이면 cond[] 파라미터를 보내지 않는다', funct
 
     $this->client->fetchPage($this->base, null, null, 1, 100);
 
-    Http::assertSent(fn ($request) => ! str_contains($request->url(), 'LAST_MDFCN_PNT'));
+    Http::assertSent(fn ($request) => ! str_contains($request->url(), 'DAT_UPDT_PNT'));
 });
 
 test('resultCode 가 0 이 아니면 예외를 던진다', function () {

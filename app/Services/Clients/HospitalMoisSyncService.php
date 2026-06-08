@@ -13,7 +13,7 @@ use Throwable;
 /**
  * 행안부(MOIS) 공공데이터 API 증분 동기화 서비스.
  *
- * 업종(의원·병원·부속의료기관)을 순회하며 커서(마지막 LAST_MDFCN_PNT) 이후 변경분을 페이징 수신,
+ * 업종(의원·병원·부속의료기관)을 순회하며 커서(마지막 DAT_UPDT_PNT) 이후 변경분을 페이징 수신,
  * API 필드를 논리 키로 변환(공용 HospitalRowMapper)하고 좌표를 WGS84 로 변환해 hospitals 에 건건 적용한다.
  * DAT_UPDT_SE 로 신규(I)·변경(U)=upsert / 폐업(D)=상태 비활성+폐업일 처리하며, 변경 없는 행은 SKIP 한다.
  * 업종/페이지 단위로 예외를 격리하고, 결과를 HospitalMoisSync 이력에 업종별 카운트로 기록한다.
@@ -37,7 +37,8 @@ class HospitalMoisSyncService
     ) {}
 
     /**
-     * 동기화 실행. options: user_id, trigger, services(업종키 배열), since(YYYYMMDD), dry_run(bool).
+     * 동기화 실행. options: user_id, trigger, services(업종키 배열), since(YYYYMMDD), dry_run(bool),
+     * sync_id(선택 — 컨트롤러가 미리 만든 pending 이력행을 재사용해 진행상태를 폴링 가능하게 함).
      */
     public function syncAll(array $options = []): HospitalMoisSync
     {
@@ -48,17 +49,23 @@ class HospitalMoisSyncService
         $since = isset($options['since']) ? $this->normalizeSince((string) $options['since']) : null;
         $dryRun = (bool) ($options['dry_run'] ?? false);
 
-        $sync = HospitalMoisSync::create([
-            'created_by' => $userId,
-            'trigger' => $trigger,
-            'params' => array_filter([
-                'services' => $serviceKeys,
-                'since' => $options['since'] ?? null,
-                'dry_run' => $dryRun ?: null,
-            ]),
-            'status' => HospitalMoisSync::STATUS_PROCESSING,
-            'started_at' => now(),
-        ]);
+        // 사전 생성 이력행(pending)이 있으면 재사용 → processing 으로 전이. 없으면 새로 생성.
+        $sync = isset($options['sync_id'])
+            ? tap(HospitalMoisSync::findOrFail($options['sync_id']), fn ($s) => $s->update([
+                'status' => HospitalMoisSync::STATUS_PROCESSING,
+                'started_at' => now(),
+            ]))
+            : HospitalMoisSync::create([
+                'created_by' => $userId,
+                'trigger' => $trigger,
+                'params' => array_filter([
+                    'services' => $serviceKeys,
+                    'since' => $options['since'] ?? null,
+                    'dry_run' => $dryRun ?: null,
+                ]),
+                'status' => HospitalMoisSync::STATUS_PROCESSING,
+                'started_at' => now(),
+            ]);
 
         $report = [];
         $success = 0;
@@ -137,7 +144,7 @@ class HospitalMoisSyncService
     }
 
     /**
-     * 한 페이지의 행들을 hospitals 에 적용하고 갱신된 커서(max LAST_MDFCN_PNT)를 반환.
+     * 한 페이지의 행들을 hospitals 에 적용하고 갱신된 커서(max DAT_UPDT_PNT)를 반환.
      *
      * @param  array<int,array<string,mixed>>  $items
      * @param  array<string,int>  $counts
@@ -154,9 +161,10 @@ class HospitalMoisSyncService
 
                 continue;
             }
+            // 증분 커서 기준은 LOCALDATA 표준 데이터갱신시점(DAT_UPDT_PNT) — cond[] 필터와 동일 필드.
             // 응답은 'yyyy-MM-dd HH:mm:ss' 형식 → 커서/cond 용 14자리(yyyyMMddHHmmss)로 정규화
-            $mdfcn = $this->normalizePoint($item['LAST_MDFCN_PNT'] ?? null);
-            $maxCursor = $this->maxStr($maxCursor, $mdfcn);
+            $updt = $this->normalizePoint($item['DAT_UPDT_PNT'] ?? null);
+            $maxCursor = $this->maxStr($maxCursor, $updt);
             $prepared[] = [
                 'code' => $code,
                 'op' => strtoupper((string) ($this->mapper->trimOrNull($item['DAT_UPDT_SE'] ?? null) ?? 'U')),
@@ -254,7 +262,7 @@ class HospitalMoisSyncService
             'suspend_begin_on' => $item['TCBIZ_BGNG_YMD'] ?? null,
             'suspend_end_on' => $item['TCBIZ_END_YMD'] ?? null,
             'license_authority_code' => $item['OPN_ATMY_GRP_CD'] ?? null,
-            'source_synced_at' => $item['LAST_MDFCN_PNT'] ?? null,
+            'source_synced_at' => $item['DAT_UPDT_PNT'] ?? null,
             // 규모 수치 (CSV 경로와 파리티) — GFA 총면적·SCKBD_CNT 병상수·HSPTLZRM_CNT 입원실수·HCWKR_CNT 의료인수
             'total_area' => $item['GFA'] ?? null,
             'bed_count' => $item['SCKBD_CNT'] ?? null,

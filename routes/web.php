@@ -213,6 +213,7 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     // 병의원 행안부(MOIS) API 증분 동기화 이력·수동 트리거 (GAP-12) — resource 보다 먼저
     Route::get('/hospitals/mois-sync', [PlatformHospitalMoisSyncController::class, 'index'])->name('hospitals.mois-sync.index');
     Route::post('/hospitals/mois-sync', [PlatformHospitalMoisSyncController::class, 'store'])->name('hospitals.mois-sync.store');
+    Route::get('/hospitals/mois-sync/{sync}/status', [PlatformHospitalMoisSyncController::class, 'status'])->name('hospitals.mois-sync.status');
 
     // 공유 마스터(약국·병의원) 전역 CRUD — super_admin 이 직접 관리 (D-6)
     Route::resource('pharmacies', PlatformPharmacyController::class)

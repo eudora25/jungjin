@@ -24,6 +24,7 @@ function moisItem(array $overrides = []): array
         'TELNO' => '0211110000',
         'LCPMT_YMD' => '2020-01-01',
         'LAST_MDFCN_PNT' => '20260604010000',
+        'DAT_UPDT_PNT' => '20260604010000',
         'DAT_UPDT_SE' => 'I',
     ], $overrides);
 }
@@ -121,10 +122,10 @@ test('변경 없는 행은 SKIP 한다', function () {
     expect($sync->report['clinics']['updated'])->toBe(0);
 });
 
-test('커서가 max LAST_MDFCN_PNT 로 전진한다', function () {
+test('커서가 max DAT_UPDT_PNT 로 전진한다', function () {
     Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
-        moisItem(['MNG_NO' => 'C-5', 'LAST_MDFCN_PNT' => '20260604010000']),
-        moisItem(['MNG_NO' => 'C-6', 'LAST_MDFCN_PNT' => '20260604093000']),
+        moisItem(['MNG_NO' => 'C-5', 'DAT_UPDT_PNT' => '20260604010000']),
+        moisItem(['MNG_NO' => 'C-6', 'DAT_UPDT_PNT' => '20260604093000']),
     ]))]);
 
     $this->service->syncAll(['services' => ['clinics']]);
@@ -194,9 +195,9 @@ test('상태명이 없으면 SALS_STTS_CD(01 영업/그 외 폐업)로 매핑한
     expect(Hospital::where('hospital_code', 'CD-2')->value('status'))->toBe('inactive');
 });
 
-test('커서는 구분자 포함 LAST_MDFCN_PNT 를 14자리로 정규화해 저장한다', function () {
+test('커서는 구분자 포함 DAT_UPDT_PNT 를 14자리로 정규화해 저장한다', function () {
     Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
-        moisItem(['MNG_NO' => 'NORM-1', 'LAST_MDFCN_PNT' => '2026-06-02 09:43:18']),
+        moisItem(['MNG_NO' => 'NORM-1', 'DAT_UPDT_PNT' => '2026-06-02 09:43:18']),
     ]))]);
 
     $this->service->syncAll(['services' => ['clinics']]);
@@ -219,6 +220,25 @@ test('규모 수치(GFA·SCKBD_CNT·HSPTLZRM_CNT·HCWKR_CNT)를 흡수한다', f
     expect($h->bed_count)->toBe(120);
     expect($h->inpatient_room_count)->toBe(30);
     expect($h->doctor_count)->toBe(45);
+});
+
+test('sync_id 를 주면 새 이력행을 만들지 않고 사전 생성행을 재사용한다', function () {
+    Http::fake(['apis.data.go.kr/*' => Http::response(moisResponse([
+        moisItem(['MNG_NO' => 'REUSE-1']),
+    ]))]);
+
+    $pre = HospitalMoisSync::create([
+        'trigger' => HospitalMoisSync::TRIGGER_MANUAL,
+        'params' => ['services' => ['clinics']],
+        'status' => HospitalMoisSync::STATUS_PENDING,
+    ]);
+
+    $sync = $this->service->syncAll(['services' => ['clinics'], 'sync_id' => $pre->id]);
+
+    expect($sync->id)->toBe($pre->id);
+    expect(HospitalMoisSync::count())->toBe(1);
+    expect($sync->status)->toBe(HospitalMoisSync::STATUS_COMPLETED);
+    expect($sync->started_at)->not->toBeNull();
 });
 
 test('규모 수치만 바뀌어도 변경 감지로 UPDATE 한다', function () {

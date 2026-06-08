@@ -9,7 +9,7 @@ use RuntimeException;
  * 행안부(MOIS) 공공데이터 API 클라이언트 — 병의원 인허가 변경분 페이지 수신.
  *
  * 공통 엔드포인트 `{base}/info` 를 GET 하며, 인증키(serviceKey)·페이징·증분 조건
- * (`cond[LAST_MDFCN_PNT::GTE/LT]`) 을 구성한다. 응답 wrapper(response.header/body)를
+ * (`cond[DAT_UPDT_PNT::GTE/LT]` — LOCALDATA 표준 데이터갱신시점) 을 구성한다. 응답 wrapper(response.header/body)를
  * 검사해 `resultCode='0'` 만 성공으로 보고, items.item 을 리스트로 평탄화해 반환한다.
  *
  * 설계: docs/modules/client/HOSPITAL_LOCALDATA_API_SYNC.md §4-2
@@ -27,8 +27,8 @@ class HospitalMoisApiClient
             'pageNo' => $pageNo,
             'numOfRows' => $size,
             'returnType' => 'json',
-            'cond[LAST_MDFCN_PNT::GTE]' => $from,
-            'cond[LAST_MDFCN_PNT::LT]' => $to,
+            'cond[DAT_UPDT_PNT::GTE]' => $from,
+            'cond[DAT_UPDT_PNT::LT]' => $to,
         ], fn ($v) => $v !== null && $v !== '');
 
         // serviceKey 는 발급 시 이미 URL-encoded 라 쿼리 배열로 넘기면 이중 인코딩된다.

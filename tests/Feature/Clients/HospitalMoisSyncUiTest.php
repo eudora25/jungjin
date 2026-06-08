@@ -65,6 +65,62 @@ test('잘못된 업종 키는 검증 실패한다', function () {
     Bus::assertNotDispatched(SyncHospitalMoisJob::class);
 });
 
+test('JSON 요청은 pending 이력행을 만들고 id 를 반환하며 잡에 sync_id 를 넘긴다', function () {
+    Bus::fake();
+    $admin = moisPlatformUser();
+
+    $response = $this->actingAs($admin)
+        ->postJson(route('platform.hospitals.mois-sync.store'), [
+            'services' => ['clinics'],
+            'dry_run' => false,
+        ])
+        ->assertOk()
+        ->assertJson(['status' => HospitalMoisSync::STATUS_PENDING]);
+
+    $id = $response->json('id');
+    expect($id)->toBeInt();
+
+    $sync = HospitalMoisSync::find($id);
+    expect($sync)->not->toBeNull();
+    expect($sync->status)->toBe(HospitalMoisSync::STATUS_PENDING);
+    expect($sync->params['services'])->toBe(['clinics']);
+
+    Bus::assertDispatched(SyncHospitalMoisJob::class, fn ($job) => ($job->options['sync_id'] ?? null) === $id);
+});
+
+test('status 엔드포인트는 진행상태를 JSON 으로 반환한다', function () {
+    $admin = moisPlatformUser();
+
+    $sync = HospitalMoisSync::create([
+        'created_by' => $admin->id,
+        'trigger' => HospitalMoisSync::TRIGGER_MANUAL,
+        'status' => HospitalMoisSync::STATUS_COMPLETED,
+        'report' => ['clinics' => ['inserted' => 2]],
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('platform.hospitals.mois-sync.status', $sync->id))
+        ->assertOk()
+        ->assertJson([
+            'id' => $sync->id,
+            'status' => HospitalMoisSync::STATUS_COMPLETED,
+            'report' => ['clinics' => ['inserted' => 2]],
+        ]);
+});
+
+test('pharma 는 status 엔드포인트에 접근할 수 없다', function () {
+    $tenant = Tenant::factory()->create();
+    $pharma = User::factory()->create(['role' => 'pharma', 'tenant_id' => $tenant->id]);
+    $sync = HospitalMoisSync::create([
+        'trigger' => HospitalMoisSync::TRIGGER_SCHEDULE,
+        'status' => HospitalMoisSync::STATUS_PROCESSING,
+    ]);
+
+    $this->actingAs($pharma)
+        ->getJson(route('platform.hospitals.mois-sync.status', $sync->id))
+        ->assertForbidden();
+});
+
 test('pharma·cso 는 MOIS 동기화 화면에 접근할 수 없다', function () {
     $tenant = Tenant::factory()->create();
     $pharma = User::factory()->create(['role' => 'pharma', 'tenant_id' => $tenant->id]);

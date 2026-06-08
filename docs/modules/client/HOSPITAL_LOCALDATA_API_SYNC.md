@@ -69,8 +69,8 @@
 | `pageNo` | 1~ | 페이지 번호(1부터) |
 | `numOfRows` | **≤ 100** | 페이지 크기 (CSV의 500과 다름) |
 | `returnType` | `json` | 응답 형식 |
-| `cond[LAST_MDFCN_PNT::GTE]` | `yyyyMMddHHmmss` | **최종수정일시 ≥ — 증분 시작** |
-| `cond[LAST_MDFCN_PNT::LT]` | `yyyyMMddHHmmss` | 최종수정일시 < — 증분 종료 (반열린 구간) |
+| `cond[DAT_UPDT_PNT::GTE]` | `yyyyMMddHHmmss` | **데이터갱신시점 ≥ — 증분 시작** |
+| `cond[DAT_UPDT_PNT::LT]` | `yyyyMMddHHmmss` | 데이터갱신시점 < — 증분 종료 (반열린 구간) |
 | `cond[SALS_STTS_CD::EQ]` | `01`/`03` | (옵션) 영업상태 필터 |
 | `cond[OPN_ATMY_GRP_CD::EQ]` | 7자리 | (옵션) 자치단체코드 |
 | `cond[LCPMT_YMD::GTE/LT]` | `yyyyMMdd` | (옵션) 인허가일자 범위(백필용) |
@@ -95,8 +95,9 @@
 | `CRD_INFO_X` / `CRD_INFO_Y` | 좌표 | `longitude` / `latitude` | **EPSG:5174→WGS84 변환**(§4-4) |
 | `GFA` / `SCKBD_CNT` / `HSPTLZRM_CNT` / `HCWKR_CNT` | 총면적/병상수/입원실수/의료인수 | `total_area` / `bed_count` / `inpatient_room_count` / `doctor_count` | CSV 경로와 파리티(2026-06-04 보강). 변경감지 비교 포함 |
 | `MNATH` / `LCTN_AREA` (병원) | 관할 위임단위/소재지면적 | — | **의도적 미매핑**(§2-1) |
-| `LAST_MDFCN_PNT` | 최종수정시점 | `source_synced_at` + 커서 | 증분 기준. ⚠️ **R7 정정**: 응답은 `yyyy-MM-dd HH:mm:ss`(구분자 포함) → 커서/cond 용 14자리(`yyyyMMddHHmmss`)로 정규화 |
-| `DAT_UPDT_SE` | 변경구분 **I/U/D** | (로직) | §5 신규/변경/**폐업** |
+| `DAT_UPDT_PNT` | 데이터갱신시점 (포털 게시시각) | `source_synced_at` + 커서 | **증분 기준** (cond·커서 모두). ⚠️ **R10 정정**: 종전 `LAST_MDFCN_PNT`(문서 누락·정의 불명확)에서 전환 — LOCALDATA 표준 `DAT_UPDT_SE`의 짝. `LAST_MDFCN_PNT`(최종수정시점)는 게시 지연 시 과거값이라 누락 위험(6/6 게시 223건이 LAST_MDFCN_PNT<6/6 → 누락 실증). 응답은 `yyyy-MM-dd HH:mm:ss` → 14자리 정규화 |
+| `DAT_UPDT_SE` | 변경구분 **I/U/D** | (로직) | §5 신규/변경/**폐업**. `DAT_UPDT_PNT`와 한 쌍의 증분 표준 필드 |
+| `LAST_MDFCN_PNT` | 최종수정시점 | — | **미사용**(R10) — 문서 미정의·게시 지연 누락 위험으로 증분 기준에서 제외 |
 
 > ⚠️ 응답 날짜는 `yyyy-MM-dd`(요청은 `yyyyMMdd`). 빈 문자열은 NULL 대신 빈값으로 오므로 **일괄 `emptyToNull`**.
 > ✅ **식별자 일치 해소**: Pample 문서가 "MOIS API와 LOCALDATA CSV 는 같은 행안부 원천"임을 명시 → `MNG_NO == 관리번호 == hospital_code`. v0.1 미결 §6-2 사실상 확정(실데이터 1회 교차 확인만 남음 §9-R7).
@@ -112,13 +113,13 @@
                               ├─ 커서 조회: 업종별 last_synced_at  (없으면 D-2 lookback)
                               └─ for each 업종(API ID):
                                    HospitalMoisApiClient::fetchPage(id, from, to, pageNo, 100)
-                                     │  (Http::retry, cond[LAST_MDFCN_PNT] 범위, totalCount 순회)
+                                     │  (Http::retry, cond[DAT_UPDT_PNT] 범위, totalCount 순회)
                                      ▼
                                    HospitalMoisSyncService::apply(items)
                                      │  HospitalRowMapper (CSV와 공용) + emptyToNull + 좌표변환
                                      │  DAT_UPDT_SE 분기 → I/U=upsert(['hospital_code']) · D=폐업
                                      ▼
-                                   커서 전진(max LAST_MDFCN_PNT) + outcome 카운트
+                                   커서 전진(max DAT_UPDT_PNT) + outcome 카운트
                               └─ 이력행 completed + report{업종:{fetched,inserted,updated,closed,skipped,failed}}
 ```
 
@@ -135,7 +136,7 @@
 - "논리 키" 연관배열을 입력받게 해 **CSV(한글 헤더)** 와 **API(영문 필드)** 가 각자 어댑터로 논리 키 매핑 후 동일 매퍼 호출 → 상태·일자·타입 규칙 1곳.
 
 ### 4-2. `HospitalMoisApiClient` (신규, `app/Services/Clients/`)
-- `fetchPage(string $apiId, ?string $from, ?string $to, int $pageNo, int $size=100): array` — `Http::baseUrl()->retry(3,200)->get('/info', [... 'cond[LAST_MDFCN_PNT::GTE]'=>$from ...])` + 평탄화 + `resultCode` 검사.
+- `fetchPage(string $apiId, ?string $from, ?string $to, int $pageNo, int $size=100): array` — `Http::baseUrl()->retry(3,200)->get('/info', [... 'cond[DAT_UPDT_PNT::GTE]'=>$from ...])` + 평탄화 + `resultCode` 검사.
 - Laravel `Http` 은 배열 쿼리를 인코딩하므로 `cond[...]` 키를 문자열 그대로 전달(인코딩 처리 검증). 테스트는 `Http::fake()`.
 
 ### 4-3. `HospitalMoisSyncService` (신규)
@@ -169,7 +170,7 @@
 | `D` | 삭제(폐업) | `status=inactive`(폐업) + `closed_on` 채움. **물리/소프트 삭제 금지**(실적 FK 보존) |
 
 - **변경 감지(SKIP 최적화)**: `hospital_name,address,postcode,phone,opened_on,closed_on,suspend_*,latitude,longitude,hospital_type,status` 비교 → 전부 동일이면 SKIP(불필요 쓰기·audit 방지).
-- **커서 전진**: 해당 실행에서 본 행들의 `max(LAST_MDFCN_PNT)` 를 업종 커서에 저장. 안전 마진(중복 수신은 upsert로 무해).
+- **커서 전진**: 해당 실행에서 본 행들의 `max(DAT_UPDT_PNT)` 를 업종 커서에 저장. 안전 마진(중복 수신은 upsert로 무해).
 
 ---
 
@@ -194,7 +195,7 @@
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
 | `api_id` | string(20) **unique** | 업종 API ID(15154874 등) |
-| `last_synced_at` | string(14) nullable | 마지막 반영 `LAST_MDFCN_PNT` |
+| `last_synced_at` | string(14) nullable | 마지막 반영 `DAT_UPDT_PNT` |
 | `last_sync_id` | FK syncs nullable | 마지막 성공 동기화 |
 | timestamps | | |
 
@@ -225,7 +226,7 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 
 - `HospitalMoisApiClientTest` — `Http::fake()` 페이징·`cond[]` 쿼리 구성·`resultCode≠0` 예외.
 - `HospitalRowMapperTest` — 한글헤더(CSV)/영문필드(API) 두 입력이 **동일 payload**·`emptyToNull`·날짜 파싱.
-- `HospitalMoisSyncServiceTest` — I→insert / U→update / **D→폐업(status=inactive+closed_on)** / 변경없음 SKIP / **멱등(2회 동일)** / 커서 전진(max LAST_MDFCN_PNT) / 업종 부분실패 격리.
+- `HospitalMoisSyncServiceTest` — I→insert / U→update / **D→폐업(status=inactive+closed_on)** / 변경없음 SKIP / **멱등(2회 동일)** / 커서 전진(max DAT_UPDT_PNT) / 업종 부분실패 격리.
 - 좌표: EPSG:5174 샘플 → WGS84 한반도 범위 검증, 범위 밖 NULL.
 - `hospitals:sync-mois` `--dry-run` upsert 없음 / 정상 이력 completed / `role:platform` 외 차단(UI 채택 시).
 - 기존 `HospitalImportService` CSV 테스트 — 매퍼 추출 후 **회귀 그린 유지**.
@@ -243,6 +244,7 @@ MOIS_SYNC_ENABLED=false                  # 검증 후 활성
 - [x] **R7** 실데이터 증분 검증 — `MNG_NO==hospital_code` 확정(6/2 변경분 97건 중 80 update·17 insert). 상태필드(`SALS_STTS_NM`)·커서 형식 버그 정정(회귀 2) — `13e0d46`
 - [x] **R8** Platform 이력·업종 커서·수동 트리거(업종 선택·dry-run) UI(`/platform/hospitals/mois-sync`) + 메뉴 + 권한 테스트 4 — `1a79992`
 - [x] **R9** ROADMAP/설계문서/CLIENT_MANAGEMENT 진행 로그 반영
+- [x] **R10** 증분 기준 필드 전환 `LAST_MDFCN_PNT` → **`DAT_UPDT_PNT`**(cond·커서·source_synced_at). 사유: ① `LAST_MDFCN_PNT`는 data.go.kr 스펙 미문서화·정의 불명확(예고 없는 제거 위험) ② **게시 지연 누락 실증** — 6/8 기준 `DAT_UPDT_PNT::GTE=6/6`은 223건이나 `LAST_MDFCN_PNT::GTE=6/6`은 0건(게시는 6/6, 최종수정은 그 이전이라 LAST_MDFCN_PNT 커서로는 누락). `DAT_UPDT_SE`(I/U/D)와 한 쌍인 LOCALDATA 표준 증분 필드 사용. 커서 초기화 후 실 API dry-run 검증(clinics 951·hospitals 223 fetched, 커서=max DAT_UPDT_PNT). 테스트 29 그린
 
 ---
 
