@@ -20,6 +20,7 @@ test('platform 은 MOIS 동기화 이력 화면을 조회한다', function () {
         'trigger' => HospitalMoisSync::TRIGGER_MANUAL,
         'status' => HospitalMoisSync::STATUS_COMPLETED,
         'report' => ['clinics' => ['fetched' => 10, 'inserted' => 3, 'updated' => 2, 'closed' => 1, 'skipped' => 4]],
+        'finished_at' => '2026-06-04 04:30:05',
     ]);
     HospitalMoisCursor::create(['api_id' => '15154874', 'last_synced_at' => '20260604043000']);
 
@@ -31,7 +32,13 @@ test('platform 은 MOIS 동기화 이력 화면을 조회한다', function () {
             ->has('syncs', 1)
             ->has('services', 3)
             ->where('enabled', false)
+            ->where('services.0.key', 'clinics')
             ->where('services.0.last_synced_at', '20260604043000')
+            ->where('services.0.last_run_status', 'completed')
+            ->whereNot('services.0.last_run_at', null)
+            // 이력에 없는 업종(병원)은 마지막 실행 정보가 비어 있다
+            ->where('services.1.last_run_status', null)
+            ->where('services.1.last_run_at', null)
         );
 });
 

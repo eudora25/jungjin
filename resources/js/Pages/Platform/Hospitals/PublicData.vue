@@ -78,7 +78,8 @@ const reportSummary = (row: ImportRow): string => {
     const r = row.report;
     if (!r) return '-';
     if (row.kind === 'institution') {
-        return `총 ${r.total} / 매칭 ${r.matched} / 미매칭 ${r.unmatched} (매칭률 ${r.match_rate}%)`;
+        const conflict = Number(r.conflict ?? 0) > 0 ? ` / ykiho 충돌 ${r.conflict}` : '';
+        return `총 ${r.total} / 매칭 ${r.matched} / 미매칭 ${r.unmatched}${conflict} (매칭률 ${r.match_rate}%)`;
     }
     return `총 ${r.total} / 연결 ${r.resolved} / 스킵 ${r.skipped_unmatched} / 적재 ${r.written}`;
 };

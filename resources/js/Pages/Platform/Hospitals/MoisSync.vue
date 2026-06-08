@@ -18,6 +18,8 @@ interface ServiceRow {
     id: string;
     label: string;
     last_synced_at: string | null;
+    last_run_at: string | null;
+    last_run_status: string | null;
 }
 
 interface SyncRow {
@@ -147,6 +149,15 @@ const formatPoint = (p: string | null): string => {
     return `${p.slice(0, 4)}-${p.slice(4, 6)}-${p.slice(6, 8)} ${p.slice(8, 10)}:${p.slice(10, 12)}`;
 };
 
+// ISO 일시 → 'yyyy-MM-dd HH:mm' (브라우저 로컬 시간)
+const formatDateTime = (iso: string | null): string => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '-';
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
 const reportSummary = (row: SyncRow): string => {
     if (!row.report) return '-';
     const parts: string[] = [];
@@ -186,16 +197,35 @@ const isDryRun = (row: SyncRow): boolean => row.params?.dry_run === true;
                 <template #title>업종별 커서</template>
                 <template #content>
                     <DataTable :value="services" striped-rows>
-                        <Column header="업종" field="label" style="width: 200px" />
-                        <Column header="API ID" field="id" style="width: 140px" />
-                        <Column header="마지막 동기화 시점">
+                        <Column header="업종" field="label" style="width: 160px" />
+                        <Column header="API ID" field="id" style="width: 120px" />
+                        <Column header="최신 데이터 시점 (게시 기준)">
                             <template #body="{ data }">
                                 <span :class="data.last_synced_at ? '' : 'text-surface-400'">
                                     {{ formatPoint(data.last_synced_at) }}
                                 </span>
                             </template>
                         </Column>
+                        <Column header="마지막 실행" style="width: 220px">
+                            <template #body="{ data }">
+                                <span v-if="!data.last_run_at && !data.last_run_status" class="text-surface-400">-</span>
+                                <span v-else class="flex items-center gap-2">
+                                    <span :class="data.last_run_at ? '' : 'text-surface-400'">
+                                        {{ formatDateTime(data.last_run_at) }}
+                                    </span>
+                                    <Tag
+                                        v-if="data.last_run_status"
+                                        :value="statusLabel(data.last_run_status)"
+                                        :severity="statusSeverity(data.last_run_status)"
+                                    />
+                                </span>
+                            </template>
+                        </Column>
                     </DataTable>
+                    <p class="text-surface-500 text-xs mt-2">
+                        ※ <b>최신 데이터 시점</b>은 받아온 레코드 중 가장 최근 게시시각(DAT_UPDT_PNT)이며, 실행 시각이 아닙니다.
+                        포털에 새 게시분이 없으면 동기화를 실행해도 이 값은 변하지 않습니다.
+                    </p>
                 </template>
             </Card>
 

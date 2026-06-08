@@ -25,20 +25,27 @@ class HospitalMoisSyncController extends Controller
 
         $cursors = HospitalMoisCursor::pluck('last_synced_at', 'api_id');
 
-        $services = collect(config('mois.services', []))
-            ->map(fn ($svc, $key) => [
-                'key' => $key,
-                'id' => $svc['id'],
-                'label' => $svc['label'] ?? $key,
-                'last_synced_at' => $cursors[$svc['id']] ?? null,
-            ])
-            ->values();
-
         $syncs = HospitalMoisSync::query()
             ->with('creator:id,name')
             ->latest('id')
             ->limit(30)
             ->get();
+
+        $services = collect(config('mois.services', []))
+            ->map(function ($svc, $key) use ($cursors, $syncs) {
+                // 마지막 "실행": 해당 업종을 포함(report 에 키 존재)한 가장 최근 동기화
+                $lastRun = $syncs->first(fn ($s) => is_array($s->report) && array_key_exists($key, $s->report));
+
+                return [
+                    'key' => $key,
+                    'id' => $svc['id'],
+                    'label' => $svc['label'] ?? $key,
+                    'last_synced_at' => $cursors[$svc['id']] ?? null, // 최신 데이터 시점(게시 기준 워터마크)
+                    'last_run_at' => $lastRun?->finished_at, // 마지막 실행 완료 시각
+                    'last_run_status' => $lastRun?->status,
+                ];
+            })
+            ->values();
 
         return Inertia::render('Platform/Hospitals/MoisSync', [
             'syncs' => $syncs,

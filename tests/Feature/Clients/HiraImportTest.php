@@ -39,6 +39,47 @@ test('심평원 병원정보(B-1)를 기관명+우편번호로 매칭해 ykiho·
     expect((float) $matchable->longitude)->toBe(128.6918945);
 });
 
+test('이미 다른 병의원에 부착된 ykiho 는 충돌로 건너뛴다(유니크 위반 방지)', function () {
+    // 다른 병원이 이미 YK-DUP 을 보유
+    Hospital::factory()->create(['hospital_name' => '기존병원', 'postcode' => '10000', 'ykiho' => 'YK-DUP']);
+    // 같은 ykiho 가 이름+우편번호로는 이 병원에 매칭됨
+    $target = Hospital::factory()->create(['hospital_name' => '대상의원', 'postcode' => '20000', 'ykiho' => null]);
+
+    $path = write_xlsx(
+        ['암호화요양기호', '요양기관명', '우편번호'],
+        [['YK-DUP', '대상의원', '20000']],
+    );
+
+    $report = app(HiraInstitutionImportService::class)->import($path);
+    @unlink($path);
+
+    expect($report['matched'])->toBe(0);
+    expect($report['conflict'])->toBe(1);
+    expect($target->refresh()->ykiho)->toBeNull();
+    // 원래 소유 병원은 그대로
+    expect(Hospital::where('ykiho', 'YK-DUP')->count())->toBe(1);
+});
+
+test('원천에 동일 ykiho 가 서로 다른 병원에 매칭돼도 첫 1건만 부착하고 나머지는 충돌', function () {
+    Hospital::factory()->create(['hospital_name' => '에이의원', 'postcode' => '30000', 'ykiho' => null]);
+    Hospital::factory()->create(['hospital_name' => '비의원', 'postcode' => '40000', 'ykiho' => null]);
+
+    $path = write_xlsx(
+        ['암호화요양기호', '요양기관명', '우편번호'],
+        [
+            ['YK-SAME', '에이의원', '30000'],
+            ['YK-SAME', '비의원', '40000'],
+        ],
+    );
+
+    $report = app(HiraInstitutionImportService::class)->import($path);
+    @unlink($path);
+
+    expect($report['matched'])->toBe(1);
+    expect($report['conflict'])->toBe(1);
+    expect(Hospital::where('ykiho', 'YK-SAME')->count())->toBe(1);
+});
+
 test('동일 기관명+우편번호가 2건 이상이면 모호로 보류한다', function () {
     Hospital::factory()->count(2)->create(['hospital_name' => '같은의원', 'postcode' => '12345', 'ykiho' => null]);
 

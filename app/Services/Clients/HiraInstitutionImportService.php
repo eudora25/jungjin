@@ -18,16 +18,17 @@ class HiraInstitutionImportService
     private const UNMATCHED_SAMPLE_LIMIT = 50;
 
     /**
-     * @return array{total:int, matched:int, unmatched:int, ambiguous:int, match_rate:float, unmatched_samples:array<int,array<string,string>>}
+     * @return array{total:int, matched:int, unmatched:int, ambiguous:int, conflict:int, match_rate:float, unmatched_samples:array<int,array<string,string>>}
      */
     public function import(string $xlsxPath): array
     {
-        [$byNamePostcode, $byName] = $this->buildHospitalIndex();
+        [$byNamePostcode, $byName, $claimedYkiho] = $this->buildHospitalIndex();
 
         $total = 0;
         $matched = 0;
         $unmatched = 0;
         $ambiguous = 0;
+        $conflict = 0;
         $unmatchedSamples = [];
         $batch = [];
 
@@ -55,6 +56,16 @@ class HiraInstitutionImportService
 
                 continue;
             }
+
+            // ykiho 충돌 가드: 이 ykiho 가 이미 다른 병의원에 부착돼 있으면 건너뜀(유니크 위반 방지).
+            // 같은 병의원이면 재실행(멱등)이므로 통과. 원천 중복 ykiho·재실행 시 다른 매칭을 안전 처리.
+            $owner = $claimedYkiho[$ykiho] ?? null;
+            if ($owner !== null && $owner !== $hospitalId) {
+                $conflict++;
+
+                continue;
+            }
+            $claimedYkiho[$ykiho] = $hospitalId;
 
             $matched++;
             $batch[] = [
@@ -85,26 +96,33 @@ class HiraInstitutionImportService
             'matched' => $matched,
             'unmatched' => $unmatched,
             'ambiguous' => $ambiguous,
+            'conflict' => $conflict,
             'match_rate' => $total > 0 ? round($matched / $total * 100, 1) : 0.0,
             'unmatched_samples' => $unmatchedSamples,
         ];
     }
 
     /**
-     * 기존 병의원 인덱스 — [normalize(name)|postcode => [ids]], [normalize(name) => [ids]]
+     * 기존 병의원 인덱스 (단일 스캔):
+     *  - [normalize(name)|postcode => [ids]], [normalize(name) => [ids]]
+     *  - 이미 부착된 ykiho 소유 맵 [ykiho => hospital_id] (충돌 가드용)
      *
-     * @return array{0: array<string,array<int,int>>, 1: array<string,array<int,int>>}
+     * @return array{0: array<string,array<int,int>>, 1: array<string,array<int,int>>, 2: array<string,int>}
      */
     private function buildHospitalIndex(): array
     {
         $byNamePostcode = [];
         $byName = [];
+        $claimedYkiho = [];
 
         Hospital::query()
-            ->select(['id', 'hospital_name', 'postcode'])
+            ->select(['id', 'hospital_name', 'postcode', 'ykiho'])
             ->orderBy('id')
-            ->chunk(2000, function ($chunk) use (&$byNamePostcode, &$byName) {
+            ->chunk(2000, function ($chunk) use (&$byNamePostcode, &$byName, &$claimedYkiho) {
                 foreach ($chunk as $h) {
+                    if ($h->ykiho !== null && $h->ykiho !== '') {
+                        $claimedYkiho[$h->ykiho] = $h->id;
+                    }
                     $norm = $this->normalizeName($h->hospital_name);
                     if ($norm === '') {
                         continue;
@@ -116,7 +134,7 @@ class HiraInstitutionImportService
                 }
             });
 
-        return [$byNamePostcode, $byName];
+        return [$byNamePostcode, $byName, $claimedYkiho];
     }
 
     /**
