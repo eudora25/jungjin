@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Scopes\TenantScope;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -109,6 +110,29 @@ class Product extends Model
                 $product->nims_managed = true;
             }
         });
+    }
+
+    /**
+     * 플랫폼 `/platform/products/*` 전역 조회 — 임퍼서네이션 중 TenantScope 우회.
+     */
+    public static function platformGlobalQuery(): Builder
+    {
+        return static::withoutGlobalScope(TenantScope::class);
+    }
+
+    /**
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        $query = request()->routeIs('platform.products.*')
+            ? static::platformGlobalQuery()
+            : static::query();
+
+        return $query->where($field, $value)->first();
     }
 
     /**

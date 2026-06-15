@@ -75,7 +75,8 @@ class HospitalController extends Controller
                 ->where('business_registration_number', 'like', "%{$digits}%")]))
             ->when($region !== '', fn ($q) => $q->where('address', 'like', "{$region}%"))
             ->when($type !== '', fn ($q) => $q->where('hospital_type', $type))
-            ->orderBy('hospital_name')
+            ->orderByDesc('opened_on') // 인허가(개설)일자 최신순 — MariaDB는 DESC에서 NULL을 뒤로 보냄
+            ->orderByDesc('id')        // 동일 일자/NULL 시 안정 정렬 보조 키
             ->paginate(20)
             ->withQueryString()
             ->through(fn (Hospital $h) => [

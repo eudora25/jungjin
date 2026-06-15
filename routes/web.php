@@ -231,9 +231,13 @@ Route::middleware(['auth', 'role:platform'])->prefix('platform')->name('platform
     Route::put('/code-groups/{codeGroup}/definitions/{definition}', [PlatformCodeGroupController::class, 'updateDefinition'])->name('code-groups.definitions.update');
     Route::delete('/code-groups/{codeGroup}/definitions/{definition}', [PlatformCodeGroupController::class, 'destroyDefinition'])->name('code-groups.definitions.destroy');
 
-    // 전역 조회 (의약품·사용자) — CRUD 는 후속 단계
-    Route::get('/products', [PlatformProductController::class, 'index'])->name('products.index');
-    Route::get('/users', [PlatformUserController::class, 'index'])->name('users.index');
+    // 의약품(제품) 전역 CRUD (GAP-10 후속-A §6.8) — index 흡수
+    Route::resource('products', PlatformProductController::class);
+
+    // 사용자(pharma·cso) 전역 CRUD (GAP-10 후속-C §6.10) — index 흡수. platform 계정은 artisan 전용
+    Route::resource('users', PlatformUserController::class);
+    Route::post('/users/{user}/toggle-active', [PlatformUserController::class, 'toggleActive'])->name('users.toggle-active');
+    Route::post('/users/{user}/reset-password', [PlatformUserController::class, 'resetPassword'])->name('users.reset-password');
 });
 
 Route::middleware(['auth', 'role:pharma'])->group(function () {
