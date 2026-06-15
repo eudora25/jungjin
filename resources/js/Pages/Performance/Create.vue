@@ -59,30 +59,18 @@ const fetchPreview = async () => {
     previewLoading.value = true;
     previewError.value = null;
     try {
-        const res = await fetch(route('performance.resolve-preview'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                company_id: form.company_id,
-                product_id: form.product_id,
-                performance_date: toDateString(form.performance_date),
-                quantity: form.quantity,
-            }),
+        // window.axios 는 항상 최신 XSRF-TOKEN 쿠키를 자동 전송 → SPA 네비게이션 후에도 CSRF 토큰 회전과 무관(419 방지).
+        // (native fetch + <meta csrf-token> 은 최초 전체 로드 시점의 stale 토큰이라 로그인 후 회전되면 419)
+        const { data } = await window.axios.post(route('performance.resolve-preview'), {
+            company_id: form.company_id,
+            product_id: form.product_id,
+            performance_date: toDateString(form.performance_date),
+            quantity: form.quantity,
         });
-        if (!res.ok) {
-            previewError.value = `미리보기 실패 (HTTP ${res.status})`;
-            preview.value = null;
-            return;
-        }
-        preview.value = (await res.json()) as Preview;
-    } catch (e) {
-        previewError.value = '미리보기 중 오류가 발생했습니다.';
+        preview.value = data as Preview;
+    } catch (e: any) {
+        const status = e?.response?.status;
+        previewError.value = status ? `미리보기 실패 (HTTP ${status})` : '미리보기 중 오류가 발생했습니다.';
         preview.value = null;
     } finally {
         previewLoading.value = false;
