@@ -34,5 +34,5 @@ yarn-error.log
 /.claude/
 /CLAUDE.local.md
 
-# 원본/샘플 데이터 (대용량 — 저장소에 커밋하지 않음)
-/docs/data/samples/
+# 프로젝트 문서 (커밋하지 않음 — 로컬 전용, 자격증명·기획 포함)
+/docs/

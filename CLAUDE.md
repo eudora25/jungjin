@@ -16,7 +16,7 @@
 - **`docs/modules/performance-settlement/PERFORMANCE_SETTLEMENT.md`**: 실적·정산(Phase 4) 설계 + 변경 로그
 - **`docs/modules/client/CLIENT_MANAGEMENT.md`**: 약국·병원·영업사원 마스터(M4) 설계 + 변경 로그
 - **`docs/modules/master-data/MASTER_DATA_ADMIN.md`**: 기준정보 마스터 admin 분리(GAP-9) — 병의원·약국·의약품을 거래처와 독립 마스터로
-- **`docs/modules/tenancy/MULTI_TENANCY.md`**: 멀티테넌시(GAP-10, XL) — 제약사 테넌트 + `super_admin`/`admin`/`sales` 역할 계층 + 데이터 격리 (**구현중**: MT-1~7 완료(격리 회귀 통과), 다음 MT-8/마스터 CRUD)
+- **`docs/modules/tenancy/MULTI_TENANCY.md`**: 멀티테넌시(GAP-10, XL) — 제약사 테넌트 + `platform`/`pharma`/`cso` 역할 계층 + 데이터 격리 (**완료**: MT-1~8 + MT-4-finalize(tenant_id NOT NULL) + 역할 리네임 + 임퍼서네이션 + 마스터/의약품/사용자 CRUD + `/users` 격리(후속 A·B·C 전부 완료). 다음: OPS-6/OPS-7 cutover)
 - **`docs/modules/reports/MONTHLY_REPORT.md`**: 월간 보고서(GAP-6) 설계·스펙 (거래처/영업사원/제품 요약 Excel)
 
 ## 참조 경로
@@ -45,7 +45,7 @@
   - GAP-9: 기준정보 마스터 admin 분리 — 🟢 **완료** ("마스터 관리" 메뉴 그룹 + `/master-data` 허브 + 약국·병원 상세 거래처 읽기 표시. 라우트 불변)
   - GAP-10 MT-1: 멀티테넌시 스키마 토대 — 🟢 **완료** (`tenants` + `Tenant` 모델 + role enum `super_admin` + `users.tenant_id`)
   - GAP-10 MT-2(1부): 기본 제약사 시드 + users 백필 — 🟢 **완료**
-  - GAP-10 MT-4: 도메인 5개 테이블 `tenant_id` 부착(nullable)+FK+백필 — 🟢 **완료** (NOT NULL 전환은 MT-3 자동주입 후)
+  - GAP-10 MT-4: 도메인 5개 테이블 `tenant_id` 부착(nullable)+FK+백필 — 🟢 **완료** (NOT NULL 전환은 MT-4-finalize 에서 완료)
   - GAP-10 MT-6: super_admin 전용 `/platform/*` 영역 — 🟢 **완료** (제약사 CRUD + 제약사 admin 생성(위임형) + 의약품·병의원·약국·사용자 **전역 목록**(제약사 칸) + `tenancy:make-super-admin` + "플랫폼" 메뉴/대시보드 리다이렉트. 마스터 CRUD 는 후속)
   - GAP-10 MT-3: 테넌트 격리 엔진 — 🟢 **완료** (`TenantContext`+`TenantScope`+`BelongsToTenant`+`ResolveTenant` 미들웨어. admin/sales 자사 격리·super_admin 전역. 회귀 0. NOT NULL 전환(MT-4-finalize)은 선행조건 있음)
   - GAP-10 MT-5: 테넌트 권한 게이트 — 🟢 **완료** (단일 `Gate::before`: super_admin 전체 통과 + 교차 테넌트 거부 + null 테넌트 위임)
@@ -54,21 +54,26 @@
   - GAP-10 role 리네임 + 코드 테이블 — 🟢 **완료**: `users.role` = **`platform`/`pharma`/`cso`** (구 super_admin/admin/sales), 헬퍼 `isPlatform/isPharma/isCso`. 코드 의미는 `code_definitions`(group_code=`user_role`) 테이블에 저장·조회. tenant_id=null 로 구분 안 함
   - GAP-10 임퍼서네이션 — 🟢 **완료**: platform 이 제약사로 "진입"(세션) → 그 테넌트 스코프로 운영 화면 사용 + 상단 배너/진입 종료. `Platform\TenantController::enter/exit`, `User::managesCurrentTenant()`, AppMenu 진입 인지
   - GAP-10 MT-8 변경요청 워크플로 — 🟢 **완료**: 공유 마스터(약국·병의원) pharma 직접 쓰기 차단(platform 전용) + 변경요청 제출(pharma)→검토·승인/반려(platform) 반영. `master_change_requests`, `MasterChangeRequestService`, `MasterChangeRequestPolicy` + UI(`MasterChangeRequests/Index.vue` 요청 폼, `Platform/MasterRequests/Index.vue` 검토 화면) + 메뉴 연동
-- 테스트: `./vendor/bin/sail test` 기준 **353개 전체 통과** (2026-05-29)
+  - GAP-10 MT-4-finalize — 🟢 **완료** (2026-06-04): 도메인 5개 테이블 `tenant_id` **NOT NULL 전환** (`2026_06_04_100000_finalize_domain_tenant_id_not_null` + 잔여 null 백필 안전망). `UserFactory` 비-platform 기본 테넌트(afterMaking) + `PerformanceResolver`/`SettlementBuilder` 거래처 테넌트 상속(컨텍스트 없는 경로 보호)
+  - GAP-10 후속(코드/마스터, 2026-06-02) — 🟢 **완료**:
+    - **공통 코드 그룹/코드 정의 CRUD**: `code_groups` + `CodeGroup`·`CodeDefinition`(FK) + `Platform\CodeGroupController`(중첩 정의 CRUD)·`CodeGroupPolicy` + `Platform/CodeGroups/{Index,Create,Edit,Show}.vue` + 메뉴
+    - **병의원 공공데이터(HIRA) import**: 병원/약국 + 의료기관 상세(진료과목·시설·장비·진료시간) import 서비스·Job·아티즌 명령 + `/platform/hospitals/public-data` 업로드 + Show 보강 + 목록 지역(시도)·구분 필터 (약국 목록도 동일 보강)
+    - **사업자번호 이력·정규화**: `business_number_histories`(폴리모픽, 적용기간·사유) + `HasBusinessNumberHistory` 트레이트(병의원·약국). 변경 이력(폐업·재등록) + 옛 번호 검색 + 숫자만 정규화(mutator+request) + morph map(별칭 hospital/pharmacy)
+- 테스트: `./vendor/bin/sail test` 기준 **488개 전체 통과** (2026-06-10, GAP-12 R1~R10 + GAP-10-후속 A·B·C(platform 의약품 CRUD · `/users` 테넌트 스코프 · platform 사용자 CRUD) 전부 포함)
   - 제약사 등록 시 초기 관리자(pharma) 계정 동시 생성(1트랜잭션) — `platform.tenants.store` (D-2 보강)
 - CI: `.github/workflows/ci.yml` (GitHub Actions — MariaDB + Pint + Pest + Vite build)
 
 ## 남은 작업 (요약 — 상세는 `docs/planning/ROADMAP.md` §3)
 - **운영 경로 B 확정** — **GAP-10 멀티테넌시(MT-1~)** 선행 → MT-7 격리 검증 후 **OPS-6·OPS-7** cutover
-- **Now**: ~~MT-1~7 + 약국·병의원 CRUD + role 리네임 + 임퍼서네이션~~ 🟢 → **MT-8(변경요청 워크플로)** / 사용자·의약품 CRUD / MT-4-finalize(NOT NULL §6.2)
-- **Later**: P2-1~4(소규모)·GAP-7/8·OPS-7·M6 알림
+- **Now**: ~~MT-1~8 + MT-4-finalize + 마스터 CRUD + role 리네임 + 임퍼서네이션 + **GAP-10-후속 A(의약품 §6.8)·B(`/users` 격리 §6.9)·C(platform 사용자 CRUD §6.10) 전부**~~ 🟢 → **OPS-6(모니터링) → OPS-7(레거시 cutover)**
+- **Later**: OPS-6(모니터링) → OPS-7(레거시 cutover) · GAP-7/8 · P2-1~4(소규모) · M6 알림
 
 ## 빌드 주의사항
 - **Vite 빌드는 호스트(Mac)에서** 실행: `npm run build` — Sail 컨테이너 내부는 rollup linux arm64 native 모듈 미포함으로 빌드 실패
 - 새 Vue 페이지 추가 후 테스트 전에 반드시 `npm run build` 실행 필요 (manifest 미등록 시 Inertia 렌더 500 오류)
 
 ## 작업 시작 시
-1. `docs/planning/ROADMAP.md` §3 확인 (현재: **경로 B** — GAP-10 **MT-8/마스터 CRUD**부터, `docs/modules/tenancy/MULTI_TENANCY.md` §6.1~§6.4)
+1. `docs/planning/ROADMAP.md` §3 확인 (현재: **경로 B** — GAP-10 멀티테넌시+후속 A/B/C 🟢 완료, 다음은 **OPS-6 모니터링 → OPS-7 레거시 cutover**)
 2. 모듈 설계/결정이 필요하면 `docs/modules/product/PRODUCT_MANAGEMENT.md`, `docs/modules/performance-settlement/PERFORMANCE_SETTLEMENT.md` 참고
 3. 구현 변경 후 `./vendor/bin/sail test`로 회귀 확인
 4. 새 Vue 페이지 추가 시 `npm run build` (호스트에서) → 그 다음 테스트
