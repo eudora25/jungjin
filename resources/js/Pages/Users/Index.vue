@@ -15,7 +15,7 @@ interface AppUser {
     id: number;
     name: string;
     email: string;
-    role: 'pharma' | 'cso';
+    role: 'cso';
     is_active: boolean;
     last_sign_in_at: string | null;
     created_at: string;
@@ -31,18 +31,11 @@ interface Paginated<T> {
 
 const props = defineProps<{
     users: Paginated<AppUser>;
-    filters: { search: string; role: string | null; active: string | null };
+    filters: { search: string; active: string | null };
 }>();
 
 const search = ref(props.filters.search ?? '');
-const role = ref(props.filters.role ?? null);
 const active = ref(props.filters.active ?? null);
-
-const roleOptions = [
-    { label: '전체', value: null },
-    { label: '관리자', value: 'pharma' },
-    { label: '영업사원', value: 'cso' },
-];
 
 const activeOptions = [
     { label: '전체', value: null },
@@ -55,7 +48,6 @@ const refresh = () => {
         route('users.index'),
         {
             search: search.value || undefined,
-            role: role.value || undefined,
             active: active.value || undefined,
         },
         { preserveState: true, preserveScroll: true, replace: true },
@@ -66,7 +58,6 @@ debouncedWatch(search, refresh, { debounce: 400 });
 
 const resetFilters = () => {
     search.value = '';
-    role.value = null;
     active.value = null;
     refresh();
 };
@@ -76,7 +67,6 @@ const onPage = (e: { page: number }) => {
         route('users.index'),
         {
             search: search.value || undefined,
-            role: role.value || undefined,
             active: active.value || undefined,
             page: e.page + 1,
         },
@@ -94,8 +84,8 @@ const formatDate = (iso: string | null) =>
         <div class="flex flex-col gap-4">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold">사용자 관리</h1>
-                    <p class="text-surface-500 mt-1 text-sm">전체 {{ users.total }}명 — admin 전용</p>
+                    <h1 class="text-2xl font-bold">영업사원 관리</h1>
+                    <p class="text-surface-500 mt-1 text-sm">자사 영업사원(CSO) {{ users.total }}명 — 관리자 전용</p>
                 </div>
                 <Link :href="route('users.create')">
                     <Button label="사용자 등록" icon="pi pi-user-plus" />
@@ -104,15 +94,6 @@ const formatDate = (iso: string | null) =>
 
             <div class="flex flex-col md:flex-row md:flex-wrap gap-3">
                 <InputText v-model="search" placeholder="이름·이메일 검색" class="w-full md:w-[28rem]" />
-                <Select
-                    v-model="role"
-                    :options="roleOptions"
-                    option-label="label"
-                    option-value="value"
-                    placeholder="권한"
-                    class="w-full md:w-[220px] shrink-0"
-                    @change="refresh"
-                />
                 <Select
                     v-model="active"
                     :options="activeOptions"
@@ -140,13 +121,7 @@ const formatDate = (iso: string | null) =>
                     </template>
                 </Column>
                 <Column header="이메일" field="email" />
-                <Column header="권한" style="width: 100px">
-                    <template #body="{ data }">
-                        <Tag :value="data.role === 'pharma' ? '관리자' : '영업사원'"
-                             :severity="data.role === 'pharma' ? 'warn' : 'info'" />
-                    </template>
-                </Column>
-                <Column header="상태" style="width: 100px">
+                <Column header="상태" body-class="text-center" style="width: 100px">
                     <template #body="{ data }">
                         <Tag :value="data.is_active ? '활성' : '비활성'"
                              :severity="data.is_active ? 'success' : 'secondary'" />

@@ -19,17 +19,18 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $search = trim((string) $request->input('search'));
-        $role = $request->input('role');
         $active = $request->input('active');
 
+        // 테넌트 격리: pharma 는 **자사 테넌트의 cso** 만 본다(§6.9). User 는 BelongsToTenant 미사용 → 컨트롤러 스코프.
         $users = User::query()
+            ->where('tenant_id', $request->user()->tenant_id)
+            ->where('role', User::ROLE_CSO)
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when(in_array($role, ['pharma', 'cso'], true), fn ($q) => $q->where('role', $role))
             ->when($active === '1', fn ($q) => $q->where('is_active', true))
             ->when($active === '0', fn ($q) => $q->where('is_active', false))
             ->orderByDesc('created_at')
@@ -40,7 +41,6 @@ class UserController extends Controller
             'users' => $users,
             'filters' => [
                 'search' => $search,
-                'role' => $role,
                 'active' => $active,
             ],
         ]);
@@ -58,6 +58,10 @@ class UserController extends Controller
         $data = $request->validated();
         $data['password'] = Hash::make($data['password']);
         $data['is_active'] = $data['is_active'] ?? true;
+
+        // 테넌트·역할 서버 주입(클라이언트 입력 무시): 자사 테넌트의 cso 로 고정(§6.9)
+        $data['tenant_id'] = $request->user()->tenant_id;
+        $data['role'] = User::ROLE_CSO;
 
         $user = User::create($data);
 

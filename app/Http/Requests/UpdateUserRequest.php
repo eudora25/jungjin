@@ -31,7 +31,8 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($id)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'role' => ['required', Rule::in(['pharma', 'cso'])],
+            // 관리 대상은 cso 로 고정(§6.9) — 역할 변경/승격 불가.
+            'role' => ['required', Rule::in(['cso'])],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

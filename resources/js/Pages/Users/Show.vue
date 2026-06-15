@@ -81,7 +81,7 @@ const formatDate = (iso: string | null) =>
     <Head :title="user.name" />
     <ConfirmDialog />
     <AdminLayout>
-        <div class="max-w-3xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">{{ user.name }}</h1>
@@ -101,25 +101,25 @@ const formatDate = (iso: string | null) =>
                 <template #content>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
                         <div>
-                            <dt class="text-surface-500 mb-1">권한</dt>
+                            <dt class="field-label">권한</dt>
                             <dd>
                                 <Tag :value="user.role === 'pharma' ? '관리자' : '영업사원'"
                                      :severity="user.role === 'pharma' ? 'warn' : 'info'" />
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">상태</dt>
+                            <dt class="field-label">상태</dt>
                             <dd>
                                 <Tag :value="user.is_active ? '활성' : '비활성'"
                                      :severity="user.is_active ? 'success' : 'secondary'" />
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">최근 로그인</dt>
+                            <dt class="field-label">최근 로그인</dt>
                             <dd>{{ formatDate(user.last_sign_in_at) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">가입일</dt>
+                            <dt class="field-label">가입일</dt>
                             <dd>{{ formatDate(user.created_at) }}</dd>
                         </div>
                     </dl>
