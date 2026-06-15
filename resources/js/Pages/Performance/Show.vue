@@ -242,7 +242,7 @@ const onDelete = () => {
                 <!-- Core snapshot -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div>
-                        <div class="text-xs text-surface-500">거래처</div>
+                        <div class="field-label">거래처</div>
                         <div class="font-semibold">{{ performance.company.company_name }}</div>
                         <div class="text-xs text-surface-400">
                             {{ performance.company.business_registration_number ?? '' }}
@@ -252,18 +252,18 @@ const onDelete = () => {
                         </div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">제품</div>
+                        <div class="field-label">제품</div>
                         <div class="font-semibold">{{ performance.product.product_name }}</div>
                         <div class="text-xs text-surface-400">
                             {{ performance.product.insurance_code }} · {{ performance.product.product_code }}
                         </div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">수량</div>
+                        <div class="field-label">수량</div>
                         <div class="font-semibold">{{ fmt(performance.quantity) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">실적일</div>
+                        <div class="field-label">실적일</div>
                         <div class="font-semibold">{{ performance.performance_date }}</div>
                     </div>
                 </div>
@@ -272,12 +272,12 @@ const onDelete = () => {
                     <h2 class="font-semibold mb-3">스냅샷</h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                            <div class="text-xs text-surface-500">단가</div>
+                            <div class="field-label">단가</div>
                             <div class="text-lg font-bold">{{ fmt(performance.unit_price) }}원</div>
                             <Tag :value="priceSourceLabel[performance.price_source]" severity="info" class="mt-1" />
                         </div>
                         <div>
-                            <div class="text-xs text-surface-500">수수료율</div>
+                            <div class="field-label">수수료율</div>
                             <div class="text-lg font-bold">
                                 <span v-if="performance.commission_rate !== null">{{ performance.commission_rate }}%</span>
                                 <span v-else class="text-surface-400">없음</span>
@@ -287,11 +287,11 @@ const onDelete = () => {
                                  class="mt-1" />
                         </div>
                         <div>
-                            <div class="text-xs text-surface-500">매출 (GENERATED)</div>
+                            <div class="field-label">매출 (GENERATED)</div>
                             <div class="text-lg font-bold">{{ fmt(performance.subtotal) }}원</div>
                         </div>
                         <div>
-                            <div class="text-xs text-surface-500">수수료 (GENERATED)</div>
+                            <div class="field-label">수수료 (GENERATED)</div>
                             <div class="text-lg font-bold">
                                 <span v-if="performance.commission_amount !== null">{{ fmt(performance.commission_amount) }}원</span>
                                 <span v-else class="text-surface-400">-</span>
@@ -301,13 +301,13 @@ const onDelete = () => {
                 </div>
 
                 <div v-if="performance.note" class="mb-6">
-                    <div class="text-xs text-surface-500 mb-1">비고</div>
+                    <div class="field-label">비고</div>
                     <div class="whitespace-pre-wrap">{{ performance.note }}</div>
                 </div>
 
                 <!-- 증빙 파일 -->
                 <div class="mb-6">
-                    <div class="text-xs text-surface-500 mb-2">증빙 파일 ({{ performance.files.length }}/5)</div>
+                    <div class="field-label">증빙 파일 ({{ performance.files.length }}/5)</div>
                     <ul v-if="performance.files.length" class="flex flex-col gap-2 mb-3">
                         <li v-for="file in performance.files" :key="file.id"
                             class="flex items-center justify-between border border-surface rounded-lg px-3 py-2 bg-surface-50 dark:bg-surface-900">

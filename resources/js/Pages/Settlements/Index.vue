@@ -172,7 +172,7 @@ const statusSeverity: Record<string, 'info' | 'warn' | 'success' | 'secondary' |
                 <Column field="total_commission" header="수수료 합계" class="text-right">
                     <template #body="{ data }">{{ fmt(data.total_commission) }}원</template>
                 </Column>
-                <Column field="status" header="상태">
+                <Column field="status" header="상태" body-class="text-center">
                     <template #body="{ data }">
                         <Tag :value="statusLabel[data.status] ?? data.status" :severity="statusSeverity[data.status] ?? 'secondary'" />
                     </template>

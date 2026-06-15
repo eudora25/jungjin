@@ -41,7 +41,7 @@ const submit = () => form.put(route('platform.code-groups.update', props.codeGro
 <template>
     <Head :title="`${codeGroup.name} 수정`" />
     <AdminLayout>
-        <div class="max-w-2xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">코드 그룹 수정</h1>
                 <Link :href="route('platform.code-groups.show', codeGroup.id)">
@@ -52,23 +52,23 @@ const submit = () => form.put(route('platform.code-groups.update', props.codeGro
             <Card>
                 <template #content>
                     <form class="flex flex-col gap-4" @submit.prevent="submit">
-                        <div>
-                            <label class="block text-sm mb-1">코드 그룹 값 <span class="text-red-500">*</span></label>
-                            <InputText v-model="form.group_code" class="w-full font-mono" />
-                            <small class="text-surface-400">변경 시 하위 코드의 group_code 도 함께 갱신됩니다.</small>
-                            <Message v-if="form.errors.group_code" severity="error" size="small" variant="simple">{{ form.errors.group_code }}</Message>
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">그룹 라벨 <span class="text-red-500">*</span></label>
-                            <InputText v-model="form.name" class="w-full" />
-                            <Message v-if="form.errors.name" severity="error" size="small" variant="simple">{{ form.errors.name }}</Message>
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">설명</label>
-                            <Textarea v-model="form.description" class="w-full" rows="3" />
-                            <Message v-if="form.errors.description" severity="error" size="small" variant="simple">{{ form.errors.description }}</Message>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm mb-1">코드 그룹 값 <span class="text-red-500">*</span></label>
+                                <InputText v-model="form.group_code" class="w-full font-mono" />
+                                <small class="text-surface-400">변경 시 하위 코드의 group_code 도 함께 갱신됩니다.</small>
+                                <Message v-if="form.errors.group_code" severity="error" size="small" variant="simple">{{ form.errors.group_code }}</Message>
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">그룹 라벨 <span class="text-red-500">*</span></label>
+                                <InputText v-model="form.name" class="w-full" />
+                                <Message v-if="form.errors.name" severity="error" size="small" variant="simple">{{ form.errors.name }}</Message>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm mb-1">설명</label>
+                                <Textarea v-model="form.description" class="w-full" rows="3" />
+                                <Message v-if="form.errors.description" severity="error" size="small" variant="simple">{{ form.errors.description }}</Message>
+                            </div>
                             <div>
                                 <label class="block text-sm mb-1">정렬 순서</label>
                                 <InputNumber v-model="form.sort_order" class="w-full" :min="0" show-buttons fluid />

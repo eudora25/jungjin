@@ -172,7 +172,7 @@ const formatDate = (iso: string) =>
                     </template>
                 </Column>
 
-                <Column header="사업자번호" field="business_registration_number" style="width: 150px">
+                <Column header="사업자번호" body-class="text-center" field="business_registration_number" style="width: 150px">
                     <template #body="{ data }">
                         <span class="text-sm">{{ data.business_registration_number ?? '-' }}</span>
                     </template>
@@ -208,7 +208,7 @@ const formatDate = (iso: string) =>
                     </template>
                 </Column>
 
-                <Column header="상태" style="width: 80px">
+                <Column header="상태" body-class="text-center" style="width: 80px">
                     <template #body="{ data }">
                         <Tag
                             :value="data.status === 'active' ? '활성' : '비활성'"

@@ -53,7 +53,7 @@ const confirmDelete = () => {
     <Head :title="pharmacy.pharmacy_name" />
     <ConfirmDialog />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">{{ pharmacy.pharmacy_name }}</h1>
@@ -75,57 +75,57 @@ const confirmDelete = () => {
                 <template #content>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
                         <div>
-                            <dt class="text-surface-500 mb-1">약국 코드</dt>
+                            <dt class="field-label">약국 코드</dt>
                             <dd>{{ pharmacy.pharmacy_code ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">상태</dt>
+                            <dt class="field-label">상태</dt>
                             <dd>
                                 <Tag :value="pharmacy.status === 'active' ? '활성' : '비활성'"
                                      :severity="pharmacy.status === 'active' ? 'success' : 'secondary'" />
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">사업자등록번호</dt>
+                            <dt class="field-label">사업자등록번호</dt>
                             <dd>{{ formatBusinessNumber(pharmacy.business_registration_number) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표자명</dt>
+                            <dt class="field-label">대표자명</dt>
                             <dd>{{ pharmacy.representative_name ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">주소</dt>
+                            <dt class="field-label">주소</dt>
                             <dd>
                                 <span v-if="pharmacy.postcode" class="text-xs text-surface-400 mr-2">[{{ pharmacy.postcode }}]</span>
                                 {{ pharmacy.address ?? '-' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표 전화</dt>
+                            <dt class="field-label">대표 전화</dt>
                             <dd>{{ pharmacy.landline_phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표자 휴대폰</dt>
+                            <dt class="field-label">대표자 휴대폰</dt>
                             <dd>{{ pharmacy.mobile_phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당자</dt>
+                            <dt class="field-label">담당자</dt>
                             <dd>{{ pharmacy.contact_person_name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당자 연락처</dt>
+                            <dt class="field-label">담당자 연락처</dt>
                             <dd>{{ pharmacy.contact_phone ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">이메일</dt>
+                            <dt class="field-label">이메일</dt>
                             <dd>{{ pharmacy.email ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">비고</dt>
+                            <dt class="field-label">비고</dt>
                             <dd class="whitespace-pre-line">{{ pharmacy.remarks ?? '-' }}</dd>
                         </div>
                         <div v-if="pharmacy.company" class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">연결된 거래처</dt>
+                            <dt class="field-label">연결된 거래처</dt>
                             <dd>
                                 <Link :href="route('companies.show', pharmacy.company.id)" class="text-primary-600 hover:underline">
                                     {{ pharmacy.company.company_name }}

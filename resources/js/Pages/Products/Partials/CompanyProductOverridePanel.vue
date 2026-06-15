@@ -223,7 +223,7 @@ const onDelete = (row: CompanyOverride) => {
                     </span>
                 </template>
             </Column>
-            <Column header="상태" style="width: 6rem">
+            <Column header="상태" body-class="text-center" style="width: 6rem">
                 <template #body="{ data }">
                     <Tag v-if="isCurrent(data)" value="적용중" severity="success" />
                     <Tag v-else value="비활성" severity="secondary" />

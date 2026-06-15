@@ -105,7 +105,7 @@ const onPage = (e: { page: number }) => {
                 <Column header="지역" style="width: 120px">
                     <template #body="{ data }">{{ data.region ?? '-' }}</template>
                 </Column>
-                <Column header="구분" style="width: 90px">
+                <Column header="구분" body-class="text-center" style="width: 90px">
                     <template #body="{ data }">
                         <Tag v-if="data.hospital_type" :value="typeLabels[data.hospital_type] ?? data.hospital_type" severity="info" />
                         <span v-else>-</span>
@@ -122,10 +122,10 @@ const onPage = (e: { page: number }) => {
                         </div>
                     </template>
                 </Column>
-                <Column header="전화번호" style="width: 120px">
+                <Column header="전화번호" body-class="text-center" style="width: 120px">
                     <template #body="{ data }">{{ data.phone ?? '-' }}</template>
                 </Column>
-                <Column header="사업자번호" style="width: 120px">
+                <Column header="사업자번호" body-class="text-center" style="width: 120px">
                     <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="주소" style="min-width: 200px">
@@ -134,10 +134,10 @@ const onPage = (e: { page: number }) => {
                 <Column header="진료과목" style="width: 110px">
                     <template #body="{ data }">{{ data.specialty ?? '-' }}</template>
                 </Column>
-                <Column header="인허가일자" style="width: 110px">
+                <Column header="인허가일자" body-class="text-center" style="width: 110px">
                     <template #body="{ data }">{{ data.opened_on ?? '-' }}</template>
                 </Column>
-                <Column header="상태" style="width: 80px">
+                <Column header="상태" body-class="text-center" style="width: 80px">
                     <template #body="{ data }">
                         <Tag :value="data.status === 'active' ? '활성' : '비활성'" :severity="data.status === 'active' ? 'success' : 'secondary'" />
                     </template>

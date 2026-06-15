@@ -46,7 +46,7 @@ const submit = () => form.put(route('platform.pharmacies.update', props.pharmacy
 <template>
     <Head :title="`${pharmacy.pharmacy_name} 수정`" />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">약국 수정</h1>
                 <Link :href="route('platform.pharmacies.show', pharmacy.id)">

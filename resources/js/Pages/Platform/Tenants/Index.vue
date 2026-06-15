@@ -99,7 +99,7 @@ const openAdmins = (tenant: Tenant) => {
                         <div v-if="data.code" class="text-xs text-surface-400 mt-1">{{ data.code }}</div>
                     </template>
                 </Column>
-                <Column header="사업자번호" style="width: 140px">
+                <Column header="사업자번호" body-class="text-center" style="width: 140px">
                     <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="관리자 계정" style="min-width: 220px">
@@ -119,7 +119,7 @@ const openAdmins = (tenant: Tenant) => {
                 <Column header="소속 사용자" style="width: 100px">
                     <template #body="{ data }">{{ data.users_count }}명</template>
                 </Column>
-                <Column header="상태" style="width: 90px">
+                <Column header="상태" body-class="text-center" style="width: 90px">
                     <template #body="{ data }">
                         <Tag :value="data.status === 'active' ? '활성' : '비활성'"
                              :severity="data.status === 'active' ? 'success' : 'secondary'" />

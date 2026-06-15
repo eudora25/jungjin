@@ -244,19 +244,19 @@ const formatDate = (iso: string | null) =>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div>
-                        <div class="text-xs text-surface-500">라인 수</div>
+                        <div class="field-label">라인 수</div>
                         <div class="text-lg font-semibold">{{ settlement.line_count }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">수량 합계</div>
+                        <div class="field-label">수량 합계</div>
                         <div class="text-lg font-semibold">{{ fmt(settlement.total_quantity) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">매출 합계</div>
+                        <div class="field-label">매출 합계</div>
                         <div class="text-lg font-semibold">{{ fmt(settlement.total_subtotal) }}원</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">수수료 합계</div>
+                        <div class="field-label">수수료 합계</div>
                         <div class="text-lg font-semibold">{{ fmt(settlement.total_commission) }}원</div>
                     </div>
                 </div>
@@ -302,19 +302,19 @@ const formatDate = (iso: string | null) =>
                 <h2 class="text-lg font-semibold mb-3">지급 정보</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <div class="text-xs text-surface-500">지급일</div>
+                        <div class="field-label">지급일</div>
                         <div class="font-medium mt-1">{{ settlement.paid_on ?? '-' }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">지급 수단</div>
+                        <div class="field-label">지급 수단</div>
                         <div class="font-medium mt-1">{{ paymentMethodLabel(settlement.payment_method) }}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-surface-500">지급 묶음(Batch)</div>
+                        <div class="field-label">지급 묶음(Batch)</div>
                         <div class="font-mono text-sm mt-1">{{ settlement.payment_batch_no ?? '-' }}</div>
                     </div>
                     <div class="md:col-span-1">
-                        <div class="text-xs text-surface-500">메모</div>
+                        <div class="field-label">메모</div>
                         <div class="text-sm mt-1 whitespace-pre-wrap">{{ settlement.payment_note || '-' }}</div>
                     </div>
                 </div>

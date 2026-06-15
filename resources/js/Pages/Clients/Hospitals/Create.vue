@@ -30,7 +30,7 @@ const submit = () => form.post(route('hospitals.store'));
 <template>
     <Head title="병의원 등록" />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">병의원 등록</h1>
                 <Link :href="route('hospitals.index')">

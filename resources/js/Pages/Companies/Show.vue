@@ -195,49 +195,49 @@ const formatAssignedAt = (iso: string | null) =>
 
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                         <div>
-                            <dt class="text-surface-500 mb-1">사업자등록번호</dt>
+                            <dt class="field-label">사업자등록번호</dt>
                             <dd>{{ company.business_registration_number ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표자</dt>
+                            <dt class="field-label">대표자</dt>
                             <dd>{{ company.representative_name ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">사업장 주소</dt>
+                            <dt class="field-label">사업장 주소</dt>
                             <dd>
                                 <span v-if="company.postcode" class="text-surface-400 mr-2">[{{ company.postcode }}]</span>
                                 {{ company.business_address ?? '-' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당자</dt>
+                            <dt class="field-label">담당자</dt>
                             <dd>{{ company.contact_person_name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표 전화</dt>
+                            <dt class="field-label">대표 전화</dt>
                             <dd>{{ company.landline_phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">휴대폰</dt>
+                            <dt class="field-label">휴대폰</dt>
                             <dd>
                                 {{ company.mobile_phone ?? '-' }}
                                 <span v-if="company.mobile_phone_2" class="text-surface-400 ml-2">/ {{ company.mobile_phone_2 }}</span>
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">이메일</dt>
+                            <dt class="field-label">이메일</dt>
                             <dd>{{ company.email ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">수신 이메일</dt>
+                            <dt class="field-label">수신 이메일</dt>
                             <dd>{{ company.receive_email ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당 제약사 관리자</dt>
+                            <dt class="field-label">담당 제약사 관리자</dt>
                             <dd>{{ company.assigned_pharmacist_contact ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">비고</dt>
+                            <dt class="field-label">비고</dt>
                             <dd class="whitespace-pre-wrap">{{ company.remarks || '-' }}</dd>
                         </div>
                     </dl>
@@ -246,15 +246,15 @@ const formatAssignedAt = (iso: string | null) =>
 
                     <dl class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 text-xs text-surface-500">
                         <div>
-                            <dt class="mb-1">등록</dt>
+                            <dt class="field-label">등록</dt>
                             <dd>{{ formatDate(company.created_at) }} · {{ company.creator?.name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1">최종 수정</dt>
+                            <dt class="field-label">최종 수정</dt>
                             <dd>{{ formatDate(company.updated_at) }} · {{ company.updater?.name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1">승인</dt>
+                            <dt class="field-label">승인</dt>
                             <dd>{{ formatDate(company.approved_at) }} · {{ company.approver?.name ?? '-' }}</dd>
                         </div>
                     </dl>
@@ -338,7 +338,7 @@ const formatAssignedAt = (iso: string | null) =>
                                 </Link>
                             </template>
                         </Column>
-                        <Column header="상태" class="min-w-[90px]">
+                        <Column header="상태" body-class="text-center" class="min-w-[90px]">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                             </template>

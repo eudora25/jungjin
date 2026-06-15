@@ -164,7 +164,7 @@ const submitChange = () =>
     <Head :title="hospital.hospital_name" />
     <ConfirmDialog />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">{{ hospital.hospital_name }}</h1>
@@ -183,62 +183,62 @@ const submitChange = () =>
 
             <Card>
                 <template #content>
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                    <dl class="detail-grid">
                         <div>
-                            <dt class="text-surface-500 mb-1">병의원 코드</dt>
+                            <dt class="field-label">병의원 코드</dt>
                             <dd>{{ hospital.hospital_code ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">상태</dt>
+                            <dt class="field-label">상태</dt>
                             <dd>
                                 <Tag :value="hospital.status === 'active' ? '활성' : '비활성'"
                                      :severity="hospital.status === 'active' ? 'success' : 'secondary'" />
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">유형</dt>
+                            <dt class="field-label">유형</dt>
                             <dd>
                                 <Tag v-if="hospital.hospital_type" :value="typeLabels[hospital.hospital_type] ?? hospital.hospital_type" severity="info" />
                                 <span v-else>-</span>
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">전문 분야</dt>
+                            <dt class="field-label">전문 분야</dt>
                             <dd>{{ hospital.specialty ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">사업자등록번호</dt>
+                            <dt class="field-label">사업자등록번호</dt>
                             <dd>{{ formatBusinessNumber(hospital.business_registration_number) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">원장/대표자명</dt>
+                            <dt class="field-label">원장/대표자명</dt>
                             <dd>{{ hospital.representative_name ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">주소</dt>
+                            <dt class="field-label">주소</dt>
                             <dd>
                                 <span v-if="hospital.postcode" class="text-xs text-surface-400 mr-2">[{{ hospital.postcode }}]</span>
                                 {{ hospital.address ?? '-' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표 전화</dt>
+                            <dt class="field-label">대표 전화</dt>
                             <dd>{{ hospital.phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당자</dt>
+                            <dt class="field-label">담당자</dt>
                             <dd>{{ hospital.contact_person_name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">담당자 연락처</dt>
+                            <dt class="field-label">담당자 연락처</dt>
                             <dd>{{ hospital.contact_phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">이메일</dt>
+                            <dt class="field-label">이메일</dt>
                             <dd>{{ hospital.email ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">비고</dt>
+                            <dt class="field-label">비고</dt>
                             <dd class="whitespace-pre-line">{{ hospital.remarks ?? '-' }}</dd>
                         </div>
                     </dl>
@@ -263,7 +263,7 @@ const submitChange = () =>
                         <template #empty>
                             <div class="text-center py-6 text-surface-500">등록된 사업자번호 이력이 없습니다.</div>
                         </template>
-                        <Column header="사업자등록번호" style="min-width: 150px">
+                        <Column header="사업자등록번호" body-class="text-center" style="min-width: 150px">
                             <template #body="{ data }">
                                 <span class="font-medium">{{ formatBusinessNumber(data.business_registration_number) }}</span>
                                 <Tag v-if="data.is_current" value="현재" severity="success" class="ml-2" />
@@ -299,27 +299,27 @@ const submitChange = () =>
                     </Message>
                     <dl v-else class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-sm">
                         <div>
-                            <dt class="text-surface-500 mb-1">개설일자</dt>
+                            <dt class="field-label">개설일자</dt>
                             <dd>{{ hospital.opened_on ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">의사 수</dt>
+                            <dt class="field-label">의사 수</dt>
                             <dd>{{ hospital.doctor_count ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">병상 수</dt>
+                            <dt class="field-label">병상 수</dt>
                             <dd>{{ hospital.bed_count ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">입원실 수</dt>
+                            <dt class="field-label">입원실 수</dt>
                             <dd>{{ hospital.inpatient_room_count ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">종별코드</dt>
+                            <dt class="field-label">종별코드</dt>
                             <dd>{{ hospital.clazz_code ?? '-' }}</dd>
                         </div>
                         <div class="col-span-2">
-                            <dt class="text-surface-500 mb-1">홈페이지</dt>
+                            <dt class="field-label">홈페이지</dt>
                             <dd class="truncate">
                                 <a v-if="hospital.homepage" :href="hospital.homepage" target="_blank" rel="noopener"
                                    class="text-primary underline">{{ hospital.homepage }}</a>
@@ -327,7 +327,7 @@ const submitChange = () =>
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">좌표</dt>
+                            <dt class="field-label">좌표</dt>
                             <dd>
                                 <span v-if="hospital.latitude">{{ hospital.latitude }}, {{ hospital.longitude }}</span>
                                 <span v-else>-</span>
@@ -353,7 +353,7 @@ const submitChange = () =>
                 <template #title>시설·병상</template>
                 <template #content>
                     <p v-if="hospital.facility?.establishment_name" class="text-sm mb-3">
-                        <span class="text-surface-500">설립구분</span> {{ hospital.facility.establishment_name }}
+                        <span class="field-label">설립구분</span> {{ hospital.facility.establishment_name }}
                     </p>
                     <div v-if="beds.length" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div v-for="b in beds" :key="b.label" class="border border-surface-200 dark:border-surface-700 rounded p-2 text-center">
@@ -388,10 +388,10 @@ const submitChange = () =>
                         </table>
                     </div>
                     <dl class="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm">
-                        <div><dt class="text-surface-500 mb-1">점심시간</dt><dd>{{ hospital.hours.lunch_weekday ?? '-' }}</dd></div>
-                        <div><dt class="text-surface-500 mb-1">접수시간(평일)</dt><dd>{{ hospital.hours.reception_weekday ?? '-' }}</dd></div>
-                        <div><dt class="text-surface-500 mb-1">주차</dt><dd>{{ hospital.hours.parking_capacity != null ? hospital.hours.parking_capacity + '대' : '-' }}<span v-if="hospital.hours.parking_fee_required != null"> ({{ hospital.hours.parking_fee_required ? '유료' : '무료' }})</span></dd></div>
-                        <div><dt class="text-surface-500 mb-1">응급실(주간)</dt><dd>{{ hospital.hours.er_day_available == null ? '-' : (hospital.hours.er_day_available ? '운영' : '미운영') }}</dd></div>
+                        <div><dt class="field-label">점심시간</dt><dd>{{ hospital.hours.lunch_weekday ?? '-' }}</dd></div>
+                        <div><dt class="field-label">접수시간(평일)</dt><dd>{{ hospital.hours.reception_weekday ?? '-' }}</dd></div>
+                        <div><dt class="field-label">주차</dt><dd>{{ hospital.hours.parking_capacity != null ? hospital.hours.parking_capacity + '대' : '-' }}<span v-if="hospital.hours.parking_fee_required != null"> ({{ hospital.hours.parking_fee_required ? '유료' : '무료' }})</span></dd></div>
+                        <div><dt class="field-label">응급실(주간)</dt><dd>{{ hospital.hours.er_day_available == null ? '-' : (hospital.hours.er_day_available ? '운영' : '미운영') }}</dd></div>
                     </dl>
                 </template>
             </Card>
@@ -415,19 +415,19 @@ const submitChange = () =>
                 <template #content>
                     <div class="flex flex-col gap-3 text-sm">
                         <div v-if="hospital.specialized_fields.length">
-                            <span class="text-surface-500 mr-2">전문병원 지정분야</span>
+                            <span class="field-label mr-2">전문병원 지정분야</span>
                             <Tag v-for="f in hospital.specialized_fields" :key="f.id" class="mr-1" severity="warn" :value="(f.field_name as string) ?? (f.field_code as string)" />
                         </div>
                         <div v-if="hospital.special_treatments.length">
-                            <span class="text-surface-500 mr-2">특수진료</span>
+                            <span class="field-label mr-2">특수진료</span>
                             <Tag v-for="t in hospital.special_treatments" :key="t.id" class="mr-1" severity="secondary" :value="(t.search_name as string) ?? (t.search_code as string)" />
                         </div>
                         <div v-if="hospital.nursing_grades.length">
-                            <span class="text-surface-500 mr-2">간호등급</span>
+                            <span class="field-label mr-2">간호등급</span>
                             <span v-for="n in hospital.nursing_grades" :key="n.id" class="mr-3">{{ n.insurance_type_name }} {{ n.nursing_grade }}등급</span>
                         </div>
                         <div v-if="hospital.other_staff.length">
-                            <span class="text-surface-500 mr-2">기타인력</span>
+                            <span class="field-label mr-2">기타인력</span>
                             <span v-for="o in hospital.other_staff" :key="o.id" class="mr-3">{{ o.staff_name }} {{ o.staff_count }}</span>
                         </div>
                     </div>

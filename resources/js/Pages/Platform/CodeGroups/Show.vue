@@ -137,7 +137,7 @@ const confirmDeleteDefinition = (def: CodeDefinition) => {
     <Head :title="codeGroup.name" />
     <ConfirmDialog />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">{{ codeGroup.name }}</h1>
@@ -156,24 +156,24 @@ const confirmDeleteDefinition = (def: CodeDefinition) => {
 
             <Card>
                 <template #content>
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                    <dl class="detail-grid">
                         <div>
-                            <dt class="text-surface-500 mb-1">코드 그룹 값</dt>
+                            <dt class="field-label">코드 그룹 값</dt>
                             <dd class="font-mono">{{ codeGroup.group_code }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">상태</dt>
+                            <dt class="field-label">상태</dt>
                             <dd>
                                 <Tag :value="codeGroup.is_active ? '활성' : '비활성'"
                                      :severity="codeGroup.is_active ? 'success' : 'secondary'" />
                             </dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">설명</dt>
+                            <dt class="field-label">설명</dt>
                             <dd>{{ codeGroup.description ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">정렬 순서</dt>
+                            <dt class="field-label">정렬 순서</dt>
                             <dd>{{ codeGroup.sort_order }}</dd>
                         </div>
                     </dl>

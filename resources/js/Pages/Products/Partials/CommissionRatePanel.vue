@@ -165,7 +165,7 @@ const confirmDelete = (rate: Rate) => {
                     <span class="text-sm">{{ formatDate(data.effective_from) }} ~ {{ formatDate(data.effective_to) }}</span>
                 </template>
             </Column>
-            <Column header="상태" style="width: 80px">
+            <Column header="상태" body-class="text-center" style="width: 80px">
                 <template #body="{ data }">
                     <Tag
                         :value="data.status === 'active' ? '활성' : '비활성'"

@@ -97,7 +97,7 @@ const filteredResults = computed(() => {
 <template>
     <Head title="제품 CSV 일괄 등록" />
     <AdminLayout>
-        <div class="flex flex-col gap-4 max-w-6xl mx-auto">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold text-surface-900 dark:text-surface-0">제품 CSV 일괄 등록</h1>

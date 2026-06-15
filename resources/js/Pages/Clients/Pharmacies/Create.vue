@@ -27,7 +27,7 @@ const submit = () => form.post(route('pharmacies.store'));
 <template>
     <Head title="약국 등록" />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">약국 등록</h1>
                 <Link :href="route('pharmacies.index')">

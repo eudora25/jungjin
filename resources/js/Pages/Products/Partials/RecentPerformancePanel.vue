@@ -125,7 +125,7 @@ const formatPercent = (n: string | number | null) => {
                 <template #body="{ data }">{{ formatPrice(data.commission_amount) }}</template>
             </Column>
 
-            <Column header="상태" style="width: 80px">
+            <Column header="상태" body-class="text-center" style="width: 80px">
                 <template #body="{ data }">
                     <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                 </template>

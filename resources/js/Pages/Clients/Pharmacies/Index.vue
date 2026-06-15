@@ -130,7 +130,7 @@ const formatDate = (iso: string) =>
                         <div v-if="data.pharmacy_code" class="text-xs text-surface-400 mt-1">{{ data.pharmacy_code }}</div>
                     </template>
                 </Column>
-                <Column header="사업자번호" style="width: 150px">
+                <Column header="사업자번호" body-class="text-center" style="width: 150px">
                     <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="대표" style="width: 120px">
@@ -142,7 +142,7 @@ const formatDate = (iso: string) =>
                         <div v-if="data.contact_phone" class="text-xs text-surface-500">{{ data.contact_phone }}</div>
                     </template>
                 </Column>
-                <Column header="상태" style="width: 80px">
+                <Column header="상태" body-class="text-center" style="width: 80px">
                     <template #body="{ data }">
                         <Tag :value="data.status === 'active' ? '활성' : '비활성'"
                              :severity="data.status === 'active' ? 'success' : 'secondary'" />

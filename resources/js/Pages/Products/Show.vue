@@ -412,51 +412,51 @@ const hasAnyAction = computed(() =>
                     <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-3">기본 정보</h2>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                         <div>
-                            <dt class="text-surface-500 mb-1">보험코드</dt>
+                            <dt class="field-label">보험코드</dt>
                             <dd class="font-mono">{{ product.insurance_code }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">제품코드</dt>
+                            <dt class="field-label">제품코드</dt>
                             <dd class="font-mono">{{ product.product_code }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">표준코드(KD)</dt>
+                            <dt class="field-label">표준코드(KD)</dt>
                             <dd class="font-mono">{{ product.standard_code || '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">바코드(GTIN)</dt>
+                            <dt class="field-label">바코드(GTIN)</dt>
                             <dd class="font-mono">{{ product.barcode_gtin || '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">성분명</dt>
+                            <dt class="field-label">성분명</dt>
                             <dd>{{ product.generic_name || '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">함량 / 단위</dt>
+                            <dt class="field-label">함량 / 단위</dt>
                             <dd>{{ product.strength || '-' }} {{ product.unit || '' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">포장 수량</dt>
+                            <dt class="field-label">포장 수량</dt>
                             <dd>{{ product.pack_size ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">보관 조건</dt>
+                            <dt class="field-label">보관 조건</dt>
                             <dd>{{ storageLabel(product.storage_condition) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">약가</dt>
+                            <dt class="field-label">약가</dt>
                             <dd class="font-semibold">{{ formatPrice(product.price) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">카테고리</dt>
+                            <dt class="field-label">카테고리</dt>
                             <dd>{{ product.category ?? '-' }}</dd>
                         </div>
                         <div v-if="product.nims_managed">
-                            <dt class="text-surface-500 mb-1">NIMS 품목코드</dt>
+                            <dt class="field-label">NIMS 품목코드</dt>
                             <dd class="font-mono">{{ product.nims_item_code || '미연동' }}</dd>
                         </div>
                         <div v-if="product.replacement">
-                            <dt class="text-surface-500 mb-1">대체품</dt>
+                            <dt class="field-label">대체품</dt>
                             <dd>
                                 <Link :href="route('products.show', product.replacement.id)" class="text-primary hover:underline">
                                     {{ product.replacement.product_name }}
@@ -465,11 +465,11 @@ const hasAnyAction = computed(() =>
                             </dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">제품 설명</dt>
+                            <dt class="field-label">제품 설명</dt>
                             <dd class="whitespace-pre-wrap">{{ product.description || '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">비고</dt>
+                            <dt class="field-label">비고</dt>
                             <dd class="whitespace-pre-wrap">{{ product.remarks || '-' }}</dd>
                         </div>
                     </dl>
@@ -479,19 +479,19 @@ const hasAnyAction = computed(() =>
                     <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-3">변경 이력</h2>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-xs text-surface-500">
                         <div>
-                            <dt class="mb-1">등록</dt>
+                            <dt class="field-label">등록</dt>
                             <dd>{{ formatDate(product.created_at) }} · {{ product.creator?.name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1">최종 수정</dt>
+                            <dt class="field-label">최종 수정</dt>
                             <dd>{{ formatDate(product.updated_at) }} · {{ product.updater?.name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1">검수</dt>
+                            <dt class="field-label">검수</dt>
                             <dd>{{ formatDate(product.reviewed_at) }} · {{ product.reviewer?.name ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="mb-1">최종 승인</dt>
+                            <dt class="field-label">최종 승인</dt>
                             <dd>{{ formatDate(product.approved_at) }} · {{ product.approver?.name ?? '-' }}</dd>
                         </div>
                     </dl>

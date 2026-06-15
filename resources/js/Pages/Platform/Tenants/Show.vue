@@ -177,7 +177,7 @@ const enterTenant = () => router.post(route('platform.tenants.enter', props.tena
     <Head :title="tenant.name" />
     <ConfirmDialog />
     <AdminLayout>
-        <div class="max-w-4xl mx-auto flex flex-col gap-4">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">{{ tenant.name }}</h1>
@@ -198,28 +198,28 @@ const enterTenant = () => router.post(route('platform.tenants.enter', props.tena
 
             <Card>
                 <template #content>
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                    <dl class="detail-grid">
                         <div>
-                            <dt class="text-surface-500 mb-1">코드</dt>
+                            <dt class="field-label">코드</dt>
                             <dd>{{ tenant.code ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">상태</dt>
+                            <dt class="field-label">상태</dt>
                             <dd>
                                 <Tag :value="tenant.status === 'active' ? '활성' : '비활성'"
                                      :severity="tenant.status === 'active' ? 'success' : 'secondary'" />
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">사업자등록번호</dt>
+                            <dt class="field-label">사업자등록번호</dt>
                             <dd>{{ formatBusinessNumber(tenant.business_registration_number) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">대표자명</dt>
+                            <dt class="field-label">대표자명</dt>
                             <dd>{{ tenant.representative_name ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-surface-500 mb-1">사업장 소재지</dt>
+                            <dt class="field-label">사업장 소재지</dt>
                             <dd>
                                 <span v-if="tenant.address">
                                     <span v-if="tenant.postcode" class="text-surface-400">({{ tenant.postcode }}) </span>{{ tenant.address }}
@@ -228,15 +228,15 @@ const enterTenant = () => router.post(route('platform.tenants.enter', props.tena
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">연락처</dt>
+                            <dt class="field-label">연락처</dt>
                             <dd>{{ tenant.phone ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">이메일</dt>
+                            <dt class="field-label">이메일</dt>
                             <dd>{{ tenant.email ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-surface-500 mb-1">소속 사용자</dt>
+                            <dt class="field-label">소속 사용자</dt>
                             <dd>{{ tenant.users_count }}명</dd>
                         </div>
                     </dl>
@@ -264,17 +264,17 @@ const enterTenant = () => router.post(route('platform.tenants.enter', props.tena
                         </template>
                         <Column header="이름" field="name" />
                         <Column header="이메일" field="email" />
-                        <Column header="권한" style="width: 110px">
+                        <Column header="권한" body-class="text-center" style="width: 110px">
                             <template #body="{ data }">
                                 <Tag :value="roleLabel(data.role)" :severity="data.role === 'pharma' ? 'info' : 'secondary'" />
                             </template>
                         </Column>
-                        <Column header="활성" style="width: 80px">
+                        <Column header="활성" body-class="text-center" style="width: 80px">
                             <template #body="{ data }">
                                 <Tag :value="data.is_active ? '활성' : '비활성'" :severity="data.is_active ? 'success' : 'danger'" />
                             </template>
                         </Column>
-                        <Column v-if="can.manageAdmins" header="작업" style="width: 160px">
+                        <Column v-if="can.manageAdmins" header="작업" body-class="text-center" style="width: 160px">
                             <template #body="{ data }">
                                 <div class="flex gap-1">
                                     <Button icon="pi pi-pencil" size="small" severity="secondary" outlined

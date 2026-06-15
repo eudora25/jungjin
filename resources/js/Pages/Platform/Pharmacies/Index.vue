@@ -112,13 +112,13 @@ const onPage = (e: { page: number }) => {
                 <Column header="전화번호" style="width: 130px">
                     <template #body="{ data }">{{ data.phone ?? '-' }}</template>
                 </Column>
-                <Column header="사업자번호" style="width: 120px">
+                <Column header="사업자번호" body-class="text-center" style="width: 120px">
                     <template #body="{ data }">{{ formatBusinessNumber(data.business_registration_number) }}</template>
                 </Column>
                 <Column header="주소" style="min-width: 200px">
                     <template #body="{ data }">{{ data.address ?? '-' }}</template>
                 </Column>
-                <Column header="상태" style="width: 80px">
+                <Column header="상태" body-class="text-center" style="width: 80px">
                     <template #body="{ data }">
                         <Tag :value="data.status === 'active' ? '활성' : '비활성'" :severity="data.status === 'active' ? 'success' : 'secondary'" />
                     </template>

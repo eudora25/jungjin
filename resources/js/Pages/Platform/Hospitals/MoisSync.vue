@@ -177,7 +177,7 @@ const isDryRun = (row: SyncRow): boolean => row.params?.dry_run === true;
 <template>
     <Head title="병의원 API 동기화(MOIS)" />
     <AdminLayout>
-        <div class="flex flex-col gap-4 max-w-5xl mx-auto">
+        <div class="flex flex-col gap-4">
             <div>
                 <h1 class="text-2xl font-bold">병의원 행안부(MOIS) API 증분 동기화</h1>
                 <p class="text-surface-500 text-sm mt-1">
@@ -280,7 +280,7 @@ const isDryRun = (row: SyncRow): boolean => row.params?.dry_run === true;
                                 <Tag v-if="isDryRun(data)" value="dry-run" severity="secondary" class="ml-1" />
                             </template>
                         </Column>
-                        <Column header="상태" style="width: 90px">
+                        <Column header="상태" body-class="text-center" style="width: 90px">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                             </template>

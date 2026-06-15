@@ -141,7 +141,7 @@ const submitReject = () => {
                 <Column header="요청자" style="width: 120px">
                     <template #body="{ data }">{{ data.requester?.name ?? '-' }}</template>
                 </Column>
-                <Column header="상태" style="width: 100px">
+                <Column header="상태" body-class="text-center" style="width: 100px">
                     <template #body="{ data }">
                         <Tag :value="statusMeta[data.status]?.label" :severity="statusMeta[data.status]?.severity" />
                         <div v-if="data.review_note" class="text-xs text-surface-400 mt-1">{{ data.review_note }}</div>

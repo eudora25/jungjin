@@ -238,7 +238,7 @@ const fmt = (v: string | number | null | undefined) => {
                         <span v-else class="text-surface-400">-</span>
                     </template>
                 </Column>
-                <Column field="status" header="상태" class="min-w-[90px]">
+                <Column field="status" header="상태" body-class="text-center" class="min-w-[90px]">
                     <template #body="{ data }">
                         <Tag :value="statusLabel[data.status as Status]" :severity="statusSeverity[data.status as Status]" />
                     </template>

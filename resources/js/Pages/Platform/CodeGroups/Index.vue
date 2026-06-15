@@ -89,7 +89,7 @@ const onPage = (e: { page: number }) => reload(e.page + 1);
                 <Column header="정렬" style="width: 80px">
                     <template #body="{ data }">{{ data.sort_order }}</template>
                 </Column>
-                <Column header="상태" style="width: 90px">
+                <Column header="상태" body-class="text-center" style="width: 90px">
                     <template #body="{ data }">
                         <Tag :value="data.is_active ? '활성' : '비활성'"
                              :severity="data.is_active ? 'success' : 'secondary'" />

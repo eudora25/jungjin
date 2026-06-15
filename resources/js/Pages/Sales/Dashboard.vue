@@ -357,7 +357,7 @@ const hasChartData = computed(() => props.myMonthlyChart.data.some((v) => v > 0)
                                     <span class="tabular-nums">{{ n(Number(data.total_commission)) }}원</span>
                                 </template>
                             </Column>
-                            <Column header="상태" style="width: 120px">
+                            <Column header="상태" body-class="text-center" style="width: 120px">
                                 <template #body="{ data }">
                                     <Tag :value="settlementStatusLabel(data.status)" :severity="settlementStatusSeverity(data.status)" />
                                 </template>
@@ -388,7 +388,7 @@ const hasChartData = computed(() => props.myMonthlyChart.data.some((v) => v > 0)
                                 <span class="tabular-nums">{{ n(Number(data.subtotal)) }}원</span>
                             </template>
                         </Column>
-                        <Column header="상태" style="width: 120px">
+                        <Column header="상태" body-class="text-center" style="width: 120px">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                             </template>

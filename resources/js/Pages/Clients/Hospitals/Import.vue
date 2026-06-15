@@ -98,7 +98,7 @@ const filteredResults = computed(() => {
 <template>
     <Head title="병의원 CSV 일괄 등록" />
     <AdminLayout>
-        <div class="flex flex-col gap-4 max-w-6xl mx-auto">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold text-surface-900 dark:text-surface-0">병의원 CSV 일괄 등록</h1>
@@ -195,7 +195,7 @@ const filteredResults = computed(() => {
                                 <span v-else class="text-xs text-surface-400">-</span>
                             </template>
                         </Column>
-                        <Column header="상태" style="width: 7rem">
+                        <Column header="상태" body-class="text-center" style="width: 7rem">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                             </template>

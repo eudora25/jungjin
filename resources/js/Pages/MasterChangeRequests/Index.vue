@@ -142,7 +142,7 @@ const onPage = (e: { page: number }) => {
                         </div>
                     </template>
                 </Column>
-                <Column header="상태" style="width: 110px">
+                <Column header="상태" body-class="text-center" style="width: 110px">
                     <template #body="{ data }">
                         <Tag :value="statusMeta[data.status]?.label" :severity="statusMeta[data.status]?.severity" />
                     </template>

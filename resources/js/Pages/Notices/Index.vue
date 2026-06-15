@@ -123,7 +123,7 @@ const formatDate = (iso: string) =>
                     </template>
                 </Column>
 
-                <Column header="작성자" style="width: 180px">
+                <Column header="작성자" body-class="text-center" style="width: 180px">
                     <template #body="{ data }">
                         <span class="text-sm">{{ data.author?.name ?? '-' }}</span>
                     </template>
@@ -135,7 +135,7 @@ const formatDate = (iso: string) =>
                     </template>
                 </Column>
 
-                <Column header="작성일" style="width: 200px">
+                <Column header="작성일" body-class="text-center" style="width: 200px">
                     <template #body="{ data }">
                         <span class="text-sm text-surface-500">{{ formatDate(data.created_at) }}</span>
                     </template>
